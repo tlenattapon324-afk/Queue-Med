@@ -1,0 +1,12 @@
+{
+  "tickerMessages": [
+    "ยินดีต้อนรับสู่ระบบคิว",
+    "Welcome to Queue System",
+    "กรุณานั่งรอเรียกหมายเลขของท่าน",
+    "Please wait for your number to be called",
+    "ขอบคุณที่ใช้บริการ | Thank you for your patience"
+  ],
+  "custom": {
+    "headerFontSize": 1.5
+  }
+}

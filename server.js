@@ -45,6 +45,24 @@ function loadJson(file, defaults) {
 }
 function saveJson(file, data) { fs.writeFileSync(file, JSON.stringify(data, null, 2)); }
 
+// ── DB Config (moved up — needed by requireApiToken before the /api/sys routes) ──
+const DB_CONFIG_FILE = path.join(DATA_DIR, 'db-config.json');
+function loadDbConfig() {
+  return loadJson(DB_CONFIG_FILE, { type: 'mysql', host: '', port: 3306, database: '', username: '', password: '', hospitalCode: '', apiToken: '' });
+}
+function genApiToken(hospitalCode) {
+  const code = String(hospitalCode || '').trim();
+  const rand = crypto.randomBytes(8).toString('hex').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
+  return code + rand;
+}
+
+// DB type ที่ HOSxP/ระบบส่วนใหญ่ใช้คือ MySQL — ค่า default ต้องเป็น MySQL เสมอ
+// ห้ามให้ค่า type ที่หายไป/พิมพ์ผิด/ตัวพิมพ์ไม่ตรง หลุดไปเข้า branch PostgreSQL โดยไม่ตั้งใจ
+// (เคยเกิดปัญหา "timeout expired" เพราะ pg client พยายามต่อ MySQL server)
+function isMysqlType(t) {
+  return String(t || 'mysql').trim().toLowerCase() !== 'postgresql';
+}
+
 // ── Systems ───────────────────────────────────────────────────────────────
 const SYSTEMS_FILE = path.join(DATA_DIR, 'systems.json');
 const GLOBAL_CONFIG_FILE = path.join(DATA_DIR, 'global-config.json');
@@ -111,6 +129,7 @@ const PRINT_CFG_DEFAULTS = {
   showFooter:true,
   footerText:'กรุณานั่งรอเรียกหมายเลขของท่าน\nPlease wait for your number',
   footerFontSize:8, autoPrint:true, copies:1,
+  showBarcode:false, barcodeSource:'qn',
 };
 
 function loadSysData(sysId) {
@@ -181,18 +200,32 @@ function requireSys(req, res, next) {
   next();
 }
 
+// ── API Token gate ───────────────────────────────────────────────────────
+// ป้องกันไม่ให้ใคร copy URL ของ /api/sys/*, patient-lookup, patient-drugs ไปยิงตรงใน Postman ได้
+// หน้าเว็บของระบบเองแนบ token ให้อัตโนมัติผ่าน public/vendor/api-token.js (ผู้ใช้ไม่ต้องกรอกเอง)
+// ถ้ายังไม่เคย gen token ไว้ (ติดตั้งใหม่) จะปล่อยผ่านก่อน จนกว่าแอดมินจะสร้าง token ที่หน้าตั้งค่าการเชื่อมต่อ
+function requireApiToken(req, res, next) {
+  const cfg = loadDbConfig();
+  if (!cfg.apiToken) return next();
+  const token = req.headers['x-queue-token'] || (req.query || {}).token;
+  if (token && token === cfg.apiToken) return next();
+  res.status(401).json({ success: false, message: 'Unauthorized: token required' });
+}
+app.use('/api/sys', requireApiToken);
+
 // ── DB helpers (fire-and-forget queue logging) ────────────────────────────
 function dbFire(fn) {
   const cfg = loadDbConfig();
   if (!cfg.host) return;
   (async () => {
-    if (cfg.type === 'mysql') {
+    if (isMysqlType(cfg.type)) {
       const mysql = require('mysql2/promise');
-      const conn  = await mysql.createConnection({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectTimeout: 5000 });
+      const conn  = await mysql.createConnection({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectTimeout: 10000, charset: 'utf8mb4' });
+      await conn.execute('SET NAMES utf8mb4');
       try { await fn('mysql', conn); } finally { conn.end().catch(() => {}); }
     } else {
       const { Client } = require('pg');
-      const client = new Client({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectionTimeoutMillis: 5000 });
+      const client = new Client({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectionTimeoutMillis: 10000 });
       await client.connect();
       try { await fn('pg', client); } finally { client.end().catch(() => {}); }
     }
@@ -905,6 +938,44 @@ app.post('/api/sys/:sysId/display-settings', requireSys, (req, res) => {
   res.json({ success: true });
 });
 
+// ── Google Translate TTS proxy (with disk cache) ───────────────────────────
+const TTS_CACHE_DIR = path.join(DATA_DIR, 'tts-cache');
+if (!fs.existsSync(TTS_CACHE_DIR)) fs.mkdirSync(TTS_CACHE_DIR, { recursive: true });
+
+app.get('/api/tts', async (req, res) => {
+  const text = (req.query.text || '').toString().trim().slice(0, 200);
+  const lang = ((req.query.lang || 'th').toString().match(/^[a-zA-Z-]+$/) || ['th'])[0];
+  if (!text) return res.status(400).json({ error: 'missing text' });
+
+  const key = crypto.createHash('md5').update(lang + '|' + text).digest('hex');
+  const cacheFile = path.join(TTS_CACHE_DIR, key + '.mp3');
+
+  res.setHeader('Content-Type', 'audio/mpeg');
+  res.setHeader('Cache-Control', 'public, max-age=2592000');
+
+  if (fs.existsSync(cacheFile)) {
+    fs.createReadStream(cacheFile).pipe(res);
+    return;
+  }
+
+  try {
+    const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=${encodeURIComponent(lang)}&client=tw-ob`;
+    const gRes = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+        'Referer': 'https://translate.google.com/'
+      }
+    });
+    if (!gRes.ok) throw new Error('google tts http ' + gRes.status);
+    const buf = Buffer.from(await gRes.arrayBuffer());
+    fs.writeFile(cacheFile, buf, () => {});
+    res.end(buf);
+  } catch (e) {
+    console.error('TTS proxy error:', e.message);
+    res.status(502).json({ error: 'tts_failed' });
+  }
+});
+
 // ── Per-sys cashier settings ──────────────────────────────────────────────
 app.get('/api/sys/:sysId/cashier-settings', requireSys, (req, res) => res.json(req.sys.cashierSettings));
 
@@ -1244,7 +1315,7 @@ function resetSys(sysId, sys) {
 })();
 
 // ── Patient lookup ────────────────────────────────────────────────────────
-app.post('/api/patient-lookup', async (req, res) => {
+app.post('/api/patient-lookup', requireApiToken, async (req, res) => {
   const { type, value, sysId: reqSysId, mode } = req.body;
   if (!value || !value.toString().trim()) return res.json({ success: false, message: 'กรุณาระบุข้อมูล' });
   const cfg = loadDbConfig();
@@ -1291,9 +1362,10 @@ app.post('/api/patient-lookup', async (req, res) => {
     // Search ipt by AN or HN regardless of which field the user typed into
     try {
       let row = null;
-      if (cfg.type === 'mysql') {
+      if (isMysqlType(cfg.type)) {
         const mysql = require('mysql2/promise');
-        const conn  = await mysql.createConnection({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectTimeout: 5000 });
+        const conn  = await mysql.createConnection({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectTimeout: 10000, charset: 'utf8mb4' });
+      await conn.execute('SET NAMES utf8mb4');
         const [rows] = await conn.execute(
           `SELECT i.hn, i.an,
              CONCAT(IFNULL(pt.pname,''), IFNULL(pt.fname,''), ' ', IFNULL(pt.lname,'')) AS patient_name,
@@ -1309,7 +1381,7 @@ app.post('/api/patient-lookup', async (req, res) => {
         row = rows[0] || null;
       } else {
         const { Client } = require('pg');
-        const client = new Client({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectionTimeoutMillis: 5000 });
+        const client = new Client({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectionTimeoutMillis: 10000 });
         await client.connect();
         const result = await client.query(
           `SELECT i.hn, i.an,
@@ -1353,9 +1425,10 @@ app.post('/api/patient-lookup', async (req, res) => {
                     : (type === 'hn' ? 'hn' : 'qn');
   try {
     let row = null;
-    if (cfg.type === 'mysql') {
+    if (isMysqlType(cfg.type)) {
       const mysql = require('mysql2/promise');
-      const conn  = await mysql.createConnection({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectTimeout: 5000 });
+      const conn  = await mysql.createConnection({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectTimeout: 10000, charset: 'utf8mb4' });
+      await conn.execute('SET NAMES utf8mb4');
       const col   = searchField === 'hn' ? 'o.hn' : 'o.oqueue';
       const [rows] = await conn.execute(
         `SELECT o.hn, o.oqueue, o.vn, o.vstdate, o.vsttime,
@@ -1372,7 +1445,7 @@ app.post('/api/patient-lookup', async (req, res) => {
       row = rows[0] || null;
     } else {
       const { Client } = require('pg');
-      const client = new Client({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectionTimeoutMillis: 5000 });
+      const client = new Client({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectionTimeoutMillis: 10000 });
       await client.connect();
       const col    = searchField === 'hn' ? 'o.hn' : 'o.oqueue';
       const result = await client.query(
@@ -1423,6 +1496,63 @@ app.post('/api/patient-lookup', async (req, res) => {
   }
 });
 
+// ── Patient drug/dispensing items for a visit (VN) ────────────────────────
+app.post('/api/patient-drugs', requireApiToken, async (req, res) => {
+  const { vn } = req.body || {};
+  if (!vn) return res.json({ success: false, message: 'ไม่พบเลข VN' });
+  const cfg = loadDbConfig();
+  if (!cfg.host) return res.json({ success: false, message: 'ยังไม่ได้ตั้งค่าฐานข้อมูล' });
+  try {
+    let rows = [];
+    if (isMysqlType(cfg.type)) {
+      const mysql = require('mysql2/promise');
+      const conn  = await mysql.createConnection({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectTimeout: 10000, charset: 'utf8mb4' });
+      await conn.execute('SET NAMES utf8mb4');
+      const [r] = await conn.execute(
+        `SELECT o.vstdate, o.oqueue, o.hn, s.name AS drug_name,
+           CONCAT(COALESCE(od.usage_line1,''),' ',COALESCE(od.usage_line2,''),' ',COALESCE(od.usage_line3,'')) AS usage_text,
+           op.qty AS qty, op.sum_price AS price
+         FROM ovst o
+         LEFT JOIN opitemrece op ON op.vn = o.vn
+         LEFT JOIN s_drugitems s ON s.icode = op.icode
+         LEFT JOIN opi_dispense od ON od.hos_guid = op.hos_guid
+         WHERE o.vn = ? AND op.icode LIKE '1%'`,
+        [vn]
+      );
+      await conn.end();
+      rows = r;
+    } else {
+      const { Client } = require('pg');
+      const client = new Client({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectionTimeoutMillis: 10000 });
+      await client.connect();
+      const result = await client.query(
+        `SELECT o.vstdate, o.oqueue, o.hn, s.name AS drug_name,
+           CONCAT(COALESCE(od.usage_line1,''),' ',COALESCE(od.usage_line2,''),' ',COALESCE(od.usage_line3,'')) AS usage_text,
+           op.qty AS qty, op.sum_price AS price
+         FROM ovst o
+         LEFT JOIN opitemrece op ON op.vn = o.vn
+         LEFT JOIN s_drugitems s ON s.icode = op.icode
+         LEFT JOIN opi_dispense od ON od.hos_guid = op.hos_guid
+         WHERE o.vn = $1 AND op.icode LIKE '1%'`,
+        [vn]
+      );
+      await client.end();
+      rows = result.rows;
+    }
+    res.json({
+      success: true,
+      items: rows.map(r => ({
+        drugName: (r.drug_name || '').trim() || null,
+        usage:    (r.usage_text || '').replace(/\s+/g, ' ').trim() || null,
+        qty:      r.qty,
+        price:    r.price,
+      }))
+    });
+  } catch (err) {
+    res.json({ success: false, message: 'เกิดข้อผิดพลาด: ' + err.message });
+  }
+});
+
 // ── Dept → System mapping  (format: { depcode: [sysId, ...] }) ───────────
 const DEPT_SYS_FILE = path.join(DATA_DIR, 'dept-systems.json');
 function loadDeptSystems() {
@@ -1447,38 +1577,85 @@ function removeSysFromDepts(sysId) {
   saveDeptSystems(d);
 }
 
-// ── DB Config & Auth ──────────────────────────────────────────────────────
-const DB_CONFIG_FILE = path.join(DATA_DIR, 'db-config.json');
-const sessions = {};
+// ── Admin auth (protects DB connection settings) ──────────────────────────
+const ADMIN_USER = 'admin';
+const ADMIN_PASS = 'adminqueue';
+const adminSessions = {};
 
-function loadDbConfig() {
-  return loadJson(DB_CONFIG_FILE, { type: 'mysql', host: '', port: 3306, database: '', username: '', password: '' });
+function requireAdmin(req, res, next) {
+  const token = req.headers['x-admin-token'] || (req.body || {}).token || (req.query || {}).token;
+  if (token && adminSessions[token]) return next();
+  res.status(401).json({ success: false, message: 'กรุณาเข้าสู่ระบบผู้ดูแลระบบก่อน' });
 }
 
-app.get('/api/db-config', (req, res) => {
-  const cfg = loadDbConfig();
-  res.json({ type: cfg.type, host: cfg.host, port: cfg.port, database: cfg.database, username: cfg.username, password: cfg.password });
+app.post('/api/admin/login', (req, res) => {
+  const { username, password } = req.body || {};
+  if (username === ADMIN_USER && password === ADMIN_PASS) {
+    const token = crypto.randomBytes(32).toString('hex');
+    adminSessions[token] = { loginAt: Date.now() };
+    return res.json({ success: true, token });
+  }
+  res.json({ success: false, message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' });
 });
 
-app.post('/api/db-config/save', (req, res) => {
-  const { type, host, port, database, username, password } = req.body;
+app.post('/api/admin/logout', (req, res) => {
+  const token = (req.body || {}).token;
+  if (token) delete adminSessions[token];
+  res.json({ success: true });
+});
+
+// ── DB Config & Auth ──────────────────────────────────────────────────────
+const sessions = {};
+
+app.get('/api/db-config', requireAdmin, (req, res) => {
+  const cfg = loadDbConfig();
+  res.json({
+    type: cfg.type, host: cfg.host, port: cfg.port, database: cfg.database, username: cfg.username, password: cfg.password,
+    hospitalCode: cfg.hospitalCode || '', apiToken: cfg.apiToken || ''
+  });
+});
+
+app.post('/api/db-config/save', requireAdmin, (req, res) => {
+  const { type, host, port, database, username, password, hospitalCode } = req.body;
+  const cfg = loadDbConfig();
   saveJson(DB_CONFIG_FILE, {
     type: type || 'mysql', host: (host || '').trim(), port: Number(port) || 3306,
-    database: (database || '').trim(), username: (username || '').trim(), password: password || ''
+    database: (database || '').trim(), username: (username || '').trim(), password: password || '',
+    hospitalCode: (hospitalCode != null ? String(hospitalCode).trim() : cfg.hospitalCode || ''),
+    apiToken: cfg.apiToken || ''
   });
   res.json({ success: true });
 });
 
-app.post('/api/db-config/test', async (req, res) => {
+// สร้าง API Token ใหม่ — ขึ้นต้นด้วยรหัสสถานพยาบาล ตามด้วยรหัส gen อีก 10 หลัก
+app.post('/api/db-config/gen-token', requireAdmin, (req, res) => {
+  const { hospitalCode } = req.body || {};
+  const cfg  = loadDbConfig();
+  const code = (hospitalCode != null ? String(hospitalCode).trim() : cfg.hospitalCode || '');
+  if (!code) return res.json({ success: false, message: 'กรุณากรอกรหัสสถานพยาบาลก่อนสร้าง Token' });
+  const apiToken = genApiToken(code);
+  saveJson(DB_CONFIG_FILE, { ...cfg, hospitalCode: code, apiToken });
+  res.json({ success: true, apiToken });
+});
+
+// Bootstrap endpoint — หน้าเว็บของระบบเองใช้ดึง token มาแนบกับ request /api/sys/* โดยอัตโนมัติ
+// (ผู้ใช้ทั่วไปไม่เห็น ไม่ต้องกรอกเอง แต่ถ้า copy URL ไปยิงตรงใน Postman โดยไม่มี token จะถูกปฏิเสธ)
+app.get('/api/client-token', (req, res) => {
+  const cfg = loadDbConfig();
+  res.json({ token: cfg.apiToken || '' });
+});
+
+app.post('/api/db-config/test', requireAdmin, async (req, res) => {
   const { type, host, port, database, username, password } = req.body;
   try {
-    if (type === 'mysql') {
+    if (isMysqlType(type)) {
       const mysql = require('mysql2/promise');
-      const conn = await mysql.createConnection({ host, port: Number(port), database, user: username, password, connectTimeout: 5000 });
+      const conn = await mysql.createConnection({ host, port: Number(port), database, user: username, password, connectTimeout: 10000, charset: 'utf8mb4' });
+      await conn.execute('SET NAMES utf8mb4');
       await conn.end();
     } else {
       const { Client } = require('pg');
-      const client = new Client({ host, port: Number(port), database, user: username, password, connectionTimeoutMillis: 5000 });
+      const client = new Client({ host, port: Number(port), database, user: username, password, connectionTimeoutMillis: 10000 });
       await client.connect();
       await client.end();
     }
@@ -1493,9 +1670,10 @@ const TABLE_NAMES = ['app_queue_opd', 'app_queue_events'];
 
 async function checkTables(cfg) {
   const result = { app_queue_opd: false, app_queue_events: false };
-  if (cfg.type === 'mysql') {
+  if (isMysqlType(cfg.type)) {
     const mysql = require('mysql2/promise');
-    const conn  = await mysql.createConnection({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectTimeout: 5000 });
+    const conn  = await mysql.createConnection({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectTimeout: 10000, charset: 'utf8mb4' });
+      await conn.execute('SET NAMES utf8mb4');
     const [rows] = await conn.execute(
       `SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME IN ('app_queue_opd','app_queue_events')`,
       [cfg.database]
@@ -1504,10 +1682,11 @@ async function checkTables(cfg) {
     rows.forEach(r => { result[r.TABLE_NAME] = true; });
   } else {
     const { Client } = require('pg');
-    const client = new Client({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectionTimeoutMillis: 5000 });
+    const client = new Client({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectionTimeoutMillis: 10000, query_timeout: 15000, statement_timeout: 15000 });
     await client.connect();
     const { rows } = await client.query(
-      `SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('app_queue_opd','app_queue_events')`
+      `SELECT c.relname AS table_name FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+       WHERE n.nspname = 'public' AND c.relkind = 'r' AND c.relname IN ('app_queue_opd','app_queue_events')`
     );
     await client.end();
     rows.forEach(r => { result[r.table_name] = true; });
@@ -1515,7 +1694,7 @@ async function checkTables(cfg) {
   return result;
 }
 
-app.get('/api/db/check-tables', async (req, res) => {
+app.get('/api/db/check-tables', requireAdmin, async (req, res) => {
   const cfg = loadDbConfig();
   if (!cfg.host) return res.json({ success: false, message: 'ยังไม่ได้ตั้งค่าการเชื่อมต่อฐานข้อมูล', tables: { app_queue_opd: false, app_queue_events: false } });
   try {
@@ -1526,13 +1705,15 @@ app.get('/api/db/check-tables', async (req, res) => {
   }
 });
 
-app.post('/api/db/migrate', async (req, res) => {
+app.post('/api/db/migrate', requireAdmin, async (req, res) => {
   const cfg = loadDbConfig();
   if (!cfg.host) return res.json({ success: false, message: 'ยังไม่ได้ตั้งค่าการเชื่อมต่อฐานข้อมูล' });
+  let step = 'connect';
   try {
-    if (cfg.type === 'mysql') {
+    if (isMysqlType(cfg.type)) {
       const mysql = require('mysql2/promise');
-      const conn  = await mysql.createConnection({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectTimeout: 5000, multipleStatements: true });
+      const conn  = await mysql.createConnection({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectTimeout: 10000, charset: 'utf8mb4', multipleStatements: true });
+      await conn.execute('SET NAMES utf8mb4');
       await conn.execute(`CREATE TABLE IF NOT EXISTS app_queue_opd (
         id           INT          NOT NULL AUTO_INCREMENT,
         sys_id       INT          NOT NULL DEFAULT 1,
@@ -1580,8 +1761,11 @@ app.post('/api/db/migrate', async (req, res) => {
       await conn.end();
     } else {
       const { Client } = require('pg');
-      const client = new Client({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectionTimeoutMillis: 5000 });
+      const client = new Client({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectionTimeoutMillis: 10000, query_timeout: 15000, statement_timeout: 15000 });
+      console.log(`[migrate] เริ่ม migrate (${cfg.host}:${cfg.port}/${cfg.database})`);
       await client.connect();
+      console.log('[migrate] connect สำเร็จ — กำลังสร้าง app_queue_opd');
+      step = 'create app_queue_opd';
       await client.query(`CREATE TABLE IF NOT EXISTS app_queue_opd (
         id           SERIAL       NOT NULL,
         sys_id       INT          NOT NULL DEFAULT 1,
@@ -1608,6 +1792,8 @@ app.post('/api/db/migrate', async (req, res) => {
         updated_at   TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (id)
       )`);
+      console.log('[migrate] สร้าง app_queue_opd สำเร็จ — กำลังสร้าง app_queue_events');
+      step = 'create app_queue_events';
       await client.query(`CREATE TABLE IF NOT EXISTS app_queue_events (
         id           SERIAL       NOT NULL,
         ticket_id    INT,
@@ -1620,18 +1806,28 @@ app.post('/api/db/migrate', async (req, res) => {
         meta         JSONB,
         PRIMARY KEY (id)
       )`);
+      console.log('[migrate] สร้าง app_queue_events สำเร็จ — กำลังสร้าง index');
+      step = 'create index';
       // Add UNIQUE index on id — ignore error if already exists
       for (const [tbl, idx] of [['app_queue_opd','uq_opd_id'],['app_queue_events','uq_evt_id']]) {
         try { await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS ${idx} ON ${tbl} (id)`); } catch {}
       }
+      console.log('[migrate] สร้าง index สำเร็จ — กำลัง alter เพิ่มคอลัมน์ vn');
+      step = 'alter add column vn';
       // Add vn column if not exists
       try { await client.query(`ALTER TABLE app_queue_opd ADD COLUMN IF NOT EXISTS vn VARCHAR(13)`); } catch {}
+      console.log('[migrate] alter สำเร็จ — ปิด connection');
+      step = 'close connection';
       await client.end();
     }
+    console.log('[migrate] กำลังตรวจสอบตาราง (checkTables)');
+    step = 'checkTables';
     const tables = await checkTables(cfg);
+    console.log('[migrate] เสร็จสมบูรณ์', tables);
     res.json({ success: true, tables });
   } catch (err) {
-    res.json({ success: false, message: err.message });
+    console.error(`[migrate] ล้มเหลวที่ขั้นตอน "${step}":`, err.message);
+    res.json({ success: false, message: `[${step}] ${err.message}`, step });
   }
 });
 
@@ -1642,15 +1838,16 @@ app.post('/api/auth/login', async (req, res) => {
   if (!cfg.host) return res.json({ success: false, message: 'ยังไม่ได้ตั้งค่าการเชื่อมต่อฐานข้อมูล' });
   try {
     let officer = null;
-    if (cfg.type === 'mysql') {
+    if (isMysqlType(cfg.type)) {
       const mysql = require('mysql2/promise');
-      const conn = await mysql.createConnection({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectTimeout: 5000 });
+      const conn = await mysql.createConnection({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectTimeout: 10000, charset: 'utf8mb4' });
+      await conn.execute('SET NAMES utf8mb4');
       const [rows] = await conn.execute('SELECT officer_id,officer_name,officer_login_name,officer_login_password_md5 FROM officer WHERE officer_login_name = ? LIMIT 1', [username]);
       await conn.end();
       officer = rows[0] || null;
     } else {
       const { Client } = require('pg');
-      const client = new Client({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectionTimeoutMillis: 5000 });
+      const client = new Client({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectionTimeoutMillis: 10000 });
       await client.connect();
       const result = await client.query('SELECT officer_id,officer_name,officer_login_name,officer_login_password_md5 FROM officer WHERE officer_login_name = $1 LIMIT 1', [username]);
       await client.end();
@@ -1668,21 +1865,71 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+// ── BMS Session login (ดู BMS-SESSION-SPECIFICATION.md) ───────────────────
+// รับ bms-session-id → ไปยืนยันตัวตนกับ HOSxP PasteJSON API → จับคู่ชื่อกับตาราง officer
+// ในฐานข้อมูลที่ตั้งค่าไว้ → ถ้าเจอ ออก session token แบบเดียวกับ login ปกติ (ยังต้องเลือกห้องตรวจต่อ)
+app.post('/api/auth/bms-login', async (req, res) => {
+  const { sessionId } = req.body || {};
+  if (!sessionId) return res.json({ success: false, message: 'ไม่พบ BMS Session ID' });
+  const cfg = loadDbConfig();
+  if (!cfg.host) return res.json({ success: false, message: 'ยังไม่ได้ตั้งค่าการเชื่อมต่อฐานข้อมูล' });
+
+  let bmsData;
+  try {
+    const r = await fetch('https://hosxp.net/phapi/PasteJSON?Action=GET&code=' + encodeURIComponent(sessionId));
+    bmsData = await r.json();
+  } catch (err) {
+    return res.json({ success: false, message: 'ติดต่อ BMS Session Server ไม่สำเร็จ: ' + err.message });
+  }
+  if (bmsData.MessageCode === 500) return res.json({ success: false, message: 'BMS Session หมดอายุ กรุณาเข้าใหม่' });
+  if (bmsData.MessageCode !== 200) return res.json({ success: false, message: bmsData.Message || 'BMS Session ไม่ถูกต้อง' });
+
+  const userInfo = (bmsData.result || {}).user_info || {};
+  const bmsName  = (userInfo.name || '').trim();
+  if (!bmsName) return res.json({ success: false, message: 'BMS Session ไม่มีข้อมูลชื่อผู้ใช้งาน' });
+
+  try {
+    let officer = null;
+    if (isMysqlType(cfg.type)) {
+      const mysql = require('mysql2/promise');
+      const conn = await mysql.createConnection({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectTimeout: 10000, charset: 'utf8mb4' });
+      await conn.execute('SET NAMES utf8mb4');
+      const [rows] = await conn.execute('SELECT officer_id,officer_name,officer_login_name FROM officer WHERE TRIM(officer_name) = TRIM(?) LIMIT 1', [bmsName]);
+      await conn.end();
+      officer = rows[0] || null;
+    } else {
+      const { Client } = require('pg');
+      const client = new Client({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectionTimeoutMillis: 10000 });
+      await client.connect();
+      const result = await client.query("SELECT officer_id,officer_name,officer_login_name FROM officer WHERE TRIM(officer_name) = TRIM($1) LIMIT 1", [bmsName]);
+      await client.end();
+      officer = result.rows[0] || null;
+    }
+    if (!officer) return res.json({ success: false, message: `ไม่พบชื่อ "${bmsName}" ในระบบเจ้าหน้าที่ (officer) กรุณาติดต่อผู้ดูแลระบบ` });
+    const token = crypto.randomBytes(32).toString('hex');
+    sessions[token] = { username: officer.officer_login_name, officerId: officer.officer_id, loginAt: Date.now(), viaBms: true };
+    res.json({ success: true, token, officer: { name: officer.officer_name || officer.officer_login_name } });
+  } catch (err) {
+    res.json({ success: false, message: 'เชื่อมต่อฐานข้อมูลไม่สำเร็จ: ' + err.message });
+  }
+});
+
 // ── DEBUG (ลบออกหลังแก้ไขเสร็จ) ────────────────────────────────────────────
 app.post('/api/debug/hash-check', async (req, res) => {
   const { username, password } = req.body;
   const cfg = loadDbConfig();
   try {
     let officer = null;
-    if (cfg.type === 'mysql') {
+    if (isMysqlType(cfg.type)) {
       const mysql = require('mysql2/promise');
-      const conn = await mysql.createConnection({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectTimeout: 5000 });
+      const conn = await mysql.createConnection({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectTimeout: 10000, charset: 'utf8mb4' });
+      await conn.execute('SET NAMES utf8mb4');
       const [rows] = await conn.execute('SELECT officer_login_name, officer_login_password_md5 FROM officer WHERE officer_login_name = ? LIMIT 1', [username]);
       await conn.end();
       officer = rows[0] || null;
     } else {
       const { Client } = require('pg');
-      const client = new Client({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectionTimeoutMillis: 5000 });
+      const client = new Client({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectionTimeoutMillis: 10000 });
       await client.connect();
       const result = await client.query('SELECT officer_login_name, officer_login_password_md5 FROM officer WHERE officer_login_name = $1 LIMIT 1', [username]);
       await client.end();
@@ -1719,39 +1966,44 @@ app.post('/api/auth/logout', (req, res) => {
 app.post('/api/officer/departments', async (req, res) => {
   const token = (req.body || {}).token;
   if (!token || !sessions[token]) return res.json({ success: false, message: 'กรุณาเข้าสู่ระบบ' });
-  const officerId = sessions[token].officerId;
+  const loginName = sessions[token].username;
   const cfg = loadDbConfig();
   if (!cfg.host) return res.json({ success: false, message: 'ยังไม่ได้ตั้งค่าฐานข้อมูล' });
   try {
     let rows = [];
-    if (cfg.type === 'mysql') {
+    if (isMysqlType(cfg.type)) {
       const mysql = require('mysql2/promise');
-      const conn  = await mysql.createConnection({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectTimeout: 5000 });
+      const conn  = await mysql.createConnection({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectTimeout: 10000, charset: 'utf8mb4' });
+      await conn.execute('SET NAMES utf8mb4');
       const [r] = await conn.execute(
         `SELECT od.depcode, k.department
-         FROM officer_department od
-         JOIN kskdepartment k ON k.depcode = od.depcode
-         WHERE od.officer_id = ?
+         FROM officer o
+         LEFT JOIN officer_department od ON od.officer_id = o.officer_id
+         LEFT JOIN kskdepartment k ON k.depcode = od.depcode
+         WHERE o.officer_login_name = ?
          ORDER BY k.department`,
-        [officerId]
+        [loginName]
       );
       await conn.end();
       rows = r;
     } else {
       const { Client } = require('pg');
-      const client = new Client({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectionTimeoutMillis: 5000 });
+      const client = new Client({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectionTimeoutMillis: 10000 });
       await client.connect();
       const result = await client.query(
         `SELECT od.depcode, k.department
-         FROM officer_department od
-         JOIN kskdepartment k ON k.depcode = od.depcode
-         WHERE od.officer_id = $1
+         FROM officer o
+         LEFT JOIN officer_department od ON od.officer_id = o.officer_id
+         LEFT JOIN kskdepartment k ON k.depcode = od.depcode
+         WHERE o.officer_login_name = $1
          ORDER BY k.department`,
-        [officerId]
+        [loginName]
       );
       await client.end();
       rows = result.rows;
     }
+    // ตัดแถวที่ officer ไม่มีห้องตรวจผูกไว้เลย (LEFT JOIN แล้วได้ NULL) ออก
+    rows = rows.filter(r => r.depcode && r.department);
     res.json({ success: true, departments: rows.map(r => ({ depcode: r.depcode, name: r.department })) });
   } catch (err) {
     res.json({ success: false, message: err.message });
@@ -1810,7 +2062,7 @@ app.post('/api/server/restart', (req, res) => {
 
 // ── ดาวน์โหลด Setup_Sound.exe ────────────────────────────────────────────
 app.get('/download/Setup_Sound.exe', (req, res) => {
-  const filePath = path.join(APP_DIR, 'Setup_Sound.exe');
+  const filePath = path.join(PUBLIC_DIR, 'Setup_Sound.exe');
   if (!fs.existsSync(filePath)) {
     return res.status(404).send(
       '<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><title>ไม่พบไฟล์</title>' +

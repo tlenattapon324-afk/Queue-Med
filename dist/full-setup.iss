@@ -1,13 +1,13 @@
 [Setup]
 AppName=ระบบคิว (Queue System)
-AppVersion=2.2.0
-AppVerName=ระบบคิว (Queue System) v2.2.0
+AppVersion=2.4.0
+AppVerName=ระบบคิว (Queue System) v2.4.0
 AppPublisher=Hospital Queue System
 AppId={{A3F2C1D0-4E5B-6F7A-8B9C-0D1E2F3A4B5C}
 DefaultDirName={autopf}\QueueSystem
 OutputDir=.
 OutputBaseFilename=Queue-Setup-Full
-SetupIconFile=
+SetupIconFile=..\icon.ico
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
@@ -24,7 +24,7 @@ Name: "thai"; MessagesFile: "compiler:Default.isl"
 [Tasks]
 Name: "desktopicon";  Description: "สร้าง Shortcut บน Desktop (เปิดระบบคิวในเบราว์เซอร์)"; GroupDescription: "ตัวเลือกเพิ่มเติม:"; Flags: checkedonce
 Name: "firewall";     Description: "เปิด Firewall อนุญาต Port 3000 (สำหรับเชื่อมต่อจากเครื่องอื่นใน LAN)"; GroupDescription: "ตัวเลือกเพิ่มเติม:"; Flags: checkedonce
-Name: "installsound"; Description: "ติดตั้งเสียงภาษาไทย (Thai TTS) สำหรับประกาศหมายเลขคิว"; GroupDescription: "ตัวเลือกเพิ่มเติม:"; Flags: checkedonce
+Name: "installsound"; Description: "ติดตั้งเสียงภาษาไทย (Thai TTS) สำรอง — เผื่ออินเทอร์เน็ตล่ม (ไม่จำเป็น ระบบใช้เสียง Google Translate ออนไลน์เป็นค่าเริ่มต้นอยู่แล้ว)"; GroupDescription: "ตัวเลือกเพิ่มเติม:"
 
 [Files]
 ; ── โปรแกรมหลัก ──────────────────────────────────────────────────────────
@@ -34,6 +34,8 @@ Source: "nssm.exe";            DestDir: "{app}\tools";    Flags: ignoreversion
 Source: "Setup_Sound.exe";     DestDir: "{app}";          Flags: ignoreversion skipifsourcedoesntexist
 ; ── หน้าเว็บ ─────────────────────────────────────────────────────────────
 Source: "..\public\*";         DestDir: "{app}\public";   Flags: ignoreversion recursesubdirs createallsubdirs
+; ── ค่าตั้งต้น (เฉพาะติดตั้งใหม่ครั้งแรก — ไม่ทับข้อมูลเดิมตอนอัปเกรด, ไม่รวมข้อมูลเชื่อมต่อฐานข้อมูล) ──
+Source: "data-defaults\*";     DestDir: "{app}\data";     Flags: onlyifdoesntexist recursesubdirs createallsubdirs
 
 [Dirs]
 Name: "{app}\data"

@@ -1,0 +1,37 @@
+[
+  {
+    "id": 1,
+    "name": "ทั่วไป",
+    "prefix": "A",
+    "color": "#0000fa",
+    "forMode": "opd"
+  },
+  {
+    "id": 2,
+    "name": "ด่วน",
+    "prefix": "B",
+    "color": "#ff0000",
+    "forMode": "opd"
+  },
+  {
+    "id": 3,
+    "name": "Stat",
+    "prefix": "",
+    "color": "#e53935",
+    "forMode": "ipd"
+  },
+  {
+    "id": 4,
+    "name": "Admit",
+    "prefix": "",
+    "color": "#ffa726",
+    "forMode": "ipd"
+  },
+  {
+    "id": 5,
+    "name": "Dischart",
+    "prefix": "",
+    "color": "#66bb6a",
+    "forMode": "ipd"
+  }
+]

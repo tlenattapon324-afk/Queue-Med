@@ -1,0 +1,100 @@
+[
+  {
+    "id": 1,
+    "name": "ระบบคิวการเงิน",
+    "description": "Finance Queue System",
+    "icon": "💰",
+    "color": "#42a5f5"
+  },
+  {
+    "id": 4,
+    "name": "ระบบคิวห้องยา",
+    "description": "MED QUEUE SSTEMS",
+    "icon": "💊",
+    "color": "#ff7043"
+  },
+  {
+    "id": 10,
+    "name": "029 การเงิน",
+    "description": "029",
+    "icon": "🏥",
+    "color": "#42a5f5"
+  },
+  {
+    "id": 11,
+    "name": "027 ห้องยานอก",
+    "description": "027",
+    "icon": "🏥",
+    "color": "#42a5f5"
+  },
+  {
+    "id": 12,
+    "name": "การเงิน IDP",
+    "description": "",
+    "icon": "💰",
+    "color": "#ef5350"
+  },
+  {
+    "id": 13,
+    "name": "FINANE",
+    "description": "",
+    "icon": "🏥",
+    "color": "#42a5f5"
+  },
+  {
+    "id": 14,
+    "name": "FN",
+    "description": "FINANCE QUEUE SYSTEM",
+    "icon": "🎯",
+    "color": "#42a5f5"
+  },
+  {
+    "id": 15,
+    "name": "FN",
+    "description": "FINANCE QUEUE SYSTEM",
+    "icon": "📋",
+    "color": "#42a5f5"
+  },
+  {
+    "id": 16,
+    "name": "FN",
+    "description": "FINANCE QUEUE SYSTEM",
+    "icon": "🎫",
+    "color": "#42a5f5"
+  },
+  {
+    "id": 17,
+    "name": "FN",
+    "description": "FINANCE QUEUE SYSTEM",
+    "icon": "💰",
+    "color": "#42a5f5"
+  },
+  {
+    "id": 18,
+    "name": "FN",
+    "description": "FINANCE QUEUE SYSTEM",
+    "icon": "💰",
+    "color": "#ec407a"
+  },
+  {
+    "id": 19,
+    "name": "FINANE",
+    "description": "",
+    "icon": "💰",
+    "color": "#ff7043"
+  },
+  {
+    "id": 20,
+    "name": "ระบบคิวเวชระเบียน",
+    "description": "Patient Queue",
+    "icon": "🏥",
+    "color": "#42a5f5"
+  },
+  {
+    "id": 22,
+    "name": "ห้องยา OPD",
+    "description": "",
+    "icon": "💊",
+    "color": "#ff7043"
+  }
+]

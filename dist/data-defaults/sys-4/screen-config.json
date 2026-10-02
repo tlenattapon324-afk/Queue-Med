@@ -1,0 +1,10 @@
+{
+  "fontFamily": "Kanit",
+  "bgPreset": "teal",
+  "accentColor": "#00bcd4",
+  "cardSize": "normal",
+  "cardStyle": "glass",
+  "showScannerCard": true,
+  "showToggles": true,
+  "navOpacity": 45
+}

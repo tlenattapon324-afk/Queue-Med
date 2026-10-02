@@ -103,6 +103,18 @@
     <button class="btn-login" id="loginBtn" onclick="doLogin()">เข้าสู่ระบบ</button>
     <div class="err" id="errMsg"></div>
 
+    <div id="bmsToggleWrap" style="text-align:center;margin-top:16px">
+      <a href="javascript:void(0)" onclick="toggleBmsBox()" style="color:#546e7a;font-size:.8rem;text-decoration:underline">เข้าสู่ระบบด้วย BMS Session</a>
+    </div>
+    <div id="bmsBox" style="display:none;margin-top:14px">
+      <div class="field">
+        <label>BMS Session ID</label>
+        <input type="text" id="bmsSessionId" placeholder="วาง Session ID ที่นี่"/>
+      </div>
+      <button class="btn-login" id="bmsLoginBtn" onclick="doBmsLogin()" style="background:linear-gradient(135deg,#66bb6a,#2e7d32)">เข้าสู่ระบบด้วย BMS Session</button>
+      <div class="err" id="bmsErrMsg"></div>
+    </div>
+
     <hr class="divider"/>
 
     <button class="btn-cfg" onclick="location.href='/db-config.html'">
@@ -127,6 +139,93 @@
   document.getElementById('password').addEventListener('keydown', e => {
     if (e.key === 'Enter') doLogin();
   });
+
+  // ── BMS Session login (ดู BMS-SESSION-SPECIFICATION.md) ────────────────
+  // รองรับ 3 ทาง: URL parameter (?bms-session-id=), Cookie (7 วัน), และกรอกเอง
+  function getBmsCookie() {
+    const m = document.cookie.match(/(?:^|; )bms_session_id=([^;]*)/);
+    return m ? decodeURIComponent(m[1]) : null;
+  }
+  function setBmsCookie(id) {
+    const d = new Date(); d.setTime(d.getTime() + 7 * 24 * 60 * 60 * 1000);
+    document.cookie = 'bms_session_id=' + encodeURIComponent(id) + '; expires=' + d.toUTCString() + '; path=/';
+  }
+  function clearBmsCookie() {
+    document.cookie = 'bms_session_id=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+  }
+
+  function toggleBmsBox() {
+    const box = document.getElementById('bmsBox');
+    box.style.display = box.style.display === 'none' ? 'block' : 'none';
+    if (box.style.display === 'block') document.getElementById('bmsSessionId').focus();
+  }
+
+  document.getElementById('bmsSessionId').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doBmsLogin();
+  });
+
+  function doBmsLogin(sessionIdArg) {
+    const sessionId = sessionIdArg || document.getElementById('bmsSessionId').value.trim();
+    const btn   = document.getElementById('bmsLoginBtn');
+    const errEl = document.getElementById('bmsErrMsg');
+    errEl.classList.remove('show');
+
+    if (!sessionId) {
+      errEl.textContent = 'กรุณากรอก BMS Session ID';
+      errEl.classList.add('show');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>กำลังเข้าสู่ระบบ...';
+
+    fetch('/api/auth/bms-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId })
+    })
+    .then(r => r.json())
+    .then(d => {
+      if (d.success) {
+        setBmsCookie(sessionId);
+        sessionStorage.setItem('authToken', d.token);
+        sessionStorage.setItem('officerName', d.officer.name);
+        fetchDepts(d.token, d.officer.name);
+      } else {
+        clearBmsCookie();
+        errEl.textContent = d.message;
+        errEl.classList.add('show');
+        btn.disabled = false;
+        btn.textContent = 'เข้าสู่ระบบด้วย BMS Session';
+        document.getElementById('bmsBox').style.display = 'block';
+      }
+    })
+    .catch(() => {
+      errEl.textContent = 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง';
+      errEl.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = 'เข้าสู่ระบบด้วย BMS Session';
+    });
+  }
+
+  // ตรวจ URL parameter ก่อน (ล้างออกจาก URL ทันที) จากนั้นค่อยตรวจ Cookie
+  (function autoBmsLogin() {
+    const params = new URLSearchParams(location.search);
+    const urlSid = params.get('bms-session-id');
+    if (urlSid) {
+      params.delete('bms-session-id');
+      const clean = location.pathname + (params.toString() ? '?' + params.toString() : '');
+      history.replaceState({}, '', clean);
+      toggleBmsBox();
+      doBmsLogin(urlSid);
+      return;
+    }
+    const cookSid = getBmsCookie();
+    if (cookSid) {
+      toggleBmsBox();
+      doBmsLogin(cookSid);
+    }
+  })();
 
   function doLogin() {
     const username = document.getElementById('username').value.trim();

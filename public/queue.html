@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
+  <script src="/vendor/api-token.js"></script>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>ออกบัตรคิว</title>
   <script src="/socket.io/socket.io.js"></script>
   <script src="https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js"></script>
+  <script src="/vendor/jsbarcode.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700;900&family=Sarabun:wght@300;400;600;700&family=Prompt:wght@300;400;600;700&family=Mitr:wght@300;400;600;700&family=Noto+Sans+Thai:wght@300;400;600;700&display=swap');
     *{box-sizing:border-box;margin:0;padding:0}
@@ -14,12 +16,12 @@
       font-family:'Kanit','Segoe UI',sans-serif;
       min-height:100vh;
       background:
-        radial-gradient(ellipse 90% 70% at 0% 0%,   rgba(178,235,242,.55) 0%, transparent 55%),
-        radial-gradient(ellipse 70% 55% at 100% 0%,  rgba(0,172,193,.45)  0%, transparent 55%),
-        radial-gradient(ellipse 80% 65% at 50% 120%, rgba(0,60,75,.6)     0%, transparent 55%),
-        radial-gradient(ellipse 60% 50% at 100% 80%, rgba(0,105,125,.5)   0%, transparent 55%),
-        linear-gradient(145deg,#29b6c8 0%,#0097a7 45%,#00696f 100%);
-      color:#fff;display:flex;flex-direction:column;overflow-x:hidden;
+        radial-gradient(ellipse 90% 70% at 0% 0%,   rgba(255,255,255,.85) 0%, transparent 55%),
+        radial-gradient(ellipse 70% 55% at 100% 0%,  rgba(178,235,242,.9)  0%, transparent 55%),
+        radial-gradient(ellipse 80% 65% at 50% 120%, rgba(129,212,250,.55)     0%, transparent 55%),
+        radial-gradient(ellipse 60% 50% at 100% 80%, rgba(77,208,225,.4)   0%, transparent 55%),
+        linear-gradient(145deg,#e0f7fa 0%,#b2ebf2 45%,#80deea 100%);
+      color:#0d3a45;display:flex;flex-direction:column;overflow-x:hidden;
     }
 
     body::before{display:none}
@@ -27,33 +29,33 @@
     /* ── Nav ── */
     nav{
       position:relative;z-index:10;
-      background:rgba(0,50,70,0.45);backdrop-filter:blur(14px);
-      border-bottom:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.65);backdrop-filter:blur(14px);
+      border-bottom:1px solid rgba(13,58,69,.12);
       padding:0 20px;display:flex;align-items:center;height:48px;gap:4px;
     }
-    .nav-logo{font-size:.88rem;font-weight:900;color:#ffd54f;margin-right:14px;
+    .nav-logo{font-size:.88rem;font-weight:900;color:#00838f;margin-right:14px;
       text-decoration:none;white-space:nowrap;letter-spacing:1px}
-    nav a{color:rgba(255,255,255,.78);text-decoration:none;padding:4px 11px;
-      border-radius:16px;font-size:.78rem;transition:all .2s;white-space:nowrap}
-    nav a:hover{background:rgba(255,255,255,.15)}
-    nav a.active{background:rgba(255,255,255,.18);color:#fff}
-    .nav-officer{font-size:.74rem;color:rgba(255,255,255,.55);
+    nav a{color:rgba(13,58,69,.75);text-decoration:none;padding:4px 11px;
+      border-radius:16px;font-size:.78rem;font-weight:600;transition:all .2s;white-space:nowrap}
+    nav a:hover{background:rgba(0,151,167,.12)}
+    nav a.active{background:#00acc1;color:#fff}
+    .nav-officer{font-size:.74rem;color:rgba(13,58,69,.55);
       margin-left:auto;padding:0 4px;white-space:nowrap}
-    .btn-logout{background:rgba(239,83,80,.15);border:1px solid rgba(239,83,80,.25);
-      color:#ffcdd2;border-radius:16px;padding:4px 12px;font-size:.74rem;
+    .btn-logout{background:#fdecea;border:1px solid #f3b6b0;
+      color:#c62828;border-radius:16px;padding:4px 12px;font-size:.74rem;font-weight:600;
       cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap;margin-left:6px}
-    .btn-logout:hover{background:rgba(239,83,80,.3);color:#fff}
+    .btn-logout:hover{background:#f9d3ce}
     .nav-ipd-toggle{display:flex;align-items:center;gap:5px;cursor:pointer;
-      background:rgba(46,125,50,.18);border:1px solid rgba(129,199,132,.35);
+      background:rgba(46,125,50,.1);border:1px solid rgba(46,125,50,.3);
       border-radius:20px;padding:3px 10px 3px 8px;font-size:.78rem;
-      color:rgba(255,255,255,.85);white-space:nowrap;transition:all .2s;user-select:none}
-    .nav-ipd-toggle:hover{background:rgba(46,125,50,.32)}
-    .nav-ipd-toggle.active{background:rgba(46,125,50,.42);border-color:rgba(129,199,132,.65);color:#a5d6a7}
+      color:#2e7d32;white-space:nowrap;transition:all .2s;user-select:none}
+    .nav-ipd-toggle:hover{background:rgba(46,125,50,.18)}
+    .nav-ipd-toggle.active{background:rgba(46,125,50,.28);border-color:#66bb6a;color:#1b5e20}
     .nav-ipd-lbl{font-weight:700;font-size:.75rem}
     .nav-ipd-sw{position:relative;flex-shrink:0}
     .nav-ipd-sw input{opacity:0;width:0;height:0;position:absolute}
     .nav-ipd-knob{position:relative;width:32px;height:17px;
-      background:rgba(255,255,255,.18);border-radius:17px;transition:background .25s}
+      background:rgba(46,125,50,.25);border-radius:17px;transition:background .25s}
     .nav-ipd-knob::before{content:'';position:absolute;width:13px;height:13px;
       border-radius:50%;background:#fff;top:2px;left:2px;
       transition:transform .25s;box-shadow:0 1px 3px rgba(0,0,0,.4)}
@@ -79,43 +81,43 @@
     }
     .kiosk-logo{
       display:flex;align-items:center;gap:10px;flex-shrink:0;
-      background:rgba(0,0,0,.28);border:1.5px solid rgba(255,255,255,.15);
+      background:rgba(255,255,255,.7);border:1.5px solid rgba(0,151,167,.2);
       border-radius:14px;padding:10px 16px;min-width:150px;
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 3px 12px rgba(0,0,0,.3);
+      box-shadow:0 3px 12px rgba(0,151,167,.12);
     }
     .kiosk-logo-icon{font-size:2rem;line-height:1;flex-shrink:0}
-    .kiosk-logo-name{font-size:.68rem;color:rgba(255,255,255,.45);font-weight:400}
-    .kiosk-logo-sys{font-size:.92rem;color:#fff;font-weight:700}
+    .kiosk-logo-name{font-size:.68rem;color:rgba(13,58,69,.5);font-weight:400}
+    .kiosk-logo-sys{font-size:.92rem;color:#0d3a45;font-weight:700}
     .kiosk-title{
       flex:1;text-align:center;
-      font-size:1.9rem;font-weight:900;color:#fff;
-      text-shadow:0 2px 20px rgba(0,0,0,.35);letter-spacing:.5px;
+      font-size:1.9rem;font-weight:900;color:#00697f;
+      text-shadow:0 2px 12px rgba(0,151,167,.15);letter-spacing:.5px;
     }
     .kiosk-header-spacer{flex-shrink:0;min-width:150px}
 
     /* Metallic scanner frame */
     .kiosk-scanner-frame{
       position:relative;width:100%;max-width:680px;
-      background:#0b1820;border-radius:18px;
+      background:#eaf7fa;border-radius:18px;
       overflow:visible;margin-bottom:16px;
       box-shadow:
-        0 0 0 2px #1e3a50,
-        0 0 0 6px #080f14,
-        0 16px 60px rgba(0,0,0,.8),
-        inset 0 1px 0 rgba(255,255,255,.04);
+        0 0 0 2px #b2e0ea,
+        0 0 0 6px #ffffff,
+        0 16px 44px rgba(0,151,167,.2),
+        inset 0 1px 0 rgba(255,255,255,.6);
     }
     /* Corner rivets */
     .kiosk-scanner-frame::before{
       content:'';position:absolute;inset:0;z-index:4;pointer-events:none;border-radius:18px;
       background:
-        radial-gradient(circle 7px at 14px 14px,#2e4a5e 50%,transparent 50%),
-        radial-gradient(circle 7px at calc(100% - 14px) 14px,#2e4a5e 50%,transparent 50%),
-        radial-gradient(circle 7px at 14px calc(100% - 36px),#2e4a5e 50%,transparent 50%),
-        radial-gradient(circle 7px at calc(100% - 14px) calc(100% - 36px),#2e4a5e 50%,transparent 50%);
+        radial-gradient(circle 7px at 14px 14px,#8fd3e0 50%,transparent 50%),
+        radial-gradient(circle 7px at calc(100% - 14px) 14px,#8fd3e0 50%,transparent 50%),
+        radial-gradient(circle 7px at 14px calc(100% - 36px),#8fd3e0 50%,transparent 50%),
+        radial-gradient(circle 7px at calc(100% - 14px) calc(100% - 36px),#8fd3e0 50%,transparent 50%);
     }
     .kiosk-scanner-inner{
       position:relative;width:100%;aspect-ratio:16/8;
-      background:#050d12;border-radius:18px 18px 0 0;overflow:hidden;
+      background:#0b1820;border-radius:18px 18px 0 0;overflow:hidden;
     }
     #scanVideo{width:100%;height:100%;object-fit:cover;display:block}
 
@@ -132,16 +134,16 @@
     .no-camera{
       position:absolute;inset:0;display:flex;flex-direction:column;
       align-items:center;justify-content:center;gap:10px;
-      background:linear-gradient(180deg,#050d12,#0a1820);
-      color:rgba(255,255,255,.35);
+      background:linear-gradient(180deg,#0f232f,#0b1820);
+      color:rgba(255,255,255,.85);
     }
     .no-camera .nc-icon{font-size:4rem}
-    .no-camera span{font-size:.82rem;text-align:center;padding:0 20px}
+    .no-camera span{font-size:.85rem;text-align:center;padding:0 20px;font-weight:600}
     .no-camera.hidden{display:none}
 
     .kiosk-scan-statusbar{
-      background:#0d1e2a;border-top:1px solid #1a3040;
-      font-size:.78rem;color:rgba(255,255,255,.38);
+      background:#f0fbfd;border-top:1px solid #cdeef4;
+      font-size:.8rem;color:#00697f;font-weight:700;
       text-align:center;padding:8px 20px;min-height:32px;
       display:flex;align-items:center;justify-content:center;
       border-radius:0 0 18px 18px;
@@ -155,49 +157,49 @@
     .kiosk-pill{
       flex:1;min-width:170px;max-width:240px;
       display:flex;align-items:center;gap:10px;
-      background:rgba(0,0,0,.30);
-      border:1.5px solid rgba(255,255,255,.13);
+      background:rgba(255,255,255,.7);
+      border:1.5px solid rgba(0,151,167,.2);
       border-radius:14px;padding:12px 15px;
       cursor:pointer;user-select:none;transition:all .2s;
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 3px 12px rgba(0,0,0,.35);
+      box-shadow:0 3px 12px rgba(0,151,167,.1);
     }
-    .kiosk-pill:hover{border-color:rgba(255,255,255,.24);background:rgba(0,0,0,.42)}
+    .kiosk-pill:hover{border-color:rgba(0,151,167,.4);background:rgba(255,255,255,.9)}
     .kp-icon{font-size:1.35rem;flex-shrink:0}
     .kp-text{flex:1;min-width:0}
-    .kp-label{font-size:.84rem;font-weight:700;color:rgba(255,255,255,.88);display:block;white-space:nowrap}
+    .kp-label{font-size:.84rem;font-weight:700;color:#0d3a45;display:block;white-space:nowrap}
     .kp-sw{
       position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0;
     }
     .kp-sw input{opacity:0;width:0;height:0;position:absolute}
     .kp-knob{
       position:relative;width:48px;height:25px;
-      background:rgba(255,255,255,.14);border-radius:25px;transition:background .25s;
+      background:rgba(13,58,69,.15);border-radius:25px;transition:background .25s;
     }
     .kp-knob::before{
       content:'';position:absolute;width:19px;height:19px;border-radius:50%;
       background:#fff;top:3px;left:3px;
-      transition:transform .25s;box-shadow:0 2px 5px rgba(0,0,0,.4);
+      transition:transform .25s;box-shadow:0 2px 5px rgba(0,0,0,.25);
     }
     .kp-sw input:checked + .kp-knob{background:linear-gradient(135deg,#00e676,#00c853)}
     .kp-sw input:checked + .kp-knob::before{transform:translateX(23px)}
     .kp-onlbl{
       font-size:.58rem;font-weight:700;letter-spacing:.8px;
-      color:rgba(255,255,255,.25);transition:color .25s;
+      color:rgba(13,58,69,.35);transition:color .25s;
     }
-    .kp-sw input:checked ~ .kp-onlbl{color:#00e676}
+    .kp-sw input:checked ~ .kp-onlbl{color:#00897b}
 
     /* ── Help button ── */
     .btn-help-kiosk{
       position:fixed;bottom:16px;left:16px;z-index:51;
       display:flex;align-items:center;gap:8px;
-      background:rgba(0,0,0,.45);border:1.5px solid rgba(255,255,255,.18);
-      color:rgba(255,255,255,.7);border-radius:30px;
+      background:rgba(255,255,255,.75);border:1.5px solid rgba(0,151,167,.25);
+      color:#00697f;border-radius:30px;
       padding:8px 18px;font-size:.78rem;font-weight:700;
       cursor:pointer;font-family:'Kanit',sans-serif;
       backdrop-filter:blur(10px);transition:all .2s;
-      box-shadow:0 4px 16px rgba(0,0,0,.4);
+      box-shadow:0 4px 16px rgba(0,151,167,.15);
     }
-    .btn-help-kiosk:hover{border-color:rgba(255,255,255,.35);color:#fff}
+    .btn-help-kiosk:hover{border-color:rgba(0,151,167,.5);color:#00495a}
 
     /* legacy selectors kept for applyScreenConfig compatibility */
     .scan-title{display:none}
@@ -209,45 +211,44 @@
     .bottom-bar{
       position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:50;
       width:calc(100% - 32px);max-width:740px;
-      background:rgba(0,28,40,.78);
+      background:rgba(255,255,255,.85);
       backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
-      border:1px solid rgba(77,208,225,.32);
+      border:1px solid rgba(0,151,167,.28);
       border-radius:22px;
       padding:12px 14px;
       display:flex;align-items:stretch;gap:10px;
-      box-shadow:0 10px 44px rgba(0,0,0,.38),0 0 0 1px rgba(255,255,255,.04) inset;
+      box-shadow:0 10px 44px rgba(0,151,167,.18);
     }
 
     /* QN / HN field groups */
     .bar-field{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
     .bar-field-lbl{
       font-size:.6rem;font-weight:700;letter-spacing:1.8px;
-      color:rgba(77,208,225,.75);text-transform:uppercase;padding-left:4px;
+      color:#00838f;text-transform:uppercase;padding-left:4px;
     }
     .bar-sep{
-      width:1px;background:rgba(255,255,255,.1);
+      width:1px;background:rgba(0,151,167,.15);
       align-self:stretch;flex-shrink:0;margin:2px 0;
     }
 
     .bar-input{
       width:100%;min-width:0;
-      background:rgba(255,255,255,.08);
-      border:1.5px solid rgba(77,208,225,.28);
+      background:#f0fbfd;
+      border:1.5px solid rgba(0,151,167,.3);
       border-radius:12px;padding:12px 14px;
-      color:#fff;font-size:1.05rem;font-weight:700;
+      color:#0d3a45;font-size:1.05rem;font-weight:700;
       font-family:'Kanit',sans-serif;text-align:center;
       letter-spacing:2px;transition:border-color .2s,background .2s,box-shadow .2s;
     }
     .bar-input:focus{
-      outline:none;border-color:#4dd0e1;background:rgba(77,208,225,.1);
-      box-shadow:0 0 0 3px rgba(77,208,225,.14);
+      outline:none;border-color:#00acc1;background:#e0f7fa;
+      box-shadow:0 0 0 3px rgba(0,172,193,.15);
     }
-    .bar-input::placeholder{font-size:.78rem;letter-spacing:.5px;font-weight:300;color:rgba(255,255,255,.28)}
+    .bar-input::placeholder{font-size:.78rem;letter-spacing:.5px;font-weight:300;color:rgba(13,58,69,.32)}
     .bar-input.active-field{
-      border-color:rgba(77,208,225,.65);background:rgba(77,208,225,.1);
-      box-shadow:0 0 0 3px rgba(77,208,225,.1);
-    }
-    .bar-input.dim{opacity:.28;pointer-events:none}
+      border-color:#00acc1;background:#e0f7fa;
+      box-shadow:0 0 0 3px rgba(0,172,193,.12)}
+    .bar-input.dim{opacity:.35;pointer-events:none}
 
     .btn-bar-search{
       flex-shrink:0;align-self:stretch;
@@ -276,51 +277,76 @@
 
     .pt-card{
       width:100%;
-      background:rgba(255,255,255,.12);
-      border:1px solid rgba(255,255,255,.2);
+      background:rgba(255,255,255,.75);
+      border:1px solid rgba(0,151,167,.22);
       border-radius:20px;padding:16px 22px;
       display:flex;align-items:center;gap:16px;
       margin-bottom:22px;
       animation:fadeUp .35s cubic-bezier(.22,1,.36,1);
       backdrop-filter:blur(10px);
+      box-shadow:0 6px 24px rgba(0,151,167,.1);
     }
     .pt-ava{width:48px;height:48px;border-radius:14px;flex-shrink:0;
       background:linear-gradient(135deg,#00acc1,#00838f);
       display:flex;align-items:center;justify-content:center;font-size:1.4rem}
     .pt-body{flex:1;min-width:0}
-    .pt-name{font-size:1.02rem;font-weight:700;color:#fff;margin-bottom:6px;
+    .pt-name{font-size:1.05rem;font-weight:800;color:#0d3a45;margin-bottom:6px;
       white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .pt-tags{display:flex;gap:8px;flex-wrap:wrap}
     .pt-tag{display:inline-flex;align-items:center;gap:5px;
-      background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
-      border-radius:20px;padding:2px 10px;font-size:.74rem;color:rgba(255,255,255,.82)}
-    .pt-tag b{color:#fff;font-weight:700}
-    .btn-back{flex-shrink:0;background:rgba(255,255,255,.1);
-      border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.75);
-      border-radius:10px;padding:7px 15px;font-size:.78rem;font-weight:600;
+      background:#e0f7fa;border:1px solid rgba(0,151,167,.25);
+      border-radius:20px;padding:2px 10px;font-size:.76rem;color:#00697f;font-weight:600}
+    .pt-tag b{color:#0d3a45;font-weight:800}
+    .btn-back{flex-shrink:0;background:rgba(0,151,167,.08);
+      border:1px solid rgba(0,151,167,.25);color:#00697f;
+      border-radius:10px;padding:7px 15px;font-size:.78rem;font-weight:700;
       cursor:pointer;font-family:'Kanit',sans-serif;transition:all .2s;white-space:nowrap}
-    .btn-back:hover{background:rgba(255,255,255,.2);color:#fff}
+    .btn-back:hover{background:rgba(0,151,167,.18);color:#0d3a45}
 
-    .cards-lbl{font-size:.66rem;color:rgba(255,255,255,.5);letter-spacing:3px;
+    /* ── Drug summary card ── */
+    .drug-card{width:100%;background:rgba(255,255,255,.78);border:1px solid rgba(0,151,167,.22);
+      border-radius:16px;margin-bottom:18px;overflow:hidden;backdrop-filter:blur(8px);
+      animation:fadeUp .35s cubic-bezier(.22,1,.36,1);box-shadow:0 6px 24px rgba(0,151,167,.1)}
+    .drug-card-head{display:flex;align-items:center;gap:10px;padding:14px 18px;cursor:pointer;
+      transition:background .2s;user-select:none}
+    .drug-card-head:hover{background:rgba(0,151,167,.06)}
+    .drug-icon{font-size:1.5rem;flex-shrink:0}
+    .drug-summary{flex:1;font-size:1.15rem;font-weight:800;color:#0d3a45}
+    .drug-summary b{color:#e65100;font-size:1.6rem;font-weight:900}
+    .drug-toggle-arrow{color:rgba(13,58,69,.4);transition:transform .2s;font-size:1rem;flex-shrink:0}
+    .drug-card.open .drug-toggle-arrow{transform:rotate(180deg)}
+    .drug-list{display:none;max-height:320px;overflow-y:auto;padding:0 14px 14px}
+    .drug-card.open .drug-list{display:block}
+    .drug-item{background:#f0fbfd;border:1px solid rgba(0,151,167,.18);
+      border-radius:10px;padding:11px 14px;margin-bottom:7px}
+    .drug-item:last-child{margin-bottom:0}
+    .drug-item-name{font-size:1.05rem;font-weight:800;color:#0d3a45;margin-bottom:4px}
+    .drug-item-usage{font-size:.82rem;color:#3a6d78;margin-bottom:5px;line-height:1.45;font-weight:600}
+    .drug-item-meta{display:flex;gap:14px;font-size:.78rem;color:#5a8a94;font-weight:600}
+    .drug-item-meta b{color:#00838f;font-size:.85rem}
+    .drug-empty{text-align:center;color:rgba(13,58,69,.4);padding:14px;font-size:.8rem}
+
+    .cards-lbl{font-size:.7rem;color:#00697f;letter-spacing:3px;font-weight:700;
       text-align:center;margin-bottom:14px;width:100%;text-transform:uppercase}
     .cards-grid{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;width:100%}
     .q-card{
       position:relative;overflow:hidden;
-      background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);
+      background:rgba(255,255,255,.75);border:1px solid rgba(0,151,167,.22);
       border-radius:20px;padding:26px 22px;text-align:center;
       min-width:148px;flex:1;max-width:200px;
       cursor:pointer;transition:all .25s;backdrop-filter:blur(8px);
+      box-shadow:0 4px 18px rgba(0,151,167,.1);
     }
-    .q-card:hover{transform:translateY(-6px);background:rgba(255,255,255,.18);
-      border-color:rgba(255,255,255,.38);box-shadow:0 14px 36px rgba(0,0,0,.25)}
+    .q-card:hover{transform:translateY(-6px);background:#fff;
+      border-color:rgba(0,151,167,.4);box-shadow:0 14px 36px rgba(0,151,167,.22)}
     .q-card:active{transform:translateY(-2px)}
     .qc-icon{width:56px;height:56px;border-radius:15px;margin:0 auto 12px;
       display:flex;align-items:center;justify-content:center;
-      font-size:1.55rem;font-weight:900;color:#000;box-shadow:0 5px 18px rgba(0,0,0,.4)}
-    .qc-name{font-size:.95rem;font-weight:700;margin-bottom:8px}
-    .qc-wait{font-size:.74rem;color:rgba(255,255,255,.5)}
-    .qc-wait strong{font-size:.9rem;font-weight:800;color:#ffd54f}
-    .no-types{text-align:center;color:rgba(255,255,255,.42);padding:32px;font-size:.88rem}
+      font-size:1.55rem;font-weight:900;color:#000;box-shadow:0 5px 18px rgba(0,0,0,.22)}
+    .qc-name{font-size:.95rem;font-weight:800;margin-bottom:8px;color:#0d3a45}
+    .qc-wait{font-size:.76rem;color:#5a8a94;font-weight:600}
+    .qc-wait strong{font-size:.92rem;font-weight:800;color:#e65100}
+    .no-types{text-align:center;color:rgba(13,58,69,.4);padding:32px;font-size:.88rem}
 
     /* ── RESULT overlay ── */
     .result-overlay{
@@ -429,16 +455,6 @@
         </div>
       </label>
 
-      <label class="kiosk-pill" for="chkSkipResult">
-        <span class="kp-icon">🖨</span>
-        <div class="kp-text"><span class="kp-label">ปริ้นทันที</span></div>
-        <div class="kp-sw">
-          <input type="checkbox" id="chkSkipResult" onchange="onSkipResultChange()"/>
-          <div class="kp-knob"></div>
-          <span class="kp-onlbl">on</span>
-        </div>
-      </label>
-
       <label class="kiosk-pill" for="chkPrintEnabled">
         <span class="kp-icon">🎫</span>
         <div class="kp-text"><span class="kp-label">พิมพ์บัตรคิว</span></div>
@@ -469,6 +485,16 @@
       </div>
       <button class="btn-back" onclick="backToScanner()">← ค้นหาใหม่</button>
     </div>
+
+    <div class="drug-card" id="drugCard" style="display:none">
+      <div class="drug-card-head" onclick="toggleDrugList()">
+        <span class="drug-icon">💊</span>
+        <span class="drug-summary" id="drugSummary">กำลังโหลดรายการยา...</span>
+        <span class="drug-toggle-arrow" id="drugToggleArrow">▾</span>
+      </div>
+      <div class="drug-list" id="drugList"></div>
+    </div>
+
     <div class="cards-lbl">เลือกประเภทการให้บริการ</div>
     <div class="cards-grid" id="cardsGrid"><div class="no-types">กำลังโหลด...</div></div>
   </div>
@@ -533,14 +559,6 @@ function onAutoScanChange() {
   if (chkAutoScan.checked) startScanner(); else stopScanner();
 }
 
-// ── Skip result / instant print ───────────────────────────────────────────
-const chkSkipResult = document.getElementById('chkSkipResult');
-chkSkipResult.checked = localStorage.getItem('skipResult') === '1';
-
-function onSkipResultChange() {
-  localStorage.setItem('skipResult', chkSkipResult.checked ? '1' : '0');
-}
-
 // ── Print enabled toggle ──────────────────────────────────────────────────
 const chkPrintEnabled = document.getElementById('chkPrintEnabled');
 chkPrintEnabled.checked = localStorage.getItem('printEnabled') !== '0'; // default ON
@@ -573,7 +591,7 @@ function applyIpdMode() {
   if (navIpdToggle) navIpdToggle.classList.toggle('active', ipd);
   const frame = document.querySelector('.kiosk-scanner-frame');
   if (frame) frame.style.boxShadow = ipd
-    ? '0 0 0 2px #2e7d32, 0 0 0 6px #080f14, 0 16px 60px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.04)'
+    ? '0 0 0 2px #2e7d32, 0 0 0 6px #ffffff, 0 16px 44px rgba(46,125,50,.28), inset 0 1px 0 rgba(255,255,255,.6)'
     : '';
   // ย้าย cursor ไปยัง field ที่เหมาะสมกับ mode
   const onScan = document.getElementById('scannerStep') &&
@@ -850,6 +868,7 @@ function doLookup() {
       }
       stopScanner();
       showStep('type');
+      if (!isIpdResult) loadPatientDrugs(d.patient.vn);
       if (d.patient.autoTypeId) {
         setTimeout(() => getQueue(d.patient.autoTypeId), 180);
       }
@@ -867,6 +886,56 @@ function doLookup() {
     btn.disabled = false;
     btn.innerHTML = '<span class="si">🔍</span><span class="st">ค้นหา</span>';
   });
+}
+
+// ── Patient drug list ────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function toggleDrugList() {
+  const card = document.getElementById('drugCard');
+  if (card) card.classList.toggle('open');
+}
+
+function loadPatientDrugs(vn) {
+  const card      = document.getElementById('drugCard');
+  const summaryEl = document.getElementById('drugSummary');
+  const listEl    = document.getElementById('drugList');
+  if (!card || !summaryEl || !listEl) return;
+  if (!vn) { card.style.display = 'none'; return; }
+
+  card.style.display = '';
+  card.classList.remove('open');
+  summaryEl.innerHTML = '⏳ กำลังโหลดรายการยา...';
+  listEl.innerHTML = '';
+
+  fetch('/api/patient-drugs', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ vn })
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (!d.success) { summaryEl.innerHTML = '⚠ โหลดรายการยาไม่สำเร็จ'; return; }
+    const items = d.items || [];
+    if (!items.length) {
+      summaryEl.innerHTML = '💊 ไม่มีรายการยา';
+      listEl.innerHTML = '';
+      return;
+    }
+    summaryEl.innerHTML = `💊 มียา <b>${items.length}</b> รายการ`;
+    listEl.innerHTML = items.map(it => `
+      <div class="drug-item">
+        <div class="drug-item-name">${escHtml(it.drugName || '(ไม่ระบุชื่อยา)')}</div>
+        ${it.usage ? `<div class="drug-item-usage">📋 ${escHtml(it.usage)}</div>` : ''}
+        <div class="drug-item-meta">
+          <span>จำนวน: <b>${it.qty ?? '-'}</b></span>
+          <span>ราคา: <b>${it.price != null ? Number(it.price).toLocaleString('th-TH', {minimumFractionDigits:2, maximumFractionDigits:2}) : '-'}</b> บาท</span>
+        </div>
+      </div>
+    `).join('');
+  })
+  .catch(() => { summaryEl.innerHTML = '⚠ เกิดข้อผิดพลาดในการโหลดรายการยา'; });
 }
 
 // ── Steps ─────────────────────────────────────────────────────────────────
@@ -889,6 +958,8 @@ function backToScanner() {
     : 'พร้อมรับบัตรคิว — ยิงบาร์โค้ด HN หรือกรอกข้อมูลด้านล่าง');
   const pttypeTag = document.getElementById('ptPttypeTag');
   if (pttypeTag) pttypeTag.style.display = 'none';
+  const drugCard = document.getElementById('drugCard');
+  if (drugCard) { drugCard.style.display = 'none'; drugCard.classList.remove('open'); }
   showStep('scanner');
   if (chkAutoScan.checked) setTimeout(() => startScanner(), 400);
   // Focus ช่องที่เหมาะกับ mode ปัจจุบัน
@@ -1068,7 +1139,7 @@ function renderSlipHtml(cfg, d) {
     ? `<div style="border-top:1px dashed #888;margin:5px 0"></div>` : '';
   const ffStyle = cfg.fontFamily ? `font-family:'${cfg.fontFamily}',sans-serif;` : '';
 
-  const DEFAULT_ORDER = ['header','patientName','hnQn','queueType','queueNum','dateTime','footer'];
+  const DEFAULT_ORDER = ['header','patientName','hnQn','queueType','queueNum','barcode','dateTime','footer'];
 
   const builders = {
     header: () => {
@@ -1098,6 +1169,16 @@ function renderSlipHtml(cfg, d) {
     dateTime: () => {
       if (!cfg.showDateTime) return '';
       return `<div style="font-size:${cfg.dateFontSize||9}pt;color:#555;text-align:center;margin:2px 0">${d.date} · ${d.issuedAt}</div>`;
+    },
+    barcode: () => {
+      if (!cfg.showBarcode) return '';
+      const val = cfg.barcodeSource === 'hn' ? d.hn : (d.qn || d.display);
+      if (!val || typeof JsBarcode === 'undefined') return '';
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      try {
+        JsBarcode(svg, String(val), { format:'CODE128', displayValue:true, fontSize:11, height:36, margin:4 });
+      } catch (e) { return ''; }
+      return `<div style="text-align:center;margin:4px 0">${svg.outerHTML}</div>`;
     },
     footer: () => {
       if (!cfg.showFooter || !cfg.footerText) return '';
@@ -1199,23 +1280,8 @@ function getQueue(typeId) {
   }).then(r => r.json()).then(d => {
     if (!d.success) { setStatus('✗ ' + (d.message || 'เกิดข้อผิดพลาด'), '#c62828'); setTimeout(() => setStatus('กดปุ่มด้านล่างเพื่อเริ่มสแกน'), 3000); showStep('scanner'); return; }
     const t = d.ticket;
-
-    if (chkSkipResult.checked) {
-      doPrint(t);
-      backToScanner();
-    } else {
-      document.getElementById('resPrefix').style.background = t.color;
-      document.getElementById('resPrefix').textContent      = t.prefix;
-      document.getElementById('resTypeName').textContent    = t.typeName;
-      document.getElementById('resNum').textContent         = t.display;
-      document.getElementById('resTime').textContent        = `วันที่ ${t.date}  ·  เวลา ${t.issuedAt}`;
-      const ptNameEl = document.getElementById('resPtName');
-      if (currentPatient) { ptNameEl.textContent = currentPatient.name; ptNameEl.style.display = ''; }
-      else ptNameEl.style.display = 'none';
-      showStep('result');
-      document.getElementById('resultOverlay').classList.add('show');
-      doPrint(t);
-    }
+    doPrint(t);
+    backToScanner();
   }).catch(() => {
     setStatus('✗ เกิดข้อผิดพลาดในการออกคิว', '#c62828');
     setTimeout(() => setStatus('กดปุ่มด้านล่างเพื่อเริ่มสแกน'), 3000);
@@ -1227,35 +1293,6 @@ function closeResult() {
   document.getElementById('resultOverlay').classList.remove('show');
   backToScanner();
 }
-</script>
-<div id="_uiPnl" style="position:fixed;bottom:16px;right:16px;z-index:10000;font-family:'Segoe UI',Tahoma,sans-serif">
-  <button onclick="_uiToggle()" title="ปรับสีหน้าจอ" style="width:40px;height:40px;border-radius:50%;border:1.5px solid rgba(255,255,255,.25);background:rgba(13,31,51,.85);color:#90caf9;font-size:1.1rem;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)">🎨</button>
-  <div id="_uiBox" style="display:none;position:absolute;bottom:48px;right:0;width:220px;background:#0d1f33;border:1px solid #1e3a5f;border-radius:14px;padding:14px 16px;box-shadow:0 4px 20px rgba(0,0,0,.6)">
-    <div style="font-size:.8rem;color:#90caf9;font-weight:700;margin-bottom:12px">🎨 ปรับสีหน้าจอ</div>
-    <div style="margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between;font-size:.72rem;color:#ccc;margin-bottom:4px"><span>☀ ความสว่าง</span><span id="_brLbl" style="color:#ffd54f;font-weight:700">1.00</span></div>
-      <input id="_brSlider" type="range" min="0.4" max="1.6" step="0.05" value="1" style="width:100%;accent-color:#ffd54f;cursor:pointer"/>
-    </div>
-    <div style="margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;font-size:.72rem;color:#ccc;margin-bottom:4px"><span>🎨 ความสด</span><span id="_stLbl" style="color:#80deea;font-weight:700">1.20</span></div>
-      <input id="_stSlider" type="range" min="0.3" max="2.5" step="0.05" value="1.2" style="width:100%;accent-color:#80deea;cursor:pointer"/>
-    </div>
-    <button onclick="_uiReset()" style="width:100%;background:rgba(255,255,255,.06);border:1px solid #1e3a5f;color:#90caf9;border-radius:8px;padding:6px;font-size:.75rem;cursor:pointer;font-family:inherit">↺ รีเซ็ต</button>
-  </div>
-</div>
-<script>
-(function(){
-  var BK='qf_brightness',SK='qf_saturation';
-  function _applyV(b,s){b=parseFloat(b)||1;s=parseFloat(s)||1.2;localStorage.setItem(BK,b);localStorage.setItem(SK,s);document.body.style.filter='brightness('+b+') saturate('+s+')';var bl=document.getElementById('_brLbl'),sl=document.getElementById('_stLbl'),bs=document.getElementById('_brSlider'),ss=document.getElementById('_stSlider');if(bl)bl.textContent=b.toFixed(2);if(bs)bs.value=b;if(sl)sl.textContent=s.toFixed(2);if(ss)ss.value=s;}
-  window._applyGlobalColor=_applyV;
-  function _applyF(){_applyV(parseFloat(localStorage.getItem(BK)||'1'),parseFloat(localStorage.getItem(SK)||'1.2'));}
-  _applyF();
-  fetch('/api/global-config').then(function(r){return r.json();}).then(function(d){if(d&&d.brightness!=null)_applyV(d.brightness,d.saturation);}).catch(function(){});
-  window._uiToggle=function(){var b=document.getElementById('_uiBox');b.style.display=b.style.display==='none'?'block':'none';};
-  window._uiReset=function(){_applyV(1,1.2);fetch('/api/global-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({brightness:1,saturation:1.2})}).catch(function(){});};
-  document.addEventListener('DOMContentLoaded',function(){_applyF();document.getElementById('_brSlider').oninput=function(){var b=parseFloat(this.value),s=parseFloat(localStorage.getItem(SK)||'1.2');_applyV(b,s);fetch('/api/global-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({brightness:b,saturation:s})}).catch(function(){});};document.getElementById('_stSlider').oninput=function(){var b=parseFloat(localStorage.getItem(BK)||'1'),s=parseFloat(this.value);_applyV(b,s);fetch('/api/global-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({brightness:b,saturation:s})}).catch(function(){});};});
-})();
-if(typeof socket!=='undefined')socket.on('global_config_updated',d=>{if(window._applyGlobalColor&&d&&d.brightness!=null)window._applyGlobalColor(d.brightness,d.saturation);});
 </script>
 </body>
 </html>

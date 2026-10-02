@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "name": "ทั่วไป",
+    "prefix": "A",
+    "color": "#42a5f5"
+  },
+  {
+    "id": 2,
+    "name": "ปิดสิทธิ",
+    "prefix": "F",
+    "color": "#66bb6a"
+  },
+  {
+    "id": 3,
+    "name": "IPD",
+    "prefix": "I",
+    "color": "#ef5350"
+  }
+]

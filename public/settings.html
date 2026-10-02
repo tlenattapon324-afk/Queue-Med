@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
+  <script src="/vendor/api-token.js"></script>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>ตั้งค่า</title>
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/vendor/jsbarcode.min.js"></script>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'Segoe UI',Tahoma,sans-serif;background:#0f1923;min-height:100vh;color:#fff}
@@ -641,6 +643,25 @@
             </div></div>
         </div>
 
+        <!-- Barcode -->
+        <div class="pd-section">
+          <div class="pd-sec-title">📊 บาร์โค้ด</div>
+          <label class="pd-ck"><input type="checkbox" id="pdShowBarcode" onchange="togglePdSection('pdBarcodeFields',this);updatePreview()"><span>แสดงบาร์โค้ดบนบัตรคิว</span></label>
+          <div id="pdBarcodeFields">
+            <div class="pd-field"><label>ข้อมูลที่ใช้สร้างบาร์โค้ด</label>
+              <div style="display:flex;gap:16px;margin-top:6px">
+                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:.82rem;color:#cfd8dc">
+                  <input type="radio" name="pdBarcodeSrc" id="pdBarcodeQn" value="qn" onchange="updatePreview()" checked> QN (หมายเลขคิว จาก ovst.oqueue)
+                </label>
+                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:.82rem;color:#cfd8dc">
+                  <input type="radio" name="pdBarcodeSrc" id="pdBarcodeHn" value="hn" onchange="updatePreview()"> HN (เลขประจำตัวผู้ป่วย จาก ovst.hn)
+                </label>
+              </div>
+              <div class="pd-hint" style="margin-top:6px">💡 บาร์โค้ดจะไม่แสดงถ้าคิวนั้นไม่มีข้อมูล HN/QN (เช่น ออกคิวแบบไม่ผูกผู้ป่วย)</div>
+            </div>
+          </div>
+        </div>
+
         <!-- Footer -->
         <div class="pd-section">
           <div class="pd-sec-title">📝 ข้อความท้าย</div>
@@ -957,20 +978,11 @@
         <div><b style="color:#80deea">④</b> &nbsp;ข้อมูลคิวจะ <b style="color:#fff">ซิงค์แบบ Real-time</b> ทันทีที่มีการออกหรือเรียกคิว</div>
       </div>
 
-      <div class="net-section-title" style="margin-top:22px">ติดตั้งเสียงภาษาไทย (สำหรับเครื่อง Client)</div>
-      <div style="background:rgba(255,213,79,.06);border:1px solid rgba(255,213,79,.2);border-radius:12px;padding:16px 20px">
-        <div style="font-size:.85rem;color:rgba(255,255,255,.7);margin-bottom:12px;line-height:1.7">
-          หน้าแสดงคิว (<b style="color:#fff">display</b>) ใช้เสียงพูดภาษาไทย (TTS) เพื่อประกาศหมายเลขคิว<br>
-          หากเครื่อง Client ไม่มีเสียงภาษาไทย — ให้ดาวน์โหลดและรัน <b style="color:#ffd54f">Setup_Sound.exe</b> บนเครื่องนั้น
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-          <a id="soundSetupLink" href="/download/Setup_Sound.exe"
-             style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#f9a825,#e65100);
-             color:#fff;text-decoration:none;border-radius:10px;padding:10px 20px;font-size:.88rem;font-weight:700;
-             transition:opacity .2s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
-            ⬇ ดาวน์โหลด Setup_Sound.exe
-          </a>
-          <span style="font-size:.78rem;color:rgba(255,255,255,.45)">ต้องการ Windows 10/11 + สิทธิ์ Admin + อินเทอร์เน็ต</span>
+      <div class="net-section-title" style="margin-top:22px">เสียงประกาศเรียกคิว</div>
+      <div style="background:rgba(102,187,106,.06);border:1px solid rgba(102,187,106,.2);border-radius:12px;padding:16px 20px">
+        <div style="font-size:.85rem;color:rgba(255,255,255,.7);line-height:1.7">
+          🌐 <b style="color:#a5d6a7">หน้าแสดงคิว (display) ใช้เสียง Google Translate</b> ในการประกาศหมายเลขคิวโดยอัตโนมัติ — ไม่ต้องติดตั้งเสียงเพิ่มที่เครื่อง Client เลย<br>
+          <span style="color:rgba(255,255,255,.45);font-size:.78rem">ต้องการอินเทอร์เน็ตขณะประกาศคิว (เสียงจะถูกแคชไว้ที่เซิร์ฟเวอร์เพื่อความเร็วในครั้งถัดไป)</span>
         </div>
       </div>
 
@@ -1478,13 +1490,14 @@ const PD_SAMPLE = {
 };
 let pdCurrentSize = '80mm';
 let pdSysName = '';
-let pdLayoutOrder = ['header', 'patientName', 'hnQn', 'queueType', 'queueNum', 'dateTime', 'footer'];
+let pdLayoutOrder = ['header', 'patientName', 'hnQn', 'queueType', 'queueNum', 'barcode', 'dateTime', 'footer'];
 const pdLayoutItems = {
   'header': { label: '📋 ส่วนหัว', icon: '📋' },
   'patientName': { label: '👤 ชื่อผู้ป่วย', icon: '👤' },
   'hnQn': { label: '🔍 HN/QN', icon: '🔍' },
   'queueType': { label: '🏷 ประเภทคิว', icon: '🏷' },
   'queueNum': { label: '🔢 หมายเลขคิว', icon: '🔢' },
+  'barcode': { label: '📊 บาร์โค้ด', icon: '📊' },
   'dateTime': { label: '📅 วันที่/เวลา', icon: '📅' },
   'footer': { label: '📝 ข้อความท้าย', icon: '📝' },
 };
@@ -1570,9 +1583,17 @@ function applyPrintCfgToForm(cfg) {
     pdFontSel.insertAdjacentHTML('afterbegin', `<option value="${ff}">${ff}</option>`);
   }
   pdFontSel.value = ff;
+  // Barcode
+  const sbc = !!cfg.showBarcode;
+  document.getElementById('pdShowBarcode').checked = sbc;
+  const bcSrc = cfg.barcodeSource === 'hn' ? 'hn' : 'qn';
+  const bcSrcEl = document.getElementById(bcSrc === 'hn' ? 'pdBarcodeHn' : 'pdBarcodeQn');
+  if (bcSrcEl) bcSrcEl.checked = true;
+  togglePdSection('pdBarcodeFields', { checked: sbc });
   // Layout Order
   if (cfg.layoutOrder && cfg.layoutOrder.length) {
     pdLayoutOrder = cfg.layoutOrder;
+    if (!pdLayoutOrder.includes('barcode')) pdLayoutOrder.push('barcode');
   }
   renderLayoutOrder();
 }
@@ -1596,6 +1617,8 @@ function collectPrintCfg() {
     queueTypePosition: document.querySelector('input[name="pdTypePos"]:checked')?.value || 'above',
     queueNumFontSize: Number(document.getElementById('pdNumFs').value),
     showDateTime:     document.getElementById('pdShowDt').checked,
+    showBarcode:      document.getElementById('pdShowBarcode').checked,
+    barcodeSource:    document.querySelector('input[name="pdBarcodeSrc"]:checked')?.value || 'qn',
     showFooter:       document.getElementById('pdShowFooter').checked,
     footerText:       document.getElementById('pdFooterText').value,
     footerFontSize:   Number(document.getElementById('pdFooterFs').value),
@@ -1719,6 +1742,16 @@ function renderSlipHtml(cfg, d) {
     'dateTime': () => {
       if (!cfg.showDateTime) return '';
       return `<div style="font-size:${cfg.dateFontSize||9}pt;color:#555;text-align:center;margin:2px 0">${d.date} · ${d.issuedAt}</div>`;
+    },
+    'barcode': () => {
+      if (!cfg.showBarcode) return '';
+      const val = cfg.barcodeSource === 'hn' ? d.hn : (d.qn || d.display);
+      if (!val || typeof JsBarcode === 'undefined') return '';
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      try {
+        JsBarcode(svg, String(val), { format:'CODE128', displayValue:true, fontSize:11, height:36, margin:4 });
+      } catch (e) { return ''; }
+      return `<div style="text-align:center;margin:4px 0">${svg.outerHTML}</div>`;
     },
     'footer': () => {
       if (!cfg.showFooter || !cfg.footerText) return '';

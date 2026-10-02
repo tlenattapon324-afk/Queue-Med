@@ -91,13 +91,59 @@
     .tbl-msg{border-radius:10px;padding:10px 14px;font-size:.84rem;margin-top:12px;display:none;line-height:1.5}
     .tbl-msg.ok{background:rgba(102,187,106,.1);border:1px solid rgba(102,187,106,.3);color:#a5d6a7;display:block}
     .tbl-msg.fail{background:rgba(239,83,80,.1);border:1px solid rgba(239,83,80,.3);color:#ef9a9a;display:block}
+
+    /* Admin login gate */
+    .gate-overlay{position:fixed;inset:0;background:#0f1923;z-index:500;
+      display:flex;align-items:center;justify-content:center}
+    .gate-overlay.hide{display:none}
+    .gate-card{width:100%;max-width:360px;background:#1a2a3a;border:1px solid #1e3a5f;
+      border-radius:16px;padding:32px 30px;margin:0 20px}
+    .gate-title{text-align:center;margin-bottom:22px}
+    .gate-icon{font-size:2.2rem;margin-bottom:8px}
+    .gate-title h2{font-size:1.02rem;color:#ffd54f;font-weight:700}
+    .gate-title p{font-size:.78rem;color:#546e7a;margin-top:4px}
+    .gate-err{background:rgba(239,83,80,.12);border:1px solid rgba(239,83,80,.35);
+      color:#ef9a9a;border-radius:10px;padding:10px 14px;font-size:.84rem;
+      margin-top:12px;display:none;line-height:1.5}
+    .gate-err.show{display:block}
+    .btn-gate-login{width:100%;background:linear-gradient(135deg,#42a5f5,#1565c0);color:#fff;
+      border:none;border-radius:12px;padding:13px;font-size:.9rem;font-weight:700;
+      cursor:pointer;font-family:inherit;transition:opacity .2s;margin-top:6px}
+    .btn-gate-login:hover{opacity:.88}
+    .btn-gate-login:disabled{opacity:.5;cursor:not-allowed}
+    .btn-logout{background:none;border:1px solid #1e3a5f;color:#546e7a;
+      border-radius:20px;padding:6px 14px;font-size:.82rem;cursor:pointer;
+      font-family:inherit;transition:all .2s;margin-left:auto}
+    .btn-logout:hover{border-color:#ef5350;color:#ef9a9a}
   </style>
 </head>
 <body>
 
+<!-- Admin login gate -->
+<div class="gate-overlay" id="gateOverlay">
+  <div class="gate-card">
+    <div class="gate-title">
+      <div class="gate-icon">🔐</div>
+      <h2>เข้าสู่ระบบผู้ดูแล</h2>
+      <p>สำหรับตั้งค่าการเชื่อมต่อฐานข้อมูล</p>
+    </div>
+    <div class="field">
+      <label>ชื่อผู้ใช้</label>
+      <input type="text" id="gateUser" placeholder="username" autocomplete="username"/>
+    </div>
+    <div class="field">
+      <label>รหัสผ่าน</label>
+      <input type="password" id="gatePass" placeholder="password" autocomplete="current-password"/>
+    </div>
+    <div class="gate-err" id="gateErr"></div>
+    <button class="btn-gate-login" id="gateLoginBtn" onclick="gateLogin()">เข้าสู่ระบบ</button>
+  </div>
+</div>
+
 <header>
   <a href="/login.html" class="back-btn">← กลับหน้าเข้าสู่ระบบ</a>
   <h1>⚙ ตั้งค่าการเชื่อมต่อฐานข้อมูล</h1>
+  <button class="btn-logout" id="adminLogoutBtn" style="display:none" onclick="gateLogout()">⏻ ออกจากระบบผู้ดูแล</button>
 </header>
 
 <div class="page">
@@ -148,6 +194,25 @@
       <button class="btn-save" id="saveBtn" onclick="saveConn()">💾 บันทึกข้อมูลเชื่อมต่อ</button>
     </div>
   </div>
+
+  <!-- API Token card -->
+  <div class="card">
+    <div class="card-title">API Token ป้องกันการเรียกข้อมูลจากภายนอก</div>
+    <div class="field">
+      <label>รหัสสถานพยาบาล</label>
+      <input type="text" id="hospitalCode" placeholder="เช่น 10670"/>
+      <small>Token จะขึ้นต้นด้วยรหัสนี้ ตามด้วยรหัส gen อีก 10 หลัก</small>
+    </div>
+    <div class="field">
+      <label>Token ปัจจุบัน</label>
+      <input type="text" id="apiToken" placeholder="ยังไม่ได้สร้าง Token" readonly/>
+      <small>หน้าจอของระบบใช้ Token นี้แนบให้อัตโนมัติ ไม่ต้องกรอกเอง — ใช้สำหรับใส่ใน Header <code>X-Queue-Token</code> เวลาเรียก API จากภายนอก (เช่น Postman) เท่านั้น</small>
+    </div>
+    <div class="actions">
+      <button class="btn-save" id="genTokenBtn" onclick="genToken()" style="flex:none;padding:13px 24px">🔑 สร้าง Token ใหม่</button>
+    </div>
+  </div>
+
   <!-- Table creation card -->
   <div class="card" id="tableCard" style="display:none">
     <div class="card-title">ตารางในฐานข้อมูล</div>
@@ -172,6 +237,76 @@
 
 <script>
   let dbType = 'mysql';
+
+  // ── Admin login gate ──────────────────────────────────────────────────
+  // ไม่จำ session ไว้ที่ไหนเลย (ไม่ใช้ sessionStorage/localStorage) — ต้อง login ใหม่ทุกครั้งที่เข้าหน้านี้
+  let adminToken = '';
+
+  function adminHeaders(extra) {
+    return Object.assign({ 'X-Admin-Token': adminToken }, extra || {});
+  }
+
+  function showGate() {
+    document.getElementById('gateOverlay').classList.remove('hide');
+    document.getElementById('adminLogoutBtn').style.display = 'none';
+    setTimeout(() => document.getElementById('gateUser').focus(), 50);
+  }
+
+  function hideGate() {
+    document.getElementById('gateOverlay').classList.add('hide');
+    document.getElementById('adminLogoutBtn').style.display = '';
+  }
+
+  function gateLogin() {
+    const username = document.getElementById('gateUser').value.trim();
+    const password = document.getElementById('gatePass').value;
+    const btn    = document.getElementById('gateLoginBtn');
+    const errEl  = document.getElementById('gateErr');
+    errEl.classList.remove('show');
+    if (!username || !password) {
+      errEl.textContent = 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน';
+      errEl.classList.add('show');
+      return;
+    }
+    btn.disabled = true;
+    btn.textContent = 'กำลังเข้าสู่ระบบ...';
+    fetch('/api/admin/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    })
+    .then(r => r.json())
+    .then(d => {
+      if (d.success) {
+        adminToken = d.token;
+        hideGate();
+        initPage();
+      } else {
+        errEl.textContent = d.message || 'เข้าสู่ระบบไม่สำเร็จ';
+        errEl.classList.add('show');
+      }
+    })
+    .catch(() => {
+      errEl.textContent = 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง';
+      errEl.classList.add('show');
+    })
+    .finally(() => {
+      btn.disabled = false;
+      btn.textContent = 'เข้าสู่ระบบ';
+    });
+  }
+
+  function gateLogout() {
+    fetch('/api/admin/logout', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: adminToken })
+    }).catch(() => {});
+    adminToken = '';
+    showGate();
+  }
+
+  document.getElementById('gatePass').addEventListener('keydown', e => {
+    if (e.key === 'Enter') gateLogin();
+  });
 
   function setType(t) {
     dbType = t;
@@ -198,7 +333,37 @@
       database: document.getElementById('database').value.trim(),
       username: document.getElementById('dbUser').value.trim(),
       password: document.getElementById('dbPass').value,
+      hospitalCode: document.getElementById('hospitalCode').value.trim(),
     };
+  }
+
+  function genToken() {
+    const hospitalCode = document.getElementById('hospitalCode').value.trim();
+    if (!hospitalCode) {
+      toast('กรุณากรอกรหัสสถานพยาบาลก่อน');
+      return;
+    }
+    const btn = document.getElementById('genTokenBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>กำลังสร้าง...';
+    fetch('/api/db-config/gen-token', {
+      method: 'POST', headers: adminHeaders({'Content-Type':'application/json'}),
+      body: JSON.stringify({ hospitalCode })
+    })
+    .then(r => r.json())
+    .then(d => {
+      if (d.success) {
+        document.getElementById('apiToken').value = d.apiToken;
+        toast('สร้าง Token สำเร็จ');
+      } else {
+        toast(d.message || 'สร้าง Token ไม่สำเร็จ');
+      }
+    })
+    .catch(() => toast('เกิดข้อผิดพลาดในการสร้าง Token'))
+    .finally(() => {
+      btn.disabled = false;
+      btn.innerHTML = '🔑 สร้าง Token ใหม่';
+    });
   }
 
   function testConn() {
@@ -215,7 +380,7 @@
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span>กำลังทดสอบ...';
     fetch('/api/db-config/test', {
-      method: 'POST', headers: {'Content-Type':'application/json'},
+      method: 'POST', headers: adminHeaders({'Content-Type':'application/json'}),
       body: JSON.stringify(data)
     })
     .then(r => r.json())
@@ -245,17 +410,30 @@
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span>กำลังบันทึก...';
     fetch('/api/db-config/save', {
-      method: 'POST', headers: {'Content-Type':'application/json'},
+      method: 'POST', headers: adminHeaders({'Content-Type':'application/json'}),
       body: JSON.stringify(data)
     })
     .then(r => r.json())
     .then(d => {
       if (d.success) {
-        toast('บันทึกสำเร็จ');
-        btn.disabled = false;
-        btn.textContent = '💾 บันทึกข้อมูลเชื่อมต่อ';
+        btn.innerHTML = '<span class="spinner"></span>กำลังตรวจสอบตาราง...';
         document.getElementById('tableCard').style.display = 'block';
-        checkTables();
+        return fetch('/api/db/migrate', { method: 'POST', headers: adminHeaders() })
+          .then(r => r.json())
+          .then(m => {
+            if (m.success) {
+              renderTableStatus(m.tables);
+              toast('บันทึกสำเร็จ กำลังกลับไปหน้าเข้าสู่ระบบ...');
+              setTimeout(() => location.href = '/login.html', 1200);
+            } else {
+              btn.disabled = false;
+              btn.textContent = '💾 บันทึกข้อมูลเชื่อมต่อ';
+              const msgEl = document.getElementById('tblMsg');
+              msgEl.textContent = '✗ บันทึกข้อมูลเชื่อมต่อสำเร็จ แต่สร้างตารางไม่สำเร็จ: ' + (m.message || '');
+              msgEl.className = 'tbl-msg fail';
+              checkTables();
+            }
+          });
       } else {
         btn.disabled = false;
         btn.textContent = '💾 บันทึกข้อมูลเชื่อมต่อ';
@@ -289,7 +467,7 @@
   }
 
   function checkTables() {
-    fetch('/api/db/check-tables').then(r => r.json()).then(d => {
+    fetch('/api/db/check-tables', { headers: adminHeaders() }).then(r => r.json()).then(d => {
       if (d.tables) {
         renderTableStatus(d.tables);
       } else {
@@ -323,7 +501,7 @@
     btn.className = 'btn-migrate done';
     btn.innerHTML = '<span class="spinner"></span>กำลังสร้างตาราง...';
     msgEl.className = 'tbl-msg'; msgEl.textContent = '';
-    fetch('/api/db/migrate', { method: 'POST' })
+    fetch('/api/db/migrate', { method: 'POST', headers: adminHeaders() })
       .then(r => r.json())
       .then(d => {
         if (d.success) {
@@ -347,48 +525,26 @@
       });
   }
 
-  // Load existing config on page load
-  fetch('/api/db-config').then(r => r.json()).then(cfg => {
-    if (cfg.type) setType(cfg.type);
-    if (cfg.host)     document.getElementById('host').value     = cfg.host;
-    if (cfg.port)     document.getElementById('port').value     = cfg.port;
-    if (cfg.database) document.getElementById('database').value = cfg.database;
-    if (cfg.username) document.getElementById('dbUser').value   = cfg.username;
-    if (cfg.password) document.getElementById('dbPass').value   = cfg.password;
-    if (cfg.host && cfg.database) {
-      document.getElementById('tableCard').style.display = 'block';
-      checkTables();
-    }
-  });
-</script>
-<div id="_uiPnl" style="position:fixed;bottom:16px;right:16px;z-index:10000;font-family:'Segoe UI',Tahoma,sans-serif">
-  <button onclick="_uiToggle()" title="ปรับสีหน้าจอ" style="width:40px;height:40px;border-radius:50%;border:1.5px solid rgba(255,255,255,.25);background:rgba(13,31,51,.85);color:#90caf9;font-size:1.1rem;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)">🎨</button>
-  <div id="_uiBox" style="display:none;position:absolute;bottom:48px;right:0;width:220px;background:#0d1f33;border:1px solid #1e3a5f;border-radius:14px;padding:14px 16px;box-shadow:0 4px 20px rgba(0,0,0,.6)">
-    <div style="font-size:.8rem;color:#90caf9;font-weight:700;margin-bottom:12px">🎨 ปรับสีหน้าจอ</div>
-    <div style="margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between;font-size:.72rem;color:#ccc;margin-bottom:4px"><span>☀ ความสว่าง</span><span id="_brLbl" style="color:#ffd54f;font-weight:700">1.00</span></div>
-      <input id="_brSlider" type="range" min="0.4" max="1.6" step="0.05" value="1" style="width:100%;accent-color:#ffd54f;cursor:pointer"/>
-    </div>
-    <div style="margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;font-size:.72rem;color:#ccc;margin-bottom:4px"><span>🎨 ความสด</span><span id="_stLbl" style="color:#80deea;font-weight:700">1.20</span></div>
-      <input id="_stSlider" type="range" min="0.3" max="2.5" step="0.05" value="1.2" style="width:100%;accent-color:#80deea;cursor:pointer"/>
-    </div>
-    <button onclick="_uiReset()" style="width:100%;background:rgba(255,255,255,.06);border:1px solid #1e3a5f;color:#90caf9;border-radius:8px;padding:6px;font-size:.75rem;cursor:pointer;font-family:inherit">↺ รีเซ็ต</button>
-  </div>
-</div>
-<script>
-(function(){
-  var BK='qf_brightness',SK='qf_saturation';
-  function _applyV(b,s){b=parseFloat(b)||1;s=parseFloat(s)||1.2;localStorage.setItem(BK,b);localStorage.setItem(SK,s);document.body.style.filter='brightness('+b+') saturate('+s+')';var bl=document.getElementById('_brLbl'),sl=document.getElementById('_stLbl'),bs=document.getElementById('_brSlider'),ss=document.getElementById('_stSlider');if(bl)bl.textContent=b.toFixed(2);if(bs)bs.value=b;if(sl)sl.textContent=s.toFixed(2);if(ss)ss.value=s;}
-  window._applyGlobalColor=_applyV;
-  function _applyF(){_applyV(parseFloat(localStorage.getItem(BK)||'1'),parseFloat(localStorage.getItem(SK)||'1.2'));}
-  _applyF();
-  fetch('/api/global-config').then(function(r){return r.json();}).then(function(d){if(d&&d.brightness!=null)_applyV(d.brightness,d.saturation);}).catch(function(){});
-  window._uiToggle=function(){var b=document.getElementById('_uiBox');b.style.display=b.style.display==='none'?'block':'none';};
-  window._uiReset=function(){_applyV(1,1.2);fetch('/api/global-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({brightness:1,saturation:1.2})}).catch(function(){});};
-  document.addEventListener('DOMContentLoaded',function(){_applyF();document.getElementById('_brSlider').oninput=function(){var b=parseFloat(this.value),s=parseFloat(localStorage.getItem(SK)||'1.2');_applyV(b,s);fetch('/api/global-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({brightness:b,saturation:s})}).catch(function(){});};document.getElementById('_stSlider').oninput=function(){var b=parseFloat(localStorage.getItem(BK)||'1'),s=parseFloat(this.value);_applyV(b,s);fetch('/api/global-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({brightness:b,saturation:s})}).catch(function(){});};});
-})();
-if(typeof socket!=='undefined')socket.on('global_config_updated',d=>{if(window._applyGlobalColor&&d&&d.brightness!=null)window._applyGlobalColor(d.brightness,d.saturation);});
+  // Load existing config — only runs after admin auth succeeds
+  function initPage() {
+    fetch('/api/db-config', { headers: adminHeaders() }).then(r => r.json()).then(cfg => {
+      if (cfg.type) setType(cfg.type);
+      if (cfg.host)     document.getElementById('host').value     = cfg.host;
+      if (cfg.port)     document.getElementById('port').value     = cfg.port;
+      if (cfg.database) document.getElementById('database').value = cfg.database;
+      if (cfg.username) document.getElementById('dbUser').value   = cfg.username;
+      if (cfg.password) document.getElementById('dbPass').value   = cfg.password;
+      if (cfg.hospitalCode) document.getElementById('hospitalCode').value = cfg.hospitalCode;
+      if (cfg.apiToken)     document.getElementById('apiToken').value     = cfg.apiToken;
+      if (cfg.host && cfg.database) {
+        document.getElementById('tableCard').style.display = 'block';
+        checkTables();
+      }
+    });
+  }
+
+  // ── Boot: ต้อง login ใหม่ทุกครั้งที่เข้าหน้านี้ ไม่มีการจำ session ────────
+  showGate();
 </script>
 </body>
 </html>

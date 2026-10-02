@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "name": "ยาทั่วไป",
+    "prefix": "A",
+    "color": "#42a5f5",
+    "forMode": "both"
+  },
+  {
+    "id": 2,
+    "name": "ยาด่วน",
+    "prefix": "B",
+    "color": "#66bb6a",
+    "forMode": "both"
+  }
+]
