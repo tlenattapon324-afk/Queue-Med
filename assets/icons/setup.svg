@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#14c1b0"/><stop offset=".55" stop-color="#0a8fc0"/><stop offset="1" stop-color="#1546b8"/>
+    </linearGradient>
+    <linearGradient id="gloss" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="58" fill="url(#bg)"/>
+  <rect x="8" y="8" width="240" height="240" rx="58" fill="url(#gloss)"/>
+  <circle cx="120" cy="118" r="68" fill="none" stroke="#fff" stroke-width="28"/>
+  <line x1="142" y1="166" x2="206" y2="196" stroke="#fff" stroke-width="30" stroke-linecap="round"/>
+  <g fill="#ff5252">
+    <rect x="109" y="82" width="22" height="72" rx="4.4"/>
+    <rect x="84" y="107" width="72" height="22" rx="4.4"/>
+  </g>
+  <circle cx="190" cy="190" r="56" fill="#2e9d4f" stroke="#fff" stroke-width="10"/>
+  <path d="M190 156 V204 M170 186 L190 206 L210 186"
+        fill="none" stroke="#fff" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M166 214 v8 h48 v-8" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/></svg>

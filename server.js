@@ -7,6 +7,7 @@ const os      = require('os');
 const crypto  = require('crypto');
 const { exec } = require('child_process');
 const { printSlip } = require('./slip-print');
+const { createTts } = require('./tts-voice');
 
 const app    = express();
 const server = http.createServer(app);
@@ -939,43 +940,44 @@ app.post('/api/sys/:sysId/display-settings', requireSys, (req, res) => {
   res.json({ success: true });
 });
 
-// ── Google Translate TTS proxy (with disk cache) ───────────────────────────
+// ── Google Translate TTS proxy (disk cache + offline Google voice clips — tts-voice.js) ──
 const TTS_CACHE_DIR = path.join(DATA_DIR, 'tts-cache');
-if (!fs.existsSync(TTS_CACHE_DIR)) fs.mkdirSync(TTS_CACHE_DIR, { recursive: true });
+const tts = createTts({ appDir: APP_DIR, cacheDir: TTS_CACHE_DIR });
 
 app.get('/api/tts', async (req, res) => {
   const text = (req.query.text || '').toString().trim().slice(0, 200);
   const lang = ((req.query.lang || 'th').toString().match(/^[a-zA-Z-]+$/) || ['th'])[0];
   if (!text) return res.status(400).json({ error: 'missing text' });
 
-  const key = crypto.createHash('md5').update(lang + '|' + text).digest('hex');
-  const cacheFile = path.join(TTS_CACHE_DIR, key + '.mp3');
-
   res.setHeader('Content-Type', 'audio/mpeg');
-  res.setHeader('Cache-Control', 'public, max-age=2592000');
-
-  if (fs.existsSync(cacheFile)) {
-    fs.createReadStream(cacheFile).pipe(res);
-    return;
-  }
-
   try {
-    const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=${encodeURIComponent(lang)}&client=tw-ob`;
-    const gRes = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
-        'Referer': 'https://translate.google.com/'
-      }
-    });
-    if (!gRes.ok) throw new Error('google tts http ' + gRes.status);
-    const buf = Buffer.from(await gRes.arrayBuffer());
-    fs.writeFile(cacheFile, buf, () => {});
-    res.end(buf);
+    const { buf, source } = await tts.getAudio(lang, text);
+    res.setHeader('Cache-Control', 'public, max-age=2592000');
+    res.setHeader('X-TTS-Source', source);
+    return res.end(buf);
   } catch (e) {
+    // No internet (or Google refused): speak it with the bundled / learned Google word clips
+    const composed = tts.composeFromClips(lang, text);
+    if (composed) {
+      res.setHeader('Cache-Control', 'no-store'); // retry the natural full sentence once back online
+      res.setHeader('X-TTS-Source', 'offline-clips');
+      if (composed.missing.length) console.warn('TTS offline: no clip for', composed.missing.join(', '));
+      return res.end(composed.buf);
+    }
     console.error('TTS proxy error:', e.message);
     res.status(502).json({ error: 'tts_failed' });
   }
 });
+
+// Learn Google clips for every counter name while online, so offline announcements include them
+function learnCounterWords() {
+  const names = Object.values(sysData).flatMap(s => (s.counters || []).map(c => c.name || ''));
+  tts.learnWords('th', names)
+    .then(n => { if (n) console.log(`[tts] learned ${n} word clip(s) for offline announcements`); })
+    .catch(() => {});
+}
+setTimeout(learnCounterWords, 5000);
+setInterval(learnCounterWords, 30 * 60 * 1000);
 
 // ── Per-sys cashier settings ──────────────────────────────────────────────
 app.get('/api/sys/:sysId/cashier-settings', requireSys, (req, res) => res.json(req.sys.cashierSettings));

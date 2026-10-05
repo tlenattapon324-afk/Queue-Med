@@ -1,12 +1,13 @@
 ﻿[Setup]
 AppName=Queue Print Agent
-AppVersion=1.3.0
+AppVersion=1.4.0
 AppPublisher=Hospital Queue System
 DefaultDirName={autopf}\QueuePrintAgent
 DefaultGroupName=Queue Print Agent
 OutputDir=.
 OutputBaseFilename=QueuePrintAgent_Setup
-SetupIconFile=
+SetupIconFile=..\assets\icons\setup.ico
+WizardSmallImageFile=..\assets\icons\wizard-small-55.bmp,..\assets\icons\wizard-small-110.bmp
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern

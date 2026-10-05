@@ -7,3 +7,4 @@ Thumbs.db
 dist/QueuePrintAgent.exe
 dist/QueueServer.exe
 .claude/
+.pkg-icon-base/

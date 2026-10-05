@@ -3,6 +3,8 @@
 <head>
   <script src="/vendor/api-token.js"></script>
   <meta charset="UTF-8"/>
+  <link rel="icon" href="/favicon.ico" sizes="any"/>
+  <link rel="apple-touch-icon" href="/app-icon.png"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>แสดงคิว</title>
   <style>
@@ -2021,7 +2023,7 @@ function fmtQueueNum(display) {
 function updateVoiceActiveInfo() {
   const el = document.getElementById('voiceActiveInfo');
   if (!el) return;
-  el.textContent = '🌐 ใช้เสียง Google Translate (ออนไลน์) — กด "ทดสอบเสียง" เพื่อตรวจสอบการเชื่อมต่อ';
+  el.textContent = '🌐 ใช้เสียง Google Translate — ถ้าเซิร์ฟเวอร์ไม่มีอินเทอร์เน็ต จะใช้เสียง Google ที่ติดตั้งมากับระบบแทน — กด "ทดสอบเสียง" เพื่อตรวจสอบ';
   el.style.color = '#80cbc4';
 }
 
@@ -2077,7 +2079,7 @@ function testVoice() {
   speakGoogle(
     text,
     () => setDiag('✓ ได้ยินเสียงแล้ว — Google Translate TTS พร้อมใช้งาน', '#69f0ae'),
-    () => setDiag('❌ เชื่อมต่อ Google Translate ไม่สำเร็จ — ตรวจสอบอินเทอร์เน็ต', '#ef9a9a')
+    () => setDiag('❌ เล่นเสียงไม่สำเร็จ — ตรวจสอบว่าเชื่อมต่อเซิร์ฟเวอร์ได้ และกดปุ่มเสียงบนจอแล้ว', '#ef9a9a')
   );
 }
 
