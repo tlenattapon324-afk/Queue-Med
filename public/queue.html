@@ -8,6 +8,8 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js"></script>
   <script src="/vendor/jsbarcode.min.js"></script>
+<script src="/vendor/qrcode.js"></script>
+<script src="/slip-render.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700;900&family=Sarabun:wght@300;400;600;700&family=Prompt:wght@300;400;600;700&family=Mitr:wght@300;400;600;700&family=Noto+Sans+Thai:wght@300;400;600;700&display=swap');
     *{box-sizing:border-box;margin:0;padding:0}
@@ -347,6 +349,19 @@
     .qc-wait{font-size:.76rem;color:#5a8a94;font-weight:600}
     .qc-wait strong{font-size:.92rem;font-weight:800;color:#e65100}
     .no-types{text-align:center;color:rgba(13,58,69,.4);padding:32px;font-size:.88rem}
+
+    /* OPD / IPD / both — separate sections on the kiosk */
+    .type-group{width:100%;border-radius:22px;padding:14px 16px 18px;margin-bottom:6px;
+      background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.25)}
+    .type-group.opd{border-color:rgba(30,136,229,.65);background:rgba(30,136,229,.12)}
+    .type-group.ipd{border-color:rgba(0,200,83,.7);background:rgba(0,200,83,.12)}
+    .type-group.both{border-color:rgba(255,193,7,.7);background:rgba(255,193,7,.10)}
+    .type-group-hdr{display:inline-block;font-size:.95rem;font-weight:800;letter-spacing:1px;
+      padding:5px 16px;border-radius:12px;margin-bottom:12px;color:#fff}
+    .type-group.opd  .type-group-hdr{background:#1565c0}
+    .type-group.ipd  .type-group-hdr{background:#00897b}
+    .type-group.both .type-group-hdr{background:#f9a825;color:#3e2700}
+    .type-group-cards{display:flex;flex-wrap:wrap;gap:14px;justify-content:center}
 
     /* ── RESULT overlay ── */
     .result-overlay{
@@ -978,12 +993,26 @@ function renderCards() {
     grid.innerHTML = `<div class="no-types">ยังไม่มีประเภทคิว — <a href="/settings.html?sys=${sysId}" style="color:#ffd54f">ตั้งค่า</a></div>`;
     return;
   }
-  grid.innerHTML = filteredTypes.map(t => `
+  const card = t => `
     <div class="q-card" onclick="getQueue(${t.id})" style="--c:${t.color}28">
       <div class="qc-icon" style="background:${t.color}">${t.prefix}</div>
       <div class="qc-name">${t.name}</div>
       <div class="qc-wait">คิวรอ <strong>${typeWaiting[t.id] || 0}</strong> คน</div>
-    </div>`).join('');
+    </div>`;
+  // Group by the type's "ใช้กับ" setting so OPD and IPD are clearly separate sections
+  const GROUPS = [
+    { mode: 'opd',  cls: 'opd',  label: '🏥 OPD — ผู้ป่วยนอก' },
+    { mode: 'ipd',  cls: 'ipd',  label: '🛏 IPD — ผู้ป่วยใน' },
+    { mode: 'both', cls: 'both', label: '🏥🛏 ใช้ได้ทั้ง OPD และ IPD' },
+  ];
+  grid.innerHTML = GROUPS.map(g => {
+    const list = filteredTypes.filter(t => (t.forMode || 'both') === g.mode);
+    if (!list.length) return '';
+    return `<div class="type-group ${g.cls}">
+      <div class="type-group-hdr">${g.label}</div>
+      <div class="type-group-cards">${list.map(card).join('')}</div>
+    </div>`;
+  }).join('');
 }
 
 // ── Apply screen config ───────────────────────────────────────────────────
@@ -1133,70 +1162,9 @@ function applyScreenConfig(cfg) {
   if (toggleRow) toggleRow.style.display = cfg.showToggles !== false ? '' : 'none';
 }
 
-// ── renderSlipHtml — uses cfg.layoutOrder to match settings preview exactly ──
+// ── renderSlipHtml — shared with settings preview (public/slip-render.js) ──
 function renderSlipHtml(cfg, d) {
-  const divider = cfg.showDividerLine
-    ? `<div style="border-top:1px dashed #888;margin:5px 0"></div>` : '';
-  const ffStyle = cfg.fontFamily ? `font-family:'${cfg.fontFamily}',sans-serif;` : '';
-
-  const DEFAULT_ORDER = ['header','patientName','hnQn','queueType','queueNum','barcode','dateTime','footer'];
-
-  const builders = {
-    header: () => {
-      if (!cfg.showHeader) return '';
-      const name = cfg.headerName || d.sysName;
-      let h = `<div style="text-align:center;font-weight:900;font-size:${cfg.headerFontSize||14}pt;margin-bottom:2px">${name}</div>`;
-      if (cfg.headerSubtitle)
-        h += `<div style="text-align:center;font-size:${(cfg.headerFontSize||14)-3}pt;color:#555;margin-bottom:3px">${cfg.headerSubtitle}</div>`;
-      return h;
-    },
-    patientName: () => {
-      if (!cfg.showPatientName || !d.patientName) return '';
-      return `<div style="font-size:${cfg.patientFontSize||11}pt;font-weight:700;text-align:center;margin:2px 0">${d.patientName}</div>`;
-    },
-    hnQn: () => {
-      if (!cfg.showHnQn || (!d.hn && !d.qn)) return '';
-      const parts = [d.hn ? 'HN: '+d.hn : '', d.qn ? 'QN: '+d.qn : ''].filter(Boolean).join('   ');
-      return `<div style="font-size:${(cfg.patientFontSize||11)-2}pt;color:#555;text-align:center;margin:2px 0">${parts}</div>`;
-    },
-    queueType: () => {
-      if (!cfg.showQueueType || !d.typeName) return '';
-      return `<div style="font-size:${cfg.queueTypeFontSize||11}pt;font-weight:600;text-align:center;margin:3px 0">${d.typeName}</div>`;
-    },
-    queueNum: () => {
-      return `<div style="font-size:${cfg.queueNumFontSize||60}pt;font-weight:900;text-align:center;letter-spacing:4px;border:3px solid #000;padding:1px 10px;display:inline-block;width:100%;box-sizing:border-box;margin:4px 0">${d.display}</div>`;
-    },
-    dateTime: () => {
-      if (!cfg.showDateTime) return '';
-      return `<div style="font-size:${cfg.dateFontSize||9}pt;color:#555;text-align:center;margin:2px 0">${d.date} · ${d.issuedAt}</div>`;
-    },
-    barcode: () => {
-      if (!cfg.showBarcode) return '';
-      const val = cfg.barcodeSource === 'hn' ? d.hn : (d.qn || d.display);
-      if (!val || typeof JsBarcode === 'undefined') return '';
-      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      try {
-        JsBarcode(svg, String(val), { format:'CODE128', displayValue:true, fontSize:11, height:36, margin:4 });
-      } catch (e) { return ''; }
-      return `<div style="text-align:center;margin:4px 0">${svg.outerHTML}</div>`;
-    },
-    footer: () => {
-      if (!cfg.showFooter || !cfg.footerText) return '';
-      return `<div style="font-size:${cfg.footerFontSize||8}pt;color:#555;text-align:center;margin:3px 0;line-height:1.6">${cfg.footerText.replace(/\n/g,'<br/>')}</div>`;
-    }
-  };
-
-  const order = (cfg.layoutOrder && cfg.layoutOrder.length) ? cfg.layoutOrder : DEFAULT_ORDER;
-  let h = '', lastWasDivider = false;
-  for (const id of order) {
-    if (id === 'divider') {
-      if (!lastWasDivider) { h += divider; lastWasDivider = true; }
-    } else if (builders[id]) {
-      const html = builders[id]();
-      if (html) { h += html; lastWasDivider = false; }
-    }
-  }
-  return ffStyle ? `<div style="${ffStyle}">${h}</div>` : h;
+  return SlipRender.html(cfg, d);
 }
 
 // ── Print ─────────────────────────────────────────────────────────────────
@@ -1208,11 +1176,14 @@ function doPrint(ticket) {
     patientName: currentPatient?.name || null,
     hn:          currentPatient?.hn   || null,
     qn:          currentPatient?.qn   || null,
+    pttypeName:  currentPatient?.pttypeName || ticket.pttypeName || null,
     typeName:    ticket.typeName,
     display:     ticket.display,
     date:        ticket.date,
     issuedAt:    ticket.issuedAt,
   };
+  // Barcode/QR is rendered here and sent as an image — server / Print Agent cannot draw it
+  data.codeImg = SlipRender.codeImage(printConfig, data);
   const printMode    = localStorage.getItem('queuePrintMode')    || 'host';
   const localPrinter = localStorage.getItem('queueLocalPrinter') || '';
   if (printMode === 'local') {
@@ -1242,21 +1213,23 @@ function doPrint(ticket) {
   }
 }
 
-function browserPrint(data) {
+// Page = exactly the configured paper (width × custom height, or measured content height)
+async function browserPrint(data) {
   const el = document.getElementById('printDynArea');
   const copies = Math.max(1, Number(printConfig.copies) || 1);
-  const slipHtml = renderSlipHtml(printConfig, data);
-  if (copies <= 1) {
-    el.innerHTML = slipHtml;
-  } else {
+  const { h, pageCss } = await SlipRender.preparePrint(el, printConfig, data);
+  if (copies > 1) {
+    // one page per copy — each copy gets its own margins and the same page height
+    const page = el.innerHTML;
+    Object.assign(el.style, { padding: '0', height: '', overflow: '' });
     el.innerHTML = Array.from({ length: copies }, (_, i) =>
-      `<div style="${i < copies - 1 ? 'page-break-after:always' : ''}">${slipHtml}</div>`
+      `<div style="box-sizing:border-box;padding:3mm;height:${h}mm;overflow:hidden;${i < copies - 1 ? 'page-break-after:always' : ''}">${page}</div>`
     ).join('');
+    await SlipRender.whenImagesReady(el);
   }
   let ps = document.getElementById('_printStyle');
   if (!ps) { ps = document.createElement('style'); ps.id = '_printStyle'; document.head.appendChild(ps); }
-  const szMap = {'80mm':'80mm auto','58mm':'58mm auto','a4':'A4','custom':`${printConfig.customWidth||80}mm auto`};
-  ps.textContent = `@media print{@page{size:${szMap[printConfig.paperSize]||'80mm auto'};margin:3mm}}`;
+  ps.textContent = `@media print{${pageCss}}`;
   window.print();
 }
 

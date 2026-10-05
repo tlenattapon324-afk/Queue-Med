@@ -1,6 +1,6 @@
-[Setup]
+﻿[Setup]
 AppName=Queue Print Agent
-AppVersion=1.0
+AppVersion=1.3.0
 AppPublisher=Hospital Queue System
 DefaultDirName={autopf}\QueuePrintAgent
 DefaultGroupName=Queue Print Agent

@@ -7,6 +7,8 @@
   <title>ตั้งค่า</title>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/vendor/jsbarcode.min.js"></script>
+<script src="/vendor/qrcode.js"></script>
+<script src="/slip-render.js"></script>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'Segoe UI',Tahoma,sans-serif;background:#0f1923;min-height:100vh;color:#fff}
@@ -161,8 +163,8 @@
     .pd-preview-wrap{background:#e8e8e8;border-radius:12px;padding:14px;
       display:flex;justify-content:center;align-items:flex-start;min-height:280px;overflow:auto}
     #slipPreview{background:#fff;color:#000;font-family:'Segoe UI',Tahoma,sans-serif;
-      border-radius:3px;box-shadow:0 2px 10px rgba(0,0,0,.2);
-      padding:6mm 5mm;max-width:100%;transition:width .2s}
+      border-radius:3px;box-shadow:0 2px 10px rgba(0,0,0,.2);flex-shrink:0}
+    .pd-size-lbl{font-size:.75rem;color:#90caf9;text-align:center}
     .pd-test-btn{background:linear-gradient(135deg,#00695c,#004d40);color:#fff;
       border:none;border-radius:10px;padding:11px;font-size:.88rem;font-weight:700;
       cursor:pointer;font-family:inherit;width:100%;transition:opacity .2s}
@@ -428,6 +430,41 @@
     .pd-lo-drag{color:#2a4060;font-size:.9rem;flex-shrink:0}
     .pd-lo-label{flex:1;font-size:.85rem;color:#90caf9;font-weight:500}
     .pd-lo-icon{font-size:1rem;flex-shrink:0}
+    .pd-lo-del{background:none;border:1px solid #3a2a2a;color:#ef9a9a;border-radius:6px;
+      width:24px;height:24px;cursor:pointer;font-size:.8rem;flex-shrink:0;line-height:1}
+    .pd-lo-del:hover{background:rgba(239,83,80,.15);border-color:#ef5350}
+    .pd-lo-actions{display:flex;gap:8px;margin-top:10px}
+
+    /* ── Per-section style row (align / bold / color) ── */
+    .pd-style-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:4px 0 11px}
+    .pd-style-lbl{font-size:.72rem;color:#64b5f6;min-width:62px}
+    .pd-seg{display:inline-flex;border:1px solid #1e3a5f;border-radius:7px;overflow:hidden}
+    .pd-seg button{background:#0f1923;border:none;color:#64b5f6;padding:5px 9px;font-size:.74rem;
+      cursor:pointer;font-family:inherit}
+    .pd-seg button+button{border-left:1px solid #1e3a5f}
+    .pd-seg button.on{background:#1565c0;color:#fff}
+    .pd-bold-btn{background:#0f1923;border:1px solid #1e3a5f;color:#64b5f6;border-radius:7px;
+      padding:4px 10px;font-weight:900;font-size:.8rem;cursor:pointer;font-family:inherit}
+    .pd-bold-btn.on{background:#1565c0;border-color:#42a5f5;color:#fff}
+    .pd-color-sel{background:#0f1923;border:1px solid #1e3a5f;color:#cfd8dc;border-radius:7px;
+      padding:4px 6px;font-size:.74rem;font-family:inherit}
+    .pd-radio-row{display:flex;gap:16px;flex-wrap:wrap;margin-top:4px}
+    .pd-radio-row label{display:flex;align-items:center;gap:5px;cursor:pointer;font-size:.82rem;color:#cfd8dc}
+
+    /* ── Logo ── */
+    .pd-logo-box{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+    .pd-logo-thumb{width:64px;height:64px;background:#fff;border-radius:8px;display:flex;
+      align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;color:#90a4ae;font-size:.68rem}
+    .pd-logo-thumb img{max-width:100%;max-height:100%}
+
+    /* ── Custom text blocks ── */
+    .pd-ct-item{background:#0f1923;border:1px solid #1e3a5f;border-radius:10px;padding:10px;margin-bottom:10px}
+    .pd-ct-item textarea{width:100%;background:#0b141c;border:1px solid #1e3a5f;border-radius:8px;
+      padding:8px 10px;color:#fff;font-size:.88rem;font-family:inherit;resize:vertical;min-height:44px}
+    .pd-ct-item textarea:focus{outline:none;border-color:#42a5f5}
+    .pd-ct-ctrl{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px}
+    .pd-ct-ctrl input[type=number]{width:58px;background:#0b141c;border:1px solid #1e3a5f;border-radius:7px;
+      padding:4px 6px;color:#fff;font-size:.8rem;text-align:center}
   </style>
 </head>
 <body>
@@ -575,11 +612,36 @@
           <div class="pd-hint" id="pdLocalPrinterHint">💡 รายชื่อเครื่องพิมพ์บนเครื่องนี้ — ระบบจะปริ้นโดยตรงโดยไม่ผ่าน dialog</div>
         </div>
 
+        <!-- Logo -->
+        <div class="pd-section">
+          <div class="pd-sec-title">🏥 โลโก้</div>
+          <label class="pd-ck"><input type="checkbox" id="pdShowLogo" onchange="togglePdSection('pdLogoFields',this);updatePreview()"><span>แสดงโลโก้</span></label>
+          <div id="pdLogoFields">
+            <div class="pd-logo-box">
+              <div class="pd-logo-thumb" id="pdLogoThumb">ยังไม่มีรูป</div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <button class="pd-ref-btn" onclick="document.getElementById('pdLogoFile').click()">📁 เลือกรูปโลโก้</button>
+                <button class="pd-ref-btn" style="background:#37474f" onclick="clearLogo()">🗑 ลบรูป</button>
+                <input type="file" id="pdLogoFile" accept="image/png,image/jpeg,image/bmp,image/gif" style="display:none" onchange="handleLogoFile(this)"/>
+              </div>
+            </div>
+            <div class="pd-field"><label>ความกว้างโลโก้</label>
+              <div class="pd-range-row">
+                <input type="range" id="pdLogoW" min="10" max="70" value="30"
+                  oninput="document.getElementById('pdLogoWV').textContent=this.value+'mm';updatePreview()"/>
+                <span class="pd-range-val" id="pdLogoWV">30mm</span>
+              </div></div>
+            <div class="pd-style" data-sec="logo" data-opts="align" data-label="ตำแหน่ง"></div>
+            <div class="pd-hint">💡 เครื่องพิมพ์ความร้อนพิมพ์ขาว-ดำ — โลโก้พื้นขาวลายเส้นชัดจะออกมาสวยที่สุด</div>
+          </div>
+        </div>
+
         <!-- Header -->
         <div class="pd-section">
           <div class="pd-sec-title">📋 ส่วนหัว</div>
           <label class="pd-ck"><input type="checkbox" id="pdShowHeader" onchange="togglePdSection('pdHeaderFields',this);updatePreview()"><span>แสดงส่วนหัว</span></label>
           <div id="pdHeaderFields">
+            <div class="pd-style" data-sec="header" data-label="รูปแบบ"></div>
             <div class="pd-field"><label>ชื่อสถานพยาบาล / หัวข้อหลัก</label>
               <input type="text" id="pdHeaderName" placeholder="ค่าเริ่มต้น: ชื่อระบบคิว" oninput="updatePreview()"/></div>
             <div class="pd-field"><label>ข้อความรอง</label>
@@ -597,7 +659,22 @@
         <div class="pd-section">
           <div class="pd-sec-title">👤 ข้อมูลผู้ป่วย</div>
           <label class="pd-ck"><input type="checkbox" id="pdShowPt" onchange="updatePreview()"><span>แสดงชื่อผู้ป่วย</span></label>
+          <div class="pd-style" data-sec="patientName" data-label="ชื่อผู้ป่วย"></div>
           <label class="pd-ck"><input type="checkbox" id="pdShowHn" onchange="updatePreview()"><span>แสดง HN / QN</span></label>
+          <div class="pd-style" data-sec="hnQn" data-label="HN / QN"></div>
+          <label class="pd-ck"><input type="checkbox" id="pdShowPttype" onchange="togglePdSection('pdPttypeFields',this);updatePreview()"><span>แสดงสิทธิการรักษา</span></label>
+          <div id="pdPttypeFields">
+            <div class="pd-style" data-sec="pttype" data-label="สิทธิ"></div>
+            <div class="pd-field"><label>ข้อความนำหน้า</label>
+              <input type="text" id="pdPttypeLabel" value="สิทธิ: " placeholder="เช่น สิทธิ: " oninput="updatePreview()"/></div>
+            <div class="pd-field"><label>ขนาดตัวอักษรสิทธิ</label>
+              <div class="pd-range-row">
+                <input type="range" id="pdPttypeFs" min="7" max="20" value="10"
+                  oninput="document.getElementById('pdPttypeFsV').textContent=this.value+'pt';updatePreview()"/>
+                <span class="pd-range-val" id="pdPttypeFsV">10pt</span>
+              </div></div>
+            <div class="pd-hint">💡 ดึงจากสิทธิของ visit (ovst.pttype → pttype.name) ตอนค้นหาผู้ป่วย — ถ้าออกคิวแบบไม่ผูกผู้ป่วยจะไม่แสดง</div>
+          </div>
           <div class="pd-field"><label>ขนาดตัวอักษร</label>
             <div class="pd-range-row">
               <input type="range" id="pdPtFs" min="7" max="18" value="11"
@@ -611,6 +688,7 @@
           <div class="pd-sec-title">🔢 หมายเลขคิว</div>
           <label class="pd-ck"><input type="checkbox" id="pdShowType" onchange="togglePdSection('pdTypeFields',this);updatePreview()"><span>แสดงประเภทคิว</span></label>
           <div id="pdTypeFields">
+          <div class="pd-style" data-sec="queueType" data-label="ประเภทคิว"></div>
           <div class="pd-field"><label>ขนาดตัวอักษรประเภท</label>
             <div class="pd-range-row">
               <input type="range" id="pdTypeFs" min="7" max="28" value="11"
@@ -634,7 +712,16 @@
                 oninput="document.getElementById('pdNumFsV').textContent=this.value+'pt';updatePreview()"/>
               <span class="pd-range-val" id="pdNumFsV">60pt</span>
             </div></div>
+          <div class="pd-field"><label>กรอบหมายเลขคิว</label>
+            <select id="pdNumBox" onchange="updatePreview()">
+              <option value="thick">กรอบหนา</option>
+              <option value="thin">กรอบบาง</option>
+              <option value="none">ไม่มีกรอบ</option>
+              <option value="inverse">พื้นดำ ตัวเลขขาว</option>
+            </select></div>
+          <div class="pd-style" data-sec="queueNum" data-opts="align" data-label="หมายเลขคิว"></div>
           <label class="pd-ck"><input type="checkbox" id="pdShowDt" onchange="updatePreview()"><span>แสดงวันที่ / เวลา</span></label>
+          <div class="pd-style" data-sec="dateTime" data-label="วันที่/เวลา"></div>
           <div class="pd-field"><label>ขนาดตัวอักษรวันที่</label>
             <div class="pd-range-row">
               <input type="range" id="pdDateFs" min="6" max="14" value="9"
@@ -645,17 +732,32 @@
 
         <!-- Barcode -->
         <div class="pd-section">
-          <div class="pd-sec-title">📊 บาร์โค้ด</div>
+          <div class="pd-sec-title">📊 บาร์โค้ด / QR Code</div>
           <label class="pd-ck"><input type="checkbox" id="pdShowBarcode" onchange="togglePdSection('pdBarcodeFields',this);updatePreview()"><span>แสดงบาร์โค้ดบนบัตรคิว</span></label>
           <div id="pdBarcodeFields">
+            <div class="pd-field"><label>ชนิด</label>
+              <div class="pd-radio-row">
+                <label><input type="radio" name="pdBarcodeType" id="pdBarcodeTypeBar" value="code128" onchange="syncBarcodeTypeFields();updatePreview()" checked> บาร์โค้ด (CODE128)</label>
+                <label><input type="radio" name="pdBarcodeType" id="pdBarcodeTypeQr" value="qr" onchange="syncBarcodeTypeFields();updatePreview()"> QR Code</label>
+              </div></div>
+            <div class="pd-field" id="pdBarcodeHField"><label>ความสูงบาร์โค้ด</label>
+              <div class="pd-range-row">
+                <input type="range" id="pdBarcodeH" min="6" max="25" value="10"
+                  oninput="document.getElementById('pdBarcodeHV').textContent=this.value+'mm';updatePreview()"/>
+                <span class="pd-range-val" id="pdBarcodeHV">10mm</span>
+              </div></div>
+            <div class="pd-field" id="pdQrSizeField" style="display:none"><label>ขนาด QR Code</label>
+              <div class="pd-range-row">
+                <input type="range" id="pdQrSize" min="15" max="50" value="25"
+                  oninput="document.getElementById('pdQrSizeV').textContent=this.value+'mm';updatePreview()"/>
+                <span class="pd-range-val" id="pdQrSizeV">25mm</span>
+              </div></div>
+            <label class="pd-ck"><input type="checkbox" id="pdBarcodeText" onchange="updatePreview()" checked><span>แสดงตัวเลขใต้บาร์โค้ด</span></label>
+            <div class="pd-style" data-sec="barcode" data-opts="align" data-label="ตำแหน่ง"></div>
             <div class="pd-field"><label>ข้อมูลที่ใช้สร้างบาร์โค้ด</label>
-              <div style="display:flex;gap:16px;margin-top:6px">
-                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:.82rem;color:#cfd8dc">
-                  <input type="radio" name="pdBarcodeSrc" id="pdBarcodeQn" value="qn" onchange="updatePreview()" checked> QN (หมายเลขคิว จาก ovst.oqueue)
-                </label>
-                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:.82rem;color:#cfd8dc">
-                  <input type="radio" name="pdBarcodeSrc" id="pdBarcodeHn" value="hn" onchange="updatePreview()"> HN (เลขประจำตัวผู้ป่วย จาก ovst.hn)
-                </label>
+              <div class="pd-radio-row" style="flex-direction:column;gap:8px;margin-top:6px">
+                <label><input type="radio" name="pdBarcodeSrc" id="pdBarcodeQn" value="qn" onchange="updatePreview()" checked> QN — หมายเลขคิว (ovst.oqueue)</label>
+                <label><input type="radio" name="pdBarcodeSrc" id="pdBarcodeHn" value="hn" onchange="updatePreview()"> HN — เลขประจำตัวผู้ป่วย (ovst.hn)</label>
               </div>
               <div class="pd-hint" style="margin-top:6px">💡 บาร์โค้ดจะไม่แสดงถ้าคิวนั้นไม่มีข้อมูล HN/QN (เช่น ออกคิวแบบไม่ผูกผู้ป่วย)</div>
             </div>
@@ -667,6 +769,7 @@
           <div class="pd-sec-title">📝 ข้อความท้าย</div>
           <label class="pd-ck"><input type="checkbox" id="pdShowFooter" onchange="togglePdSection('pdFooterFields',this);updatePreview()"><span>แสดงข้อความท้าย</span></label>
           <div id="pdFooterFields">
+            <div class="pd-style" data-sec="footer" data-label="รูปแบบ"></div>
             <div class="pd-field"><label>ข้อความ (Enter = ขึ้นบรรทัดใหม่)</label>
               <textarea id="pdFooterText" rows="3" oninput="updatePreview()"></textarea></div>
             <div class="pd-field"><label>ขนาดตัวอักษร</label>
@@ -678,11 +781,26 @@
           </div>
         </div>
 
+        <!-- Custom text blocks -->
+        <div class="pd-section">
+          <div class="pd-sec-title">✏️ ข้อความเพิ่มเติม</div>
+          <div id="pdCustomTexts"></div>
+          <button class="pd-ref-btn" onclick="addCustomText()">+ เพิ่มข้อความ</button>
+          <div class="pd-hint">💡 ใช้ตัวแปรได้: <b>{queue}</b> หมายเลขคิว · <b>{type}</b> ประเภท · <b>{name}</b> ชื่อผู้ป่วย · <b>{hn}</b> · <b>{qn}</b> · <b>{pttype}</b> สิทธิ · <b>{date}</b> · <b>{time}</b> · <b>{hospital}</b> — ใช้ได้ในส่วนหัวและข้อความท้ายด้วย<br/>ลากจัดตำแหน่งได้ที่ "ลำดับการแสดงผล"</div>
+        </div>
+
         <!-- Options -->
         <div class="pd-section">
           <div class="pd-sec-title">⚙ ตัวเลือกการพิมพ์</div>
           <label class="pd-ck"><input type="checkbox" id="pdAutoPrint" onchange="updatePreview()"><span>พิมพ์อัตโนมัติหลังออกคิว</span></label>
           <label class="pd-ck"><input type="checkbox" id="pdShowDivider" onchange="updatePreview()"><span>แสดงเส้นคั่น</span></label>
+          <div class="pd-field"><label>รูปแบบเส้นคั่น</label>
+            <select id="pdDividerStyle" onchange="updatePreview()">
+              <option value="dashed">เส้นประ - - - -</option>
+              <option value="solid">เส้นทึบ ────</option>
+              <option value="dotted">เส้นจุด · · · ·</option>
+              <option value="double">เส้นคู่ ════</option>
+            </select></div>
           <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
             <label style="font-size:.82rem;color:#2c3e50;white-space:nowrap">จำนวนสำเนา</label>
             <input type="number" id="pdCopies" min="1" max="10" value="1"
@@ -710,8 +828,11 @@
         <!-- Layout Order -->
         <div class="pd-section">
           <div class="pd-sec-title">📐 ลำดับการแสดงผล</div>
-          <div style="font-size:.72rem;color:#3a5a78;margin-bottom:12px">💡 ลากแถวเพื่อเรียงลำดับ</div>
+          <div style="font-size:.72rem;color:#3a5a78;margin-bottom:12px">💡 ลากแถวเพื่อเรียงลำดับ — เพิ่มเส้นคั่นได้หลายจุด</div>
           <div id="pdLayoutOrder" style="display:flex;flex-direction:column;gap:6px"></div>
+          <div class="pd-lo-actions">
+            <button class="pd-ref-btn" onclick="addLayoutDivider()">+ เส้นคั่น</button>
+          </div>
         </div>
 
         <button class="pd-save-btn" onclick="savePrintCfg()">💾 บันทึกการตั้งค่า</button>
@@ -723,6 +844,7 @@
         <div class="pd-preview-wrap" id="pdPreviewWrap">
           <div id="slipPreview"></div>
         </div>
+        <div class="pd-size-lbl" id="pdSizeLbl"></div>
         <button class="pd-test-btn" onclick="testPrint()">🖨 ทดสอบพิมพ์</button>
       </div>
 
@@ -1485,16 +1607,22 @@ fetch(`/api/sys/${sysId}/status`).then(r=>r.json()).then(d => {
 // ── Print Designer ────────────────────────────────────────────────────────
 const PD_SAMPLE = {
   sysName:'โรงพยาบาลตัวอย่าง', patientName:'นาย สมชาย ใจดี',
-  hn:'12345', qn:'001', typeName:'ทั่วไป', prefix:'A',
+  hn:'12345', qn:'001', pttypeName:'บัตรทอง (UC)', typeName:'ทั่วไป', prefix:'A',
   display:'A001', issuedAt:'09:30:00', date:'7/5/2568',
 };
 let pdCurrentSize = '80mm';
 let pdSysName = '';
-let pdLayoutOrder = ['header', 'patientName', 'hnQn', 'queueType', 'queueNum', 'barcode', 'dateTime', 'footer'];
+let pdLayoutOrder = ['logo', 'header', 'patientName', 'hnQn', 'pttype', 'queueType', 'queueNum', 'barcode', 'dateTime', 'footer'];
+let pdSectionStyles = {};   // { sectionId: { align, bold, color } }
+let pdCustomTexts   = [];   // [{ id, text, fs, align, bold, color }]
+let pdLogo          = { data: '', aspect: 1 };
 const pdLayoutItems = {
+  'logo': { label: '🏥 โลโก้', icon: '🏥' },
+  'divider': { label: '➖ เส้นคั่น', icon: '➖' },
   'header': { label: '📋 ส่วนหัว', icon: '📋' },
   'patientName': { label: '👤 ชื่อผู้ป่วย', icon: '👤' },
   'hnQn': { label: '🔍 HN/QN', icon: '🔍' },
+  'pttype': { label: '💳 สิทธิการรักษา', icon: '💳' },
   'queueType': { label: '🏷 ประเภทคิว', icon: '🏷' },
   'queueNum': { label: '🔢 หมายเลขคิว', icon: '🔢' },
   'barcode': { label: '📊 บาร์โค้ด', icon: '📊' },
@@ -1590,12 +1718,50 @@ function applyPrintCfgToForm(cfg) {
   const bcSrcEl = document.getElementById(bcSrc === 'hn' ? 'pdBarcodeHn' : 'pdBarcodeQn');
   if (bcSrcEl) bcSrcEl.checked = true;
   togglePdSection('pdBarcodeFields', { checked: sbc });
+  const bcType = cfg.barcodeType === 'qr' ? 'qr' : 'code128';
+  document.getElementById(bcType === 'qr' ? 'pdBarcodeTypeQr' : 'pdBarcodeTypeBar').checked = true;
+  setRange('pdBarcodeH', cfg.barcodeHeight || 10, 'mm');
+  setRange('pdQrSize',   cfg.qrSize || 25, 'mm');
+  document.getElementById('pdBarcodeText').checked = cfg.barcodeShowText !== false;
+  syncBarcodeTypeFields();
+  // Logo
+  const sl = !!cfg.showLogo;
+  document.getElementById('pdShowLogo').checked = sl;
+  pdLogo = { data: cfg.logoData || '', aspect: Number(cfg.logoAspect) || 1 };
+  setRange('pdLogoW', cfg.logoWidth || 30, 'mm');
+  renderLogoThumb();
+  togglePdSection('pdLogoFields', { checked: sl });
+  // Treatment right (pttype)
+  const sp = !!cfg.showPttype;
+  document.getElementById('pdShowPttype').checked = sp;
+  document.getElementById('pdPttypeLabel').value  = cfg.pttypeLabel != null ? cfg.pttypeLabel : 'สิทธิ: ';
+  setRange('pdPttypeFs', cfg.pttypeFontSize || 10, 'pt');
+  togglePdSection('pdPttypeFields', { checked: sp });
+  // Box / divider style
+  document.getElementById('pdNumBox').value       = cfg.numBoxStyle  || 'thick';
+  document.getElementById('pdDividerStyle').value = cfg.dividerStyle || 'dashed';
+  // Section styles + custom text blocks
+  pdSectionStyles = JSON.parse(JSON.stringify(cfg.sectionStyles || {}));
+  pdCustomTexts   = JSON.parse(JSON.stringify(cfg.customTexts   || []));
+  renderStyleRows();
+  renderCustomTexts();
   // Layout Order
   if (cfg.layoutOrder && cfg.layoutOrder.length) {
-    pdLayoutOrder = cfg.layoutOrder;
+    pdLayoutOrder = cfg.layoutOrder.slice();
     if (!pdLayoutOrder.includes('barcode')) pdLayoutOrder.push('barcode');
+    if (!pdLayoutOrder.includes('logo'))    pdLayoutOrder.unshift('logo');
+    if (!pdLayoutOrder.includes('pttype')) {
+      const at = pdLayoutOrder.indexOf('hnQn');
+      pdLayoutOrder.splice(at >= 0 ? at + 1 : pdLayoutOrder.length, 0, 'pttype');
+    }
   }
+  syncLayoutWithTexts();
   renderLayoutOrder();
+}
+
+function setRange(id, v, unit) {
+  document.getElementById(id).value = v;
+  document.getElementById(id + 'V').textContent = v + unit;
 }
 
 function collectPrintCfg() {
@@ -1619,6 +1785,21 @@ function collectPrintCfg() {
     showDateTime:     document.getElementById('pdShowDt').checked,
     showBarcode:      document.getElementById('pdShowBarcode').checked,
     barcodeSource:    document.querySelector('input[name="pdBarcodeSrc"]:checked')?.value || 'qn',
+    barcodeType:      document.querySelector('input[name="pdBarcodeType"]:checked')?.value || 'code128',
+    barcodeHeight:    Number(document.getElementById('pdBarcodeH').value) || 10,
+    qrSize:           Number(document.getElementById('pdQrSize').value) || 25,
+    barcodeShowText:  document.getElementById('pdBarcodeText').checked,
+    showLogo:         document.getElementById('pdShowLogo').checked,
+    logoData:         pdLogo.data,
+    logoAspect:       pdLogo.aspect,
+    logoWidth:        Number(document.getElementById('pdLogoW').value) || 30,
+    showPttype:       document.getElementById('pdShowPttype').checked,
+    pttypeLabel:      document.getElementById('pdPttypeLabel').value,
+    pttypeFontSize:   Number(document.getElementById('pdPttypeFs').value) || 10,
+    numBoxStyle:      document.getElementById('pdNumBox').value,
+    dividerStyle:     document.getElementById('pdDividerStyle').value,
+    sectionStyles:    pdSectionStyles,
+    customTexts:      pdCustomTexts,
     showFooter:       document.getElementById('pdShowFooter').checked,
     footerText:       document.getElementById('pdFooterText').value,
     footerFontSize:   Number(document.getElementById('pdFooterFs').value),
@@ -1643,8 +1824,15 @@ function setPaperSize(size, btn, doUpdate = true) {
 function renderLayoutOrder() {
   const container = document.getElementById('pdLayoutOrder');
   container.innerHTML = pdLayoutOrder.map((id, idx) => {
-    const item = pdLayoutItems[id];
-    return `<div class="pd-lo-item" draggable="true" 
+    let item = pdLayoutItems[id];
+    if (id.startsWith('text:')) {
+      const blk = pdCustomTexts.find(b => 'text:' + b.id === id);
+      const preview = (blk && blk.text ? blk.text.split('\n')[0] : '(ว่าง)').slice(0, 22);
+      item = { icon: '✏️', label: '✏️ ' + escHtml(preview) };
+    }
+    if (!item) item = { icon: '•', label: escHtml(id) };
+    const removable = id === 'divider';
+    return `<div class="pd-lo-item" draggable="true"
       ondragstart="handleLayoutDragStart(event,${idx})"
       ondragover="event.preventDefault();this.classList.add('drag-over')"
       ondragleave="this.classList.remove('drag-over')"
@@ -1653,8 +1841,147 @@ function renderLayoutOrder() {
       <span class="pd-lo-drag">⋮⋮</span>
       <span class="pd-lo-icon">${item.icon}</span>
       <span class="pd-lo-label">${item.label}</span>
+      ${removable ? `<button class="pd-lo-del" title="ลบ" onclick="removeLayoutItem(${idx})">✕</button>` : ''}
     </div>`;
   }).join('');
+}
+
+function escHtml(s) {
+  return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function addLayoutDivider() {
+  pdLayoutOrder.push('divider');
+  if (!document.getElementById('pdShowDivider').checked) document.getElementById('pdShowDivider').checked = true;
+  renderLayoutOrder(); updatePreview();
+}
+
+function removeLayoutItem(idx) {
+  pdLayoutOrder.splice(idx, 1);
+  renderLayoutOrder(); updatePreview();
+}
+
+// Keep layout order in sync with custom text blocks (add new ones, drop deleted ones)
+function syncLayoutWithTexts() {
+  const ids = pdCustomTexts.map(b => 'text:' + b.id);
+  pdLayoutOrder = pdLayoutOrder.filter(id => !id.startsWith('text:') || ids.includes(id));
+  ids.forEach(id => { if (!pdLayoutOrder.includes(id)) pdLayoutOrder.push(id); });
+}
+
+// ── Per-section style (align / bold / color) ──────────────────────────────
+function renderStyleRows() {
+  document.querySelectorAll('.pd-style[data-sec]').forEach(el => {
+    const sec  = el.dataset.sec;
+    const opts = (el.dataset.opts || 'align,bold,color').split(',');
+    const st   = SlipRender.style({ sectionStyles: pdSectionStyles }, sec);
+    el.innerHTML = `<div class="pd-style-row"><span class="pd-style-lbl">${el.dataset.label || ''}</span>` +
+      styleControlsHtml(st, opts, `setSecStyle('${sec}',`) + `</div>`;
+  });
+}
+
+function styleControlsHtml(st, opts, call) {
+  let h = '';
+  if (opts.includes('align')) {
+    h += `<div class="pd-seg">` + [['left','⇤ ซ้าย'],['center','กลาง'],['right','ขวา ⇥']].map(([v, l]) =>
+      `<button class="${st.align === v ? 'on' : ''}" onclick="${call}'align','${v}')">${l}</button>`).join('') + `</div>`;
+  }
+  if (opts.includes('bold')) {
+    h += `<button class="pd-bold-btn ${st.bold ? 'on' : ''}" title="ตัวหนา" onclick="${call}'bold',${!st.bold})">B</button>`;
+  }
+  if (opts.includes('color')) {
+    h += `<select class="pd-color-sel" onchange="${call}'color',this.value)">
+      <option value="black"${st.color !== 'gray' ? ' selected' : ''}>สีดำ</option>
+      <option value="gray"${st.color === 'gray' ? ' selected' : ''}>สีเทา</option></select>`;
+  }
+  return h;
+}
+
+function setSecStyle(sec, key, value) {
+  pdSectionStyles[sec] = { ...SlipRender.style({ sectionStyles: pdSectionStyles }, sec), [key]: value };
+  renderStyleRows(); updatePreview();
+}
+
+// ── Custom text blocks ────────────────────────────────────────────────────
+function renderCustomTexts() {
+  const el = document.getElementById('pdCustomTexts');
+  el.innerHTML = pdCustomTexts.map((b, i) => `
+    <div class="pd-ct-item">
+      <textarea rows="2" placeholder="พิมพ์ข้อความ เช่น ติดต่อสอบถาม โทร 0-xxxx-xxxx" oninput="setCustomText(${i},'text',this.value,false)">${escHtml(b.text)}</textarea>
+      <div class="pd-ct-ctrl">
+        <input type="number" min="6" max="40" value="${Number(b.fs) || 10}" title="ขนาดตัวอักษร (pt)" oninput="setCustomText(${i},'fs',Number(this.value)||10,false)"/>
+        <span style="font-size:.72rem;color:#64b5f6">pt</span>
+        ${styleControlsHtml({ align: b.align || 'center', bold: !!b.bold, color: b.color || 'black' }, ['align','bold','color'], `setCustomText(${i},`)}
+        <button class="pd-lo-del" title="ลบข้อความนี้" onclick="removeCustomText(${i})">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+// rerender=false while typing so the textarea keeps focus
+function setCustomText(i, key, value, rerender = true) {
+  pdCustomTexts[i][key] = value;
+  if (rerender) renderCustomTexts();
+  if (key === 'text') renderLayoutOrder();
+  updatePreview();
+}
+
+function addCustomText() {
+  pdCustomTexts.push({ id: Date.now().toString(36), text: '', fs: 10, align: 'center', bold: false, color: 'black' });
+  syncLayoutWithTexts();
+  renderCustomTexts(); renderLayoutOrder(); updatePreview();
+  const tas = document.querySelectorAll('#pdCustomTexts textarea');
+  if (tas.length) tas[tas.length - 1].focus();
+}
+
+function removeCustomText(i) {
+  pdCustomTexts.splice(i, 1);
+  syncLayoutWithTexts();
+  renderCustomTexts(); renderLayoutOrder(); updatePreview();
+}
+
+// ── Barcode type ──────────────────────────────────────────────────────────
+function syncBarcodeTypeFields() {
+  const qr = document.getElementById('pdBarcodeTypeQr').checked;
+  document.getElementById('pdBarcodeHField').style.display = qr ? 'none' : '';
+  document.getElementById('pdQrSizeField').style.display   = qr ? '' : 'none';
+}
+
+// ── Logo ──────────────────────────────────────────────────────────────────
+function renderLogoThumb() {
+  document.getElementById('pdLogoThumb').innerHTML = pdLogo.data ? `<img src="${pdLogo.data}"/>` : 'ยังไม่มีรูป';
+}
+
+// Resize to printer resolution (≈ 72mm @ 203dpi) and flatten transparency onto white
+function handleLogoFile(input) {
+  const file = input.files && input.files[0];
+  input.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      const maxW = 576;
+      const w = Math.min(maxW, img.naturalWidth), h = Math.round(img.naturalHeight * w / img.naturalWidth);
+      const cv = document.createElement('canvas');
+      cv.width = w; cv.height = h;
+      const g = cv.getContext('2d');
+      g.fillStyle = '#fff'; g.fillRect(0, 0, w, h);
+      g.drawImage(img, 0, 0, w, h);
+      let data = cv.toDataURL('image/png');
+      if (data.length > 900000) data = cv.toDataURL('image/jpeg', 0.85);
+      pdLogo = { data, aspect: h / w };
+      document.getElementById('pdShowLogo').checked = true;
+      togglePdSection('pdLogoFields', { checked: true });
+      renderLogoThumb(); updatePreview();
+    };
+    img.onerror = () => toast('❌ เปิดไฟล์รูปไม่ได้');
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearLogo() {
+  pdLogo = { data: '', aspect: 1 };
+  renderLogoThumb(); updatePreview();
 }
 
 let pdLayoutDragIdx = -1;
@@ -1687,99 +2014,28 @@ function updatePreview() {
   const el  = document.getElementById('slipPreview');
   const sysName = pdSysName || PD_SAMPLE.sysName;
 
-  const widthMap = { '80mm':'72mm', '58mm':'50mm', 'a4':'190mm', 'custom': (cfg.customWidth||80)+'mm' };
-  el.style.width = widthMap[pdCurrentSize] || '72mm';
-
-  if (pdCurrentSize === 'custom' && Number(cfg.customHeight)) {
-    el.style.height   = cfg.customHeight + 'mm';
-    el.style.overflow = 'hidden';
-  } else {
-    el.style.height   = '';
-    el.style.overflow = '';
-  }
-
+  // True paper size and margins (same as the printed page); zoomed out only to fit the column
+  el.style.zoom = '';
+  SlipRender.applyPaperBox(el, cfg);
   el.innerHTML = renderSlipHtml(cfg, { ...PD_SAMPLE, sysName });
+  const wrap = document.getElementById('pdPreviewWrap');
+  const fit  = (wrap.clientWidth - 28) / el.offsetWidth;
+  if (fit > 0 && fit < 1) el.style.zoom = fit.toFixed(3);
+
+  const { w, h } = SlipRender.paperSize(cfg);
+  const lbl = document.getElementById('pdSizeLbl');
+  if (h) {
+    lbl.textContent = `📐 ขนาดกระดาษ ${w} × ${h} mm`;
+  } else {
+    const updateAuto = () => { lbl.textContent = `📐 ขนาดกระดาษ ${w} × ${SlipRender.measureHeightMm(el)} mm (ความยาวอัตโนมัติตามเนื้อหา)`; };
+    updateAuto();
+    SlipRender.whenImagesReady(el).then(updateAuto); // logo / barcode change the height once loaded
+  }
 }
 
+// Shared with queue.html and matches server / Print Agent output (public/slip-render.js)
 function renderSlipHtml(cfg, d) {
-  const divider = cfg.showDividerLine
-    ? `<div style="border-top:1px dashed #888;margin:5px 0"></div>` : '';
-  const ffStyle = cfg.fontFamily ? `font-family:'${cfg.fontFamily}',sans-serif;` : '';
-
-  // Section builders
-  const builders = {
-    'header': () => {
-      if (!cfg.showHeader) return '';
-      const name = cfg.headerName || d.sysName;
-      let h = `<div style="text-align:center;font-weight:900;font-size:${cfg.headerFontSize}pt;margin-bottom:2px">${name}</div>`;
-      if (cfg.headerSubtitle)
-        h += `<div style="text-align:center;font-size:${cfg.headerFontSize-3}pt;color:#555;margin-bottom:3px">${cfg.headerSubtitle}</div>`;
-      return h;
-    },
-    'patientName': () => {
-      if (!cfg.showPatientName || !d.patientName) return '';
-      return `<div style="font-size:${cfg.patientFontSize}pt;font-weight:700;text-align:center;margin:2px 0">${d.patientName}</div>`;
-    },
-    'hnQn': () => {
-      if (!cfg.showHnQn || (!d.hn && !d.qn)) return '';
-      const parts = [d.hn ? 'HN: '+d.hn : '', d.qn ? 'QN: '+d.qn : ''].filter(Boolean).join('   ');
-      return `<div style="font-size:${cfg.patientFontSize-2}pt;color:#555;text-align:center;margin:2px 0">${parts}</div>`;
-    },
-    'queueType': () => {
-      if (!cfg.showQueueType || !d.typeName) return '';
-      if ((cfg.queueTypePosition || 'above') === 'left') return '';
-      return `<div style="font-size:${cfg.queueTypeFontSize}pt;font-weight:600;text-align:center;margin:3px 0">${d.typeName}</div>`;
-    },
-    'queueNum': () => {
-      if ((cfg.queueTypePosition || 'above') === 'left' && cfg.showQueueType && d.typeName) {
-        return `<div style="display:flex;align-items:center;gap:3px;margin:4px 0">` +
-          `<div style="flex:0 0 35%;font-size:${cfg.queueTypeFontSize}pt;font-weight:700;text-align:center;word-break:break-word;line-height:1.3">${d.typeName}</div>` +
-          `<div style="flex:1;font-size:${cfg.queueNumFontSize}pt;font-weight:900;text-align:center;letter-spacing:4px;border:3px solid #000;padding:1px 4px;box-sizing:border-box">${d.display}</div>` +
-          `</div>`;
-      }
-      return `<div style="font-size:${cfg.queueNumFontSize}pt;font-weight:900;text-align:center;letter-spacing:4px;border:3px solid #000;padding:1px 10px;display:inline-block;width:100%;box-sizing:border-box;margin:4px 0">${d.display}</div>`;
-    },
-    'dateTime': () => {
-      if (!cfg.showDateTime) return '';
-      return `<div style="font-size:${cfg.dateFontSize||9}pt;color:#555;text-align:center;margin:2px 0">${d.date} · ${d.issuedAt}</div>`;
-    },
-    'barcode': () => {
-      if (!cfg.showBarcode) return '';
-      const val = cfg.barcodeSource === 'hn' ? d.hn : (d.qn || d.display);
-      if (!val || typeof JsBarcode === 'undefined') return '';
-      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      try {
-        JsBarcode(svg, String(val), { format:'CODE128', displayValue:true, fontSize:11, height:36, margin:4 });
-      } catch (e) { return ''; }
-      return `<div style="text-align:center;margin:4px 0">${svg.outerHTML}</div>`;
-    },
-    'footer': () => {
-      if (!cfg.showFooter || !cfg.footerText) return '';
-      return `<div style="font-size:${cfg.footerFontSize}pt;color:#555;text-align:center;margin:3px 0;line-height:1.6">${cfg.footerText.replace(/\n/g,'<br/>')}</div>`;
-    }
-  };
-
-  // Build HTML by layout order
-  let h = '';
-  const order = cfg.layoutOrder || pdLayoutOrder;
-  let lastWasDivider = false;
-
-  for (const itemId of order) {
-    if (itemId === 'divider') {
-      if (!lastWasDivider) {
-        h += divider;
-        lastWasDivider = true;
-      }
-    } else if (builders[itemId]) {
-      const html = builders[itemId]();
-      if (html) {
-        h += html;
-        lastWasDivider = false;
-      }
-    }
-  }
-
-  return ffStyle ? `<div style="${ffStyle}">${h}</div>` : h;
+  return SlipRender.html({ ...cfg, layoutOrder: cfg.layoutOrder || pdLayoutOrder }, d);
 }
 
 async function loadPrinters() {
@@ -1871,6 +2127,7 @@ async function testPrint() {
   const cfg      = collectPrintCfg();
   const sysName  = pdSysName || PD_SAMPLE.sysName;
   const ticket   = { ...PD_SAMPLE, sysName };
+  ticket.codeImg  = SlipRender.codeImage(cfg, ticket);
   const mode     = localStorage.getItem('queuePrintMode') || 'host';
 
   // HOST mode: save config → print via server GDI+/ZPL pipeline
@@ -1909,17 +2166,14 @@ async function testPrint() {
     }
   }
 
-  // Fallback: browser print dialog (no printer configured)
-  _testPrintArea.innerHTML = renderSlipHtml(cfg, ticket);
-  _testPrintArea.style.display = 'block';
+  // Fallback: browser print dialog (no printer configured) — page = exact configured paper size
+  _testPrintArea.style.cssText = 'display:none';
+  const { pageCss } = await SlipRender.preparePrint(_testPrintArea, cfg, ticket);
   let ps = document.getElementById('_testPageStyle');
   if (!ps) { ps = document.createElement('style'); ps.id='_testPageStyle'; document.head.appendChild(ps); }
-  const szMap = {'80mm':'80mm auto','58mm':'58mm auto','a4':'A4','custom':`${cfg.customWidth||80}mm ${cfg.customHeight?cfg.customHeight+'mm':'auto'}`};
-  ps.textContent = `@media print{@page{size:${szMap[pdCurrentSize]};margin:4mm}body>*:not(#testPrintArea){display:none!important}#testPrintArea{display:block!important;position:static;padding:0}}`;
-  setTimeout(() => {
-    window.print();
-    setTimeout(() => { _testPrintArea.style.display='none'; ps.textContent=''; }, 1000);
-  }, 150);
+  ps.textContent = `@media print{${pageCss}body>*:not(#testPrintArea){display:none!important}#testPrintArea{display:block!important}}`;
+  window.print();
+  setTimeout(() => { ps.textContent = ''; }, 1000);
 }
 
 socket.on('print_config_updated', cfg => { /* live update if needed */ });

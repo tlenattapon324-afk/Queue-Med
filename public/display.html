@@ -259,6 +259,13 @@
       font-size:.72rem;font-weight:700;letter-spacing:1px;margin-left:8px;flex-shrink:0}
     .mode-badge.opd{background:rgba(66,165,245,.2);border:1px solid rgba(66,165,245,.4);color:#90caf9}
     .mode-badge.ipd{background:rgba(0,200,83,.2);border:1px solid rgba(0,200,83,.4);color:#69f0ae}
+    .mode-badge.all{background:rgba(255,193,7,.18);border:1px solid rgba(255,193,7,.45);color:#ffe082}
+    .mode-seg{display:flex;align-items:center}
+    .mode-seg .btn-mode-toggle{margin-left:4px}
+    .mode-tag{display:inline-block;padding:1px 7px;border-radius:6px;font-size:.7em;font-weight:800;
+      letter-spacing:1px;vertical-align:middle;margin-left:6px;line-height:1.5}
+    .mode-tag.opd{background:#1565c0;color:#fff}
+    .mode-tag.ipd{background:#00897b;color:#fff}
     .btn-mode-toggle{display:flex;align-items:center;gap:5px;cursor:pointer;
       background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.18);
       border-radius:20px;padding:4px 12px 4px 10px;font-size:.78rem;font-family:inherit;
@@ -275,9 +282,11 @@
   <div style="display:flex;align-items:center">
     <div class="hdr-title" id="hdrTitle">ระบบแสดงคิว</div>
     <div id="modeBadge" class="mode-badge opd">🏥 OPD</div>
-    <button id="dispModeToggle" class="btn-mode-toggle"
-            onclick="switchDispMode(dispMode==='opd'?'ipd':'opd')"
-            title="สลับโหมดผู้ป่วยนอก / ผู้ป่วยใน">🛏 IPD</button>
+    <div id="dispModeSeg" class="mode-seg" title="เลือกคิวที่แสดงบนจอนี้">
+      <button class="btn-mode-toggle" data-mode="opd" onclick="switchDispMode('opd')">🏥 OPD</button>
+      <button class="btn-mode-toggle" data-mode="ipd" onclick="switchDispMode('ipd')">🛏 IPD</button>
+      <button class="btn-mode-toggle" data-mode="all" onclick="switchDispMode('all')">🏥+🛏 รวม</button>
+    </div>
   </div>
   <div class="hdr-right">
     <div class="hdr-clock" id="clock">--:--:--</div>
@@ -789,7 +798,7 @@
 <script src="/socket.io/socket.io.js"></script>
 <script>
 const sysId    = new URLSearchParams(location.search).get('sys') || 1;
-let   dispMode = new URLSearchParams(location.search).get('mode') || 'opd';
+let   dispMode = ['opd','ipd','all'].includes(new URLSearchParams(location.search).get('mode')) ? new URLSearchParams(location.search).get('mode') : 'opd';
 const socket = io();
 // Init badge after DOM is ready (script is at bottom of body)
 document.addEventListener('DOMContentLoaded', updateModeBadge);
@@ -879,12 +888,21 @@ let cfg = { ...DEF, ...(JSON.parse(localStorage.getItem(LS_KEY) || '{}')) };
 function getModeSettings(ds) {
   return (ds && ds.modes && ds.modes[dispMode]) ? ds.modes[dispMode] : (ds || {});
 }
+// opd = ผู้ป่วยนอกเท่านั้น · ipd = ผู้ป่วยในเท่านั้น · all = รวม OPD + IPD บนจอเดียว
+function modeMatches(t) {
+  return dispMode === 'all' || !t || !t.mode || t.mode === dispMode;
+}
+// On the combined screen, tag each ticket so staff can tell OPD from IPD
+function modeTag(t) {
+  if (dispMode !== 'all' || !t) return '';
+  return t.mode === 'ipd' ? '<span class="mode-tag ipd">IPD</span>' : '<span class="mode-tag opd">OPD</span>';
+}
 function updateModeBadge() {
+  // labels live here: this runs at startup, before later top-level consts are initialised
+  const MODE_LABELS = { opd: '🏥 OPD ผู้ป่วยนอก', ipd: '🛏 IPD ผู้ป่วยใน', all: '🏥+🛏 รวม OPD + IPD' };
   const b = document.getElementById('modeBadge');
-  if (b) { b.className = 'mode-badge ' + dispMode;
-           b.textContent = dispMode === 'ipd' ? '🛏 IPD ผู้ป่วยใน' : '🏥 OPD ผู้ป่วยนอก'; }
-  const t = document.getElementById('dispModeToggle');
-  if (t) t.classList.toggle('active', dispMode === 'ipd');
+  if (b) { b.className = 'mode-badge ' + dispMode; b.textContent = MODE_LABELS[dispMode] || MODE_LABELS.opd; }
+  document.querySelectorAll('#dispModeSeg button').forEach(btn => btn.classList.toggle('active', btn.dataset.mode === dispMode));
 }
 function switchDispMode(newMode) {
   if (newMode === dispMode) return;
@@ -985,12 +1003,12 @@ socket.on('queue_called', (data) => {
     const hasGrid = allCounters.length && document.getElementById('cell-' + allCounters[0]?.id);
     const hasCard = allCounters.length && document.getElementById('card-' + allCounters[0]?.id);
     if (allCounters.length && !hasGrid && !hasCard) buildCounterGrid();
-    const modeMatch = !calledQueue || !calledQueue.mode || calledQueue.mode === dispMode;
+    const modeMatch = modeMatches(calledQueue);
     renderCounters(modeMatch, modeMatch ? calledQueue : null);
     renderNoShow();
   } catch(e) { console.error('[queue_called] render error:', e); }
   // Sound only if called queue matches this display's mode
-  const _match = !calledQueue || !calledQueue.mode || calledQueue.mode === dispMode;
+  const _match = modeMatches(calledQueue);
   if (_match) {
     try { playBell(); } catch(e) {}
     try { announceQueue(calledQueue); } catch(e) { console.error('[queue_called] sound error:', e); }
@@ -1200,7 +1218,7 @@ function renderCell(counterId, animate, flashFor) {
   const counter = allCounters.find(c => c.id === counterId);
   const displayCfg = getDisplayCfg();
   const hiddenBadge = displayCfg.hiddenTypes || [];
-  const recent  = (recentByCtr[String(counterId)] || []).filter(t => !t.mode || t.mode === dispMode).slice(0, displayCfg.maxPerCounter);
+  const recent  = (recentByCtr[String(counterId)] || []).filter(modeMatches).slice(0, displayCfg.maxPerCounter);
   const visLen  = getVisibleCounters().length;
 
   const nameHtml = `<div class="cc-name">🪟 ${counter?.name || 'ช่อง '+counterId}</div>`;
@@ -1226,7 +1244,7 @@ function renderCell(counterId, animate, flashFor) {
       <div class="cc-ticket ${!isMain ? 'cc-prev' : ''}">
         ${hiddenBadge.includes(Number(ticket.typeId)) ? '' : `<div class="cc-badge-row">
           <div class="cc-prefix" style="background:${ticket.color};${!isMain ? 'width:26px;height:26px;font-size:.75rem' : ''}">${ticket.prefix}</div>
-          <span class="cc-typename" style="${!isMain ? 'font-size:.72rem' : ''}">${ticket.typeName}</span>
+          <span class="cc-typename" style="${!isMain ? 'font-size:.72rem' : ''}">${ticket.typeName}${modeTag(ticket)}</span>
         </div>`}
         <div class="cc-num" data-flash="${doFlash?'1':''}" style="color:${numClr};font-size:${sz}">${ticket.display}</div>
         <div class="cc-time" style="${!isMain ? 'font-size:.65rem' : ''}">${ticket.calledAt || ''}</div>
@@ -1265,7 +1283,7 @@ function renderSplitCard(counter, animate, flashFor) {
   const d       = getDisplayCfg();
   const mode    = d.layoutMode || 'grid';
   const hidden  = d.hiddenTypes || [];
-  const recent  = (recentByCtr[String(counter.id)] || []).filter(t => !t.mode || t.mode === dispMode);
+  const recent  = (recentByCtr[String(counter.id)] || []).filter(modeMatches);
   const ticket  = recent[0] || null;
   const showBadge = ticket && !hidden.includes(Number(ticket.typeId));
   const doFlash = animate && ticket && (!flashFor || ticket.display === flashFor?.display);
@@ -1277,7 +1295,7 @@ function renderSplitCard(counter, animate, flashFor) {
   const badgeRow = showBadge ? `
     <div class="split-badge-row">
       <div class="split-pfx" style="background:${ticket.color};width:${bsz}px;height:${bsz}px;font-size:${(bsz*0.032).toFixed(2)}rem">${ticket.prefix}</div>
-      <span class="split-typename" style="font-size:${typeFs};color:${ticket.color}">${ticket.typeName}</span>
+      <span class="split-typename" style="font-size:${typeFs};color:${ticket.color}">${ticket.typeName}${modeTag(ticket)}</span>
     </div>` : '';
 
   if (mode === 'split-h') {
@@ -1289,7 +1307,7 @@ function renderSplitCard(counter, animate, flashFor) {
         qCell = `<div style="display:flex;align-items:center;gap:6px;width:100%;justify-content:center">
           <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0;max-width:35%">
             <div class="split-pfx" style="background:${ticket.color};width:${bsz}px;height:${bsz}px;font-size:${(bsz*0.032).toFixed(2)}rem">${ticket.prefix}</div>
-            <span class="split-typename" style="font-size:${typeFs};color:${ticket.color};text-align:center;word-break:break-word">${ticket.typeName}</span>
+            <span class="split-typename" style="font-size:${typeFs};color:${ticket.color};text-align:center;word-break:break-word">${ticket.typeName}${modeTag(ticket)}</span>
           </div>
           <div class="split-q-val" data-flash="${doFlash?'1':''}" style="font-size:${qFs};color:${ticket.color};flex:1;text-align:center">${ticket.display}</div>
         </div>`;
@@ -1420,7 +1438,7 @@ function renderCounters(animate, latestCall) {
 function renderNoShow() {
   const dcfg = getDisplayCfg();
   if (!dcfg.showNoShow) return;
-  const list      = noShows.filter(t => !t.mode || t.mode === dispMode).slice(0, dcfg.nsRows);
+  const list      = noShows.filter(modeMatches).slice(0, dcfg.nsRows);
   const el        = document.getElementById('nsList');
   const detail    = dcfg.showNsDetail !== false;
   const bsz       = dcfg.nsBadgeSize || 28;
@@ -1431,7 +1449,7 @@ function renderNoShow() {
     <div class="ns-item" style="height:${dcfg.nsRowH}px;${!detail ? 'justify-content:center;gap:8px' : ''}">
       <div class="ns-badge" style="background:${t.color};width:${bsz}px;height:${bsz}px;border-radius:${bRadius};font-size:${bFs}">${t.prefix}</div>
       <div style="${!detail ? 'text-align:center' : ''}">
-        <div class="ns-num" style="${!detail ? 'font-size:'+((dcfg.nsNumFs||1.1)*1.6)+'rem' : ''}">${t.display}</div>
+        <div class="ns-num" style="${!detail ? 'font-size:'+((dcfg.nsNumFs||1.1)*1.6)+'rem' : ''}">${t.display}${modeTag(t)}</div>
         ${detail ? `<div class="ns-meta">${t.typeName}${t.counterName?' · '+t.counterName:''}</div>` : ''}
       </div>
       ${detail ? `<div class="ns-times">

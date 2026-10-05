@@ -337,6 +337,24 @@
     };
   }
 
+  // connection ล่าสุดที่ทดสอบผ่าน — ใช้ตอนเช็ค/เพิ่มตาราง แทนค่าที่บันทึกไว้ในไฟล์
+  let verifiedConn = null;
+  function connFields(d) {
+    return { type: d.type, host: d.host, port: d.port, database: d.database, username: d.username, password: d.password };
+  }
+  function sameConn(a, b) {
+    return !!a && !!b && JSON.stringify(connFields(a)) === JSON.stringify(connFields(b));
+  }
+  function postConnTest(data) {
+    return fetch('/api/db-config/test', {
+      method: 'POST', headers: adminHeaders({'Content-Type':'application/json'}),
+      body: JSON.stringify(data)
+    }).then(r => r.json()).then(d => {
+      verifiedConn = d.success ? connFields(data) : null;
+      return d;
+    });
+  }
+
   function genToken() {
     const hospitalCode = document.getElementById('hospitalCode').value.trim();
     if (!hospitalCode) {
@@ -379,14 +397,16 @@
     }
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span>กำลังทดสอบ...';
-    fetch('/api/db-config/test', {
-      method: 'POST', headers: adminHeaders({'Content-Type':'application/json'}),
-      body: JSON.stringify(data)
-    })
-    .then(r => r.json())
+    postConnTest(data)
     .then(d => {
       resEl.textContent = d.success ? '✓ ' + d.message : '✗ ' + d.message;
       resEl.className   = 'result-box ' + (d.success ? 'ok' : 'fail');
+      if (d.success) {
+        document.getElementById('tableCard').style.display = 'block';
+        document.getElementById('tblMsg').className = 'tbl-msg';
+        document.getElementById('tblMsg').textContent = '';
+        checkTables();
+      }
     })
     .catch(() => {
       resEl.textContent = '✗ เกิดข้อผิดพลาดในการเชื่อมต่อ';
@@ -418,7 +438,10 @@
       if (d.success) {
         btn.innerHTML = '<span class="spinner"></span>กำลังตรวจสอบตาราง...';
         document.getElementById('tableCard').style.display = 'block';
-        return fetch('/api/db/migrate', { method: 'POST', headers: adminHeaders() })
+        return fetch('/api/db/migrate', {
+          method: 'POST', headers: adminHeaders({'Content-Type':'application/json'}),
+          body: JSON.stringify(connFields(data))
+        })
           .then(r => r.json())
           .then(m => {
             if (m.success) {
@@ -467,7 +490,10 @@
   }
 
   function checkTables() {
-    fetch('/api/db/check-tables', { headers: adminHeaders() }).then(r => r.json()).then(d => {
+    const req = verifiedConn
+      ? fetch('/api/db/check-tables', { method: 'POST', headers: adminHeaders({'Content-Type':'application/json'}), body: JSON.stringify(verifiedConn) })
+      : fetch('/api/db/check-tables', { headers: adminHeaders() });
+    req.then(r => r.json()).then(d => {
       if (d.tables) {
         renderTableStatus(d.tables);
       } else {
@@ -501,8 +527,20 @@
     btn.className = 'btn-migrate done';
     btn.innerHTML = '<span class="spinner"></span>กำลังสร้างตาราง...';
     msgEl.className = 'tbl-msg'; msgEl.textContent = '';
-    fetch('/api/db/migrate', { method: 'POST', headers: adminHeaders() })
-      .then(r => r.json())
+    const form = getFormData();
+    // ต้องเชื่อมต่อ connection ในฟอร์มสำเร็จก่อน ถึงจะสร้างตาราง
+    const ready = sameConn(verifiedConn, form)
+      ? Promise.resolve({ success: true })
+      : (btn.innerHTML = '<span class="spinner"></span>กำลังทดสอบการเชื่อมต่อ...', postConnTest(form));
+    ready
+      .then(t => {
+        if (!t.success) throw new Error('เชื่อมต่อฐานข้อมูลไม่สำเร็จ: ' + (t.message || ''));
+        btn.innerHTML = '<span class="spinner"></span>กำลังสร้างตาราง...';
+        return fetch('/api/db/migrate', {
+          method: 'POST', headers: adminHeaders({'Content-Type':'application/json'}),
+          body: JSON.stringify(verifiedConn)
+        }).then(r => r.json());
+      })
       .then(d => {
         if (d.success) {
           msgEl.textContent = '✓ สร้างตารางสำเร็จ';
@@ -516,8 +554,8 @@
           btn.textContent = '+ เพิ่มตาราง';
         }
       })
-      .catch(() => {
-        msgEl.textContent = '✗ เกิดข้อผิดพลาดในการเชื่อมต่อ';
+      .catch(err => {
+        msgEl.textContent = '✗ ' + (err && err.message && err.message.startsWith('เชื่อมต่อ') ? err.message : 'เกิดข้อผิดพลาดในการเชื่อมต่อ');
         msgEl.className   = 'tbl-msg fail';
         btn.disabled = false;
         btn.className = 'btn-migrate active';

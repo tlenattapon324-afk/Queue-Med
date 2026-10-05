@@ -293,6 +293,14 @@
       <div class="lm-hint">ส่งให้จอ TV / monitor ที่แสดงหมายเลขคิวให้ผู้รับบริการ</div>
     </div>
     <div class="lm-sec">
+      <div class="lm-lbl">🖥️ แสดงคิวรวม OPD + IPD <span style="color:#3a5a78;font-weight:400;text-transform:none;letter-spacing:0">(จอเดียวแสดงทั้งผู้ป่วยนอกและผู้ป่วยใน)</span></div>
+      <div class="lm-url-row">
+        <input type="text" class="lm-url" id="lmUrlDisplayAll" readonly onclick="this.select()">
+        <button class="btn-lm-copy" id="btnCpDisplayAll" onclick="copyLink('lmUrlDisplayAll','btnCpDisplayAll')">📋 คัดลอก</button>
+      </div>
+      <div class="lm-hint">จอแยก OPD / IPD แบบเดิมยังใช้ได้ — เลือกได้จากปุ่มบนหัวจอแสดงคิว หรือใส่ &amp;mode=opd / &amp;mode=ipd ท้ายลิงก์</div>
+    </div>
+    <div class="lm-sec">
       <div class="lm-lbl">📞 เรียกคิว <span style="color:#3a5a78;font-weight:400;text-transform:none;letter-spacing:0">(สำหรับเจ้าหน้าที่เรียกคิว)</span></div>
       <div class="lm-url-row">
         <input type="text" class="lm-url" id="lmUrlCashier" readonly onclick="this.select()">
@@ -414,6 +422,7 @@ function renderSystems() {
         </a>
         <a class="sc-link sc-link-sec" href="/cashier.html?sys=${s.id}">📞 เรียกคิว</a>
         <a class="sc-link sc-link-sec" href="/display.html?sys=${s.id}" target="_blank">🖥️ แสดงคิว</a>
+        <a class="sc-link sc-link-sec" href="/display.html?sys=${s.id}&mode=all" target="_blank" title="จอเดียวแสดงทั้ง OPD และ IPD">🖥️ จอรวม OPD+IPD</a>
         <a class="sc-link sc-link-sec" href="/settings.html?sys=${s.id}">⚙️ ตั้งค่า</a>
       </div>
       <div class="sc-footer">
@@ -561,7 +570,8 @@ function openLinkModal(id) {
   document.getElementById('lmUrlQueue').value   = `${origin}/queue.html?sys=${id}`;
   document.getElementById('lmUrlDisplay').value = `${origin}/display.html?sys=${id}`;
   document.getElementById('lmUrlCashier').value = `${origin}/cashier.html?sys=${id}`;
-  ['btnCpQueue','btnCpDisplay','btnCpCashier'].forEach(bid => {
+  document.getElementById('lmUrlDisplayAll').value = `${origin}/display.html?sys=${id}&mode=all`;
+  ['btnCpQueue','btnCpDisplay','btnCpDisplayAll','btnCpCashier'].forEach(bid => {
     document.getElementById(bid).textContent = '📋 คัดลอก';
     document.getElementById(bid).classList.remove('copied');
   });

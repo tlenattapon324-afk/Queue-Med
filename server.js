@@ -6,6 +6,7 @@ const fs      = require('fs');
 const os      = require('os');
 const crypto  = require('crypto');
 const { exec } = require('child_process');
+const { printSlip } = require('./slip-print');
 
 const app    = express();
 const server = http.createServer(app);
@@ -28,7 +29,7 @@ if (IS_PKG) {
 }
 
 app.use(express.static(PUBLIC_DIR));
-app.use(express.json());
+app.use(express.json({ limit: '5mb' })); // print config may carry a logo image
 
 // ── Persist helpers ──────────────────────────────────────────────────────
 const DATA_DIR = path.join(APP_DIR, 'data');
@@ -1018,265 +1019,14 @@ app.get('/api/printers', corsLocal, (req, res) => {
   });
 });
 
-// ── Direct print (server-side, no browser dialog) ────────────────────────
-function calcPrintHeight(lines, bottomMargin = 8) {
-  let y = 3; // top margin
-  for (const line of lines) {
-    if (line.t === 'div') {
-      y += 3.0;
-    } else if (line.t === 'numWithType') {
-      const lh = (line.numFs / 72.0 * 25.4) * 1.5;
-      y += lh + 1.5;
-    } else {
-      const lh = (line.fs / 72.0 * 25.4) * 1.5;
-      y += lh + 1.5;
-    }
-  }
-  return Math.ceil(y + bottomMargin);
-}
-
-function buildPrintLines(cfg, ticket) {
-  const lines = [];
-  const DEFAULT_ORDER = ['header','patientName','hnQn','queueType','queueNum','dateTime','footer'];
-  const order = (cfg.layoutOrder && cfg.layoutOrder.length) ? cfg.layoutOrder : DEFAULT_ORDER;
-
-  const builders = {
-    header: () => {
-      if (!cfg.showHeader) return;
-      lines.push({ t:'text', text: cfg.headerName || ticket.sysName || 'ระบบคิว', fs: cfg.headerFontSize||14, bold:true, color:'Black' });
-      if (cfg.headerSubtitle) lines.push({ t:'text', text: cfg.headerSubtitle, fs: Math.max(7,(cfg.headerFontSize||14)-3), bold:false, color:'DimGray' });
-    },
-    patientName: () => {
-      if (!cfg.showPatientName || !ticket.patientName) return;
-      lines.push({ t:'text', text: ticket.patientName, fs: cfg.patientFontSize||11, bold:true, color:'Black' });
-    },
-    hnQn: () => {
-      if (!cfg.showHnQn) return;
-      const parts = [ticket.hn?'HN: '+ticket.hn:'', ticket.qn?'QN: '+ticket.qn:''].filter(Boolean);
-      if (parts.length) lines.push({ t:'text', text: parts.join('   '), fs: Math.max(7,(cfg.patientFontSize||11)-2), bold:false, color:'DimGray' });
-    },
-    queueType: () => {
-      if ((cfg.queueTypePosition || 'above') === 'left') return;
-      if (!cfg.showQueueType || !ticket.typeName) return;
-      lines.push({ t:'text', text: ticket.typeName, fs: cfg.queueTypeFontSize||11, bold:false, color:'Black' });
-    },
-    queueNum: () => {
-      if ((cfg.queueTypePosition || 'above') === 'left' && cfg.showQueueType && ticket.typeName) {
-        lines.push({ t:'numWithType', typeText: ticket.typeName, typeFs: cfg.queueTypeFontSize||11,
-                     numText: ticket.display, numFs: cfg.queueNumFontSize||60 });
-      } else {
-        lines.push({ t:'num', text: ticket.display, fs: cfg.queueNumFontSize||60, bold:true, color:'Black' });
-      }
-    },
-    dateTime: () => {
-      if (!cfg.showDateTime) return;
-      lines.push({ t:'text', text: `${ticket.date}  ${ticket.issuedAt}`, fs: cfg.dateFontSize||9, bold:false, color:'DimGray' });
-    },
-    footer: () => {
-      if (!cfg.showFooter || !cfg.footerText) return;
-      cfg.footerText.split('\n').forEach(l => {
-        if (l.trim()) lines.push({ t:'text', text: l, fs: cfg.footerFontSize||8, bold:false, color:'DimGray' });
-      });
-    }
-  };
-
-  for (const id of order) {
-    if (id === 'divider') {
-      if (cfg.showDividerLine && lines.length && lines[lines.length-1]?.t !== 'div')
-        lines.push({ t:'div' });
-    } else if (builders[id]) {
-      builders[id]();
-    }
-  }
-  return lines;
-}
-
-function runPowershellPrint(printData, callback) {
-  const ts       = Date.now();
-  const dataFile = path.join(os.tmpdir(), `qdata_${ts}.json`);
-  const ps1File  = path.join(os.tmpdir(), `qprint_${ts}.ps1`);
-  const safeFont = (printData.fontFamily || 'Segoe UI').replace(/['"]/g, '');
-  fs.writeFileSync(dataFile, JSON.stringify({ ...printData, fontFamily: safeFont }), 'utf8');
-  const esc = dataFile.replace(/\\/g,'\\\\').replace(/'/g,"''");
-  const psScript = `
-Add-Type -AssemblyName System.Drawing
-Add-Type -TypeDefinition @'
-using System;using System.Runtime.InteropServices;
-public class RawPrint{
-  [StructLayout(LayoutKind.Sequential,CharSet=CharSet.Unicode)]
-  struct DOCINFOW{[MarshalAs(UnmanagedType.LPWStr)]public string pDocName;[MarshalAs(UnmanagedType.LPWStr)]public string pOutputFile;[MarshalAs(UnmanagedType.LPWStr)]public string pDatatype;}
-  [DllImport("winspool.drv",CharSet=CharSet.Unicode)]static extern bool OpenPrinter(string p,out IntPtr h,IntPtr d);
-  [DllImport("winspool.drv")]static extern bool ClosePrinter(IntPtr h);
-  [DllImport("winspool.drv",CharSet=CharSet.Unicode)]static extern int StartDocPrinterW(IntPtr h,int lv,ref DOCINFOW di);
-  [DllImport("winspool.drv")]static extern bool StartPagePrinter(IntPtr h);
-  [DllImport("winspool.drv")]static extern bool WritePrinter(IntPtr h,byte[] b,int n,out int w);
-  [DllImport("winspool.drv")]static extern bool EndPagePrinter(IntPtr h);
-  [DllImport("winspool.drv")]static extern bool EndDocPrinter(IntPtr h);
-  public static bool Send(string name,byte[] data){
-    IntPtr h;if(!OpenPrinter(name,out h,IntPtr.Zero))return false;
-    var di=new DOCINFOW{pDocName="Q",pDatatype="RAW"};
-    if(StartDocPrinterW(h,1,ref di)<=0){ClosePrinter(h);return false;}
-    StartPagePrinter(h);int w;WritePrinter(h,data,data.Length,out w);
-    EndPagePrinter(h);EndDocPrinter(h);ClosePrinter(h);return true;
-  }
-}
-'@ -Language CSharp -ErrorAction SilentlyContinue
-$script:d = Get-Content '${esc}' -Raw -Encoding utf8 | ConvertFrom-Json
-$pw100 = [int]($script:d.paperMm / 25.4 * 100)
-$ph100 = if($script:d.paperHmm -gt 0){[int]($script:d.paperHmm / 25.4 * 100)}else{2000}
-$script:fontName = if($script:d.fontFamily -and $script:d.fontFamily -ne ''){$script:d.fontFamily}else{'Segoe UI'}
-
-# Font fallback: if configured font not installed in Windows, use Thai-capable system font
-$allFamilies = [System.Drawing.FontFamily]::Families | ForEach-Object { $_.Name }
-if ($script:fontName -notin $allFamilies) {
-  foreach ($fb in @('Leelawadee UI','Leelawadee','Tahoma','Segoe UI')) {
-    if ($fb -in $allFamilies) { $script:fontName = $fb; break }
-  }
-}
-
-# Detect ZPL printer — driver name check first, then printer name fallback
-# (network/shared printers show MEPPC driver locally, not ZDesigner)
-$script:isZPL = $false
-try {
-  $pName = $script:d.printerName
-  $pWmi = Get-WmiObject Win32_Printer -Filter ("Name='" + $pName.Replace("'","''") + "'") -ErrorAction SilentlyContinue
-  if ($pWmi -and ($pWmi.DriverName -like '*ZDesigner*' -or $pWmi.DriverName -like '*Zebra*' -or $pWmi.DriverName -like '*ZPL*')) {
-    $script:isZPL = $true
-  }
-  # Fallback: match on printer name itself (covers shared/network printers)
-  if (-not $script:isZPL) {
-    $script:isZPL = ($pName -like '*ZDesigner*' -or $pName -like '*Zebra*' -or $pName -like '*ZPL*')
-  }
-} catch {}
-
-# Drawing logic shared by GDI+ and ZPL paths
-$script:drawContent = {
-  param($g)
-  $g.PageUnit = [System.Drawing.GraphicsUnit]::Millimeter
-  [float]$pw=$script:d.paperMm-6.0; [float]$m=3.0; [float]$y=$m
-  foreach($line in $script:d.lines){
-    if($line.t -eq 'div'){
-      $pen=New-Object System.Drawing.Pen([System.Drawing.Color]::LightGray,[float]0.3)
-      $pen.DashStyle=[System.Drawing.Drawing2D.DashStyle]::Dash
-      $g.DrawLine($pen,$m,$y,($m+$pw),$y); $y+=[float]3.0
-    }elseif($line.t -eq 'numWithType'){
-      [float]$typeSmm=$line.typeFs/72.0*25.4
-      [float]$numSmm=$line.numFs/72.0*25.4
-      [float]$lh=$numSmm*1.5
-      [float]$leftW=$pw*[float]0.35; [float]$gap=[float]2.0
-      [float]$rightW=$pw-$leftW-$gap; [float]$rightX=$m+$leftW+$gap
-      $typeFont=New-Object System.Drawing.Font($script:fontName,$typeSmm,[System.Drawing.FontStyle]::Regular,[System.Drawing.GraphicsUnit]::Millimeter)
-      $numFont=New-Object System.Drawing.Font($script:fontName,$numSmm,[System.Drawing.FontStyle]::Bold,[System.Drawing.GraphicsUnit]::Millimeter)
-      $fmt=New-Object System.Drawing.StringFormat
-      $fmt.Alignment=[System.Drawing.StringAlignment]::Center; $fmt.LineAlignment=[System.Drawing.StringAlignment]::Center
-      $leftRect=New-Object System.Drawing.RectangleF($m,$y,$leftW,$lh)
-      $g.DrawString($line.typeText,$typeFont,[System.Drawing.Brushes]::Black,$leftRect,$fmt)
-      $bpen=New-Object System.Drawing.Pen([System.Drawing.Color]::Black,[float]0.7)
-      $g.DrawRectangle($bpen,$rightX,$y,$rightW,$lh)
-      $rightRect=New-Object System.Drawing.RectangleF($rightX,$y,$rightW,$lh)
-      $g.DrawString($line.numText,$numFont,[System.Drawing.Brushes]::Black,$rightRect,$fmt)
-      $y+=$lh+[float]1.5
-    }else{
-      [float]$smm=$line.fs/72.0*25.4
-      $st=if($line.bold){[System.Drawing.FontStyle]::Bold}else{[System.Drawing.FontStyle]::Regular}
-      $font=New-Object System.Drawing.Font($script:fontName,$smm,$st,[System.Drawing.GraphicsUnit]::Millimeter)
-      $brush=[System.Drawing.Brushes]::($line.color)
-      if(-not $brush){$brush=[System.Drawing.Brushes]::Black}
-      $fmt=New-Object System.Drawing.StringFormat
-      $fmt.Alignment=[System.Drawing.StringAlignment]::Center; $fmt.LineAlignment=[System.Drawing.StringAlignment]::Center
-      [float]$lh=$smm*1.5
-      if($line.t -eq 'num'){
-        $bpen=New-Object System.Drawing.Pen([System.Drawing.Color]::Black,[float]0.7)
-        $g.DrawRectangle($bpen,$m,$y,$pw,$lh)
-      }
-      $rect=New-Object System.Drawing.RectangleF($m,$y,$pw,$lh)
-      $g.DrawString($line.text,$font,$brush,$rect,$fmt)
-      $y+=$lh+[float]1.5
-    }
-  }
-}
-
-function DoPrint {
-  if ($script:isZPL) {
-    # ZPL path: render to bitmap at printer DPI → convert to ^GFA hex → send raw ZPL
-    # ^PW and ^LL in ZPL data stream enforce exact label dimensions the driver cannot override
-    [int]$dpi = 203
-    try {
-      $pdDpi = New-Object System.Drawing.Printing.PrintDocument
-      $pdDpi.PrinterSettings.PrinterName = $script:d.printerName
-      $r = $pdDpi.PrinterSettings.DefaultPageSettings.PrinterResolution.X
-      if ($r -gt 0) { $dpi = $r }
-    } catch {}
-    [int]$bmpW = [Math]::Max(1,[int]($script:d.paperMm / 25.4 * $dpi))
-    [int]$bmpH = [Math]::Max(1,[int]($script:d.paperHmm / 25.4 * $dpi))
-    $bmp = New-Object System.Drawing.Bitmap($bmpW, $bmpH)
-    $bmp.SetResolution($dpi, $dpi)
-    $gBmp = [System.Drawing.Graphics]::FromImage($bmp)
-    $gBmp.Clear([System.Drawing.Color]::White)
-    & $script:drawContent $gBmp
-    $gBmp.Dispose()
-    # Convert to 1-bit ZPL ^GFA hex
-    $bytesPerRow = [int][Math]::Ceiling($bmpW / 8.0)
-    $totalBytes  = $bytesPerRow * $bmpH
-    $bmp1 = $bmp.Clone([System.Drawing.Rectangle]::new(0,0,$bmpW,$bmpH),[System.Drawing.Imaging.PixelFormat]::Format1bppIndexed)
-    $bmp.Dispose()
-    $bd = $bmp1.LockBits([System.Drawing.Rectangle]::new(0,0,$bmpW,$bmpH),[System.Drawing.Imaging.ImageLockMode]::ReadOnly,[System.Drawing.Imaging.PixelFormat]::Format1bppIndexed)
-    $stride = [Math]::Abs($bd.Stride)
-    $raw = New-Object byte[] ($bmpH * $stride)
-    [System.Runtime.InteropServices.Marshal]::Copy($bd.Scan0,$raw,0,$raw.Length)
-    $bmp1.UnlockBits($bd); $bmp1.Dispose()
-    $sb = [System.Text.StringBuilder]::new($totalBytes * 2)
-    for ($r = 0; $r -lt $bmpH; $r++) {
-      for ($b = 0; $b -lt $bytesPerRow; $b++) {
-        [void]$sb.Append((($raw[$r * $stride + $b] -bxor 0xFF) -band 0xFF).ToString('X2'))
-      }
-    }
-    $zpl = "^XA^PW$bmpW^LL$bmpH^FO0,0^GFA,$totalBytes,$totalBytes,$bytesPerRow,$($sb.ToString())^FS^XZ"
-    [void][RawPrint]::Send($script:d.printerName,[System.Text.Encoding]::UTF8.GetBytes($zpl))
-  } else {
-    # Standard GDI+ path
-    $pd = New-Object System.Drawing.Printing.PrintDocument
-    $pd.PrinterSettings.PrinterName = $script:d.printerName
-    $pd.PrinterSettings.Copies = [int16]1
-    $customSize = New-Object System.Drawing.Printing.PaperSize('Custom',$pw100,$ph100)
-    $customSize.RawKind = 256
-    $pd.DefaultPageSettings.PaperSize = $customSize
-    $pd.DefaultPageSettings.Landscape = $false
-    $pd.DefaultPageSettings.Margins = New-Object System.Drawing.Printing.Margins(0,0,0,0)
-    $pd.add_PrintPage({ param($s,$e); & $script:drawContent $e.Graphics })
-    $pd.Print()
-  }
-}
-
-for($i=0; $i -lt [int]$script:d.copies; $i++){
-  DoPrint
-  if($i -lt ([int]$script:d.copies - 1)){ Start-Sleep -Milliseconds 300 }
-}
-`;
-  fs.writeFileSync(ps1File, psScript, 'utf8');
-  exec(`powershell -NoProfile -ExecutionPolicy Bypass -File "${ps1File}"`,
-    { timeout: 15000, windowsHide: true }, (err, stdout, stderr) => {
-      try { fs.unlinkSync(ps1File); } catch {}
-      try { fs.unlinkSync(dataFile); } catch {}
-      callback(err, stderr);
-    });
-}
-
+// ── Direct print (server-side, no browser dialog) — shared with print-agent.js ──
 app.post('/api/sys/:sysId/print-ticket', requireSys, (req, res) => {
   const cfg = req.sys.printConfig;
   if (!cfg.printerName) return res.json({ success: false, message: 'ไม่ได้เลือกเครื่องพิมพ์' });
-  const paperMm  = cfg.paperSize === '58mm' ? 58 : cfg.paperSize === 'a4' ? 210
-                 : cfg.paperSize === 'custom' ? (Number(cfg.customWidth) || 80) : 80;
-  const lines    = buildPrintLines(cfg, req.body);
-  const paperHmm = cfg.paperSize === 'a4' ? 297
-                 : cfg.paperSize === 'custom' && Number(cfg.customHeight) ? Number(cfg.customHeight)
-                 : calcPrintHeight(lines);
-  runPowershellPrint({ printerName: cfg.printerName, paperMm, paperHmm, copies: cfg.copies || 1,
-                       fontFamily: cfg.fontFamily || '', lines },
-    (err, stderr) => {
-      if (err) return res.json({ success: false, message: (stderr || err.message).trim() });
-      res.json({ success: true });
-    });
+  printSlip(cfg, req.body, cfg.printerName, (err, stderr) => {
+    if (err) return res.json({ success: false, message: (stderr || err.message).trim() });
+    res.json({ success: true });
+  }, 15000);
 });
 
 // ── Local print (CORS — called from client machine's localhost) ───────────
@@ -1286,18 +1036,10 @@ app.post('/api/local-print', corsLocal, (req, res) => {
   if (!printerName) return res.json({ success: false, message: 'ไม่ได้ระบุเครื่องพิมพ์' });
   const sys = getSys(Number(sysId) || 1);
   const cfg = sys ? { ...sys.printConfig, printerName } : { ...PRINT_CFG_DEFAULTS, printerName };
-  const paperMm  = cfg.paperSize === '58mm' ? 58 : cfg.paperSize === 'a4' ? 210
-                 : cfg.paperSize === 'custom' ? (Number(cfg.customWidth) || 80) : 80;
-  const lines    = buildPrintLines(cfg, ticket || req.body);
-  const paperHmm = cfg.paperSize === 'a4' ? 297
-                 : cfg.paperSize === 'custom' && Number(cfg.customHeight) ? Number(cfg.customHeight)
-                 : calcPrintHeight(lines);
-  runPowershellPrint({ printerName, paperMm, paperHmm, copies: cfg.copies || 1,
-                       fontFamily: cfg.fontFamily || '', lines },
-    (err, stderr) => {
-      if (err) return res.json({ success: false, message: (stderr || err.message).trim() });
-      res.json({ success: true });
-    });
+  printSlip(cfg, ticket || req.body, printerName, (err, stderr) => {
+    if (err) return res.json({ success: false, message: (stderr || err.message).trim() });
+    res.json({ success: true });
+  }, 15000);
 });
 
 // ── Daily reset ───────────────────────────────────────────────────────────
@@ -1682,7 +1424,7 @@ async function checkTables(cfg) {
     rows.forEach(r => { result[r.TABLE_NAME] = true; });
   } else {
     const { Client } = require('pg');
-    const client = new Client({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectionTimeoutMillis: 10000, query_timeout: 15000, statement_timeout: 15000 });
+    const client = new Client({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectionTimeoutMillis: 10000, query_timeout: 15000 });
     await client.connect();
     const { rows } = await client.query(
       `SELECT c.relname AS table_name FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
@@ -1694,8 +1436,15 @@ async function checkTables(cfg) {
   return result;
 }
 
-app.get('/api/db/check-tables', requireAdmin, async (req, res) => {
-  const cfg = loadDbConfig();
+// ใช้ connection ที่ส่งมาจากฟอร์ม (หลังทดสอบเชื่อมต่อสำเร็จ) ถ้ามี — ไม่งั้นใช้ค่าที่บันทึกไว้
+function connCfgFrom(req) {
+  const b = req.body || {};
+  if (!b.host) return loadDbConfig();
+  return { type: b.type, host: b.host, port: b.port, database: b.database, username: b.username, password: b.password };
+}
+
+async function handleCheckTables(req, res) {
+  const cfg = connCfgFrom(req);
   if (!cfg.host) return res.json({ success: false, message: 'ยังไม่ได้ตั้งค่าการเชื่อมต่อฐานข้อมูล', tables: { app_queue_opd: false, app_queue_events: false } });
   try {
     const tables = await checkTables(cfg);
@@ -1703,10 +1452,12 @@ app.get('/api/db/check-tables', requireAdmin, async (req, res) => {
   } catch (err) {
     res.json({ success: false, message: err.message, tables: { app_queue_opd: false, app_queue_events: false } });
   }
-});
+}
+app.get('/api/db/check-tables', requireAdmin, handleCheckTables);
+app.post('/api/db/check-tables', requireAdmin, handleCheckTables);
 
 app.post('/api/db/migrate', requireAdmin, async (req, res) => {
-  const cfg = loadDbConfig();
+  const cfg = connCfgFrom(req);
   if (!cfg.host) return res.json({ success: false, message: 'ยังไม่ได้ตั้งค่าการเชื่อมต่อฐานข้อมูล' });
   let step = 'connect';
   try {
@@ -1761,7 +1512,7 @@ app.post('/api/db/migrate', requireAdmin, async (req, res) => {
       await conn.end();
     } else {
       const { Client } = require('pg');
-      const client = new Client({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectionTimeoutMillis: 10000, query_timeout: 15000, statement_timeout: 15000 });
+      const client = new Client({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectionTimeoutMillis: 10000, query_timeout: 15000 });
       console.log(`[migrate] เริ่ม migrate (${cfg.host}:${cfg.port}/${cfg.database})`);
       await client.connect();
       console.log('[migrate] connect สำเร็จ — กำลังสร้าง app_queue_opd');
