@@ -1,12 +1,12 @@
 ﻿[Setup]
 AppName=ระบบคิว (Queue System)
-AppVersion=2.7.2
-AppVerName=ระบบคิว (Queue System) v2.7.2
+AppVersion=2.9.0
+AppVerName=ระบบคิว (Queue System) v2.9.0
 AppPublisher=Hospital Queue System
 AppId={{A3F2C1D0-4E5B-6F7A-8B9C-0D1E2F3A4B5C}
 DefaultDirName={autopf}\QueueSystem
 OutputDir=.
-OutputBaseFilename=Queue-Setup-Full
+OutputBaseFilename=Queue-Setup-Full-v2.9.0
 SetupIconFile=..\assets\icons\setup.ico
 WizardSmallImageFile=..\assets\icons\wizard-small-55.bmp,..\assets\icons\wizard-small-110.bmp
 Compression=lzma2/ultra64
@@ -34,9 +34,10 @@ Source: "nssm.exe";            DestDir: "{app}\tools";    Flags: ignoreversion
 ; ── เสียงเรียกคิว Google TTS (ใช้ได้แม้ไม่มีอินเทอร์เน็ต — tools/make-tts-clips.js) ──
 Source: "..\tts-clips\*";      DestDir: "{app}\tts-clips"; Flags: ignoreversion
 ; ── หน้าเว็บ ─────────────────────────────────────────────────────────────
-Source: "..\public\*";         DestDir: "{app}\public";   Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\public\*";         DestDir: "{app}\public";   Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "testfile.txt"
 ; ── ค่าตั้งต้น (เฉพาะติดตั้งใหม่ครั้งแรก — ไม่ทับข้อมูลเดิมตอนอัปเกรด, ไม่รวมข้อมูลเชื่อมต่อฐานข้อมูล) ──
-Source: "data-defaults\*";     DestDir: "{app}\data";     Flags: onlyifdoesntexist recursesubdirs createallsubdirs
+; uninsneveruninstall: ถอนโปรแกรม/อัปเกรดรุ่นถัดไป จะไม่ลบไฟล์ตั้งค่าเหล่านี้ (ผู้ใช้แก้ค่าไปแล้ว)
+Source: "data-defaults\*";     DestDir: "{app}\data";     Flags: onlyifdoesntexist uninsneveruninstall recursesubdirs createallsubdirs
 
 [Dirs]
 Name: "{app}\data"
@@ -65,15 +66,37 @@ begin
   Result := UninstStr;
 end;
 
+// โฟลเดอร์ที่ติดตั้งรุ่นเก่าไว้ (อาจไม่ใช่ค่าเริ่มต้น)
+function GetOldAppDir(): String;
+var
+  RegKey, Dir: String;
+begin
+  Dir := '';
+  RegKey := 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{A3F2C1D0-4E5B-6F7A-8B9C-0D1E2F3A4B5C}_is1';
+  if not RegQueryStringValue(HKLM, RegKey, 'InstallLocation', Dir) then
+    RegQueryStringValue(HKCU, RegKey, 'InstallLocation', Dir);
+  if Dir = '' then Dir := ExpandConstant('{autopf}') + '\QueueSystem';
+  Result := RemoveBackslashUnlessRoot(Dir);
+end;
+
+// copy ทั้งโฟลเดอร์ (ทับไฟล์เดิม) — robocopy คืนค่า 0-7 = สำเร็จ
+function RoboCopy(Src, Dst: String): Boolean;
+var
+  ResultCode: Integer;
+begin
+  Result := Exec(ExpandConstant('{sys}\robocopy.exe'), '"' + Src + '" "' + Dst + '" /E /R:2 /W:1 /NFL /NDL /NJH /NJS /NP',
+                 '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode < 8);
+end;
+
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 var
-  UninstStr, NssmExe: String;
+  UninstStr, NssmExe, OldData, BackupDir: String;
   ResultCode: Integer;
 begin
   Result := '';
 
   // หยุด service เก่าก่อน
-  NssmExe := ExpandConstant('{autopf}') + '\QueueSystem\tools\nssm.exe';
+  NssmExe := GetOldAppDir() + '\tools\nssm.exe';
   if FileExists(NssmExe) then
   begin
     Exec(NssmExe, 'stop QueueSystem', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
@@ -85,9 +108,25 @@ begin
   UninstStr := GetOldUninstallString();
   if UninstStr <> '' then
   begin
+    // ตัวถอนรุ่นเก่าลบไฟล์ตั้งค่าที่เคยติดตั้งไว้ใน data (รายชื่อระบบ ช่องบริการ ประเภทคิว ...) แม้ผู้ใช้แก้แล้ว
+    // → สำรอง data ทั้งโฟลเดอร์ก่อนถอน แล้วคืนกลับหลังถอนเสร็จ (สำเนาเก็บไว้ที่ ProgramData\QueueSystem\backup)
+    OldData := GetOldAppDir() + '\data';
+    BackupDir := '';
+    if DirExists(OldData) then
+    begin
+      BackupDir := ExpandConstant('{commonappdata}') + '\QueueSystem\backup\data-' + GetDateTimeString('yyyymmdd-hhnnss', '-', '-');
+      if not RoboCopy(OldData, BackupDir) then
+      begin
+        Result := 'สำรองข้อมูลเดิมไม่สำเร็จ (' + OldData + ') — ยกเลิกการติดตั้งเพื่อไม่ให้ค่าที่ตั้งไว้หาย';
+        exit;
+      end;
+    end;
     UninstStr := RemoveQuotes(UninstStr);
     Exec(UninstStr, '/SILENT /NORESTART /SUPPRESSMSGBOXES', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
     Sleep(2500);
+    if BackupDir <> '' then
+      if not RoboCopy(BackupDir, OldData) then
+        Result := 'คืนข้อมูลเดิมไม่สำเร็จ — ข้อมูลสำรองอยู่ที่ ' + BackupDir + ' ให้ copy กลับไปที่ ' + OldData;
   end;
 end;
 

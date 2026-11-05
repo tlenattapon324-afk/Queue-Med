@@ -13,39 +13,39 @@
 <script src="/slip-render.js"></script>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Segoe UI',Tahoma,sans-serif;background:#0f1923;min-height:100vh;color:#fff}
+    body{font-family:'Sarabun','Segoe UI',Tahoma,sans-serif;background:linear-gradient(180deg,#e6f3ff 0%,#d4ebf8 100%);background-attachment:fixed;min-height:100vh;color:#0f172a}
 
-    nav{background:#0d1f33;border-bottom:2px solid #1e3a5f;padding:0 28px;
+    nav{background:#ffffff;border-bottom:2px solid #9ec5f3;padding:0 28px;
       display:flex;align-items:center;gap:4px;height:54px}
-    nav .logo{font-size:1rem;font-weight:700;color:#ffd54f;margin-right:20px;
+    nav .logo{font-size:1rem;font-weight:700;color:#b45309;margin-right:20px;
       text-decoration:none;white-space:nowrap}
-    nav a{color:#90caf9;text-decoration:none;padding:6px 14px;border-radius:20px;
+    nav a{color:#1e3a8a;text-decoration:none;padding:6px 14px;border-radius:20px;
       font-size:.88rem;transition:background .2s;white-space:nowrap}
-    nav a:hover{background:#1e3a5f}
+    nav a:hover{background:#dbeafe}
     nav a.active{background:#1565c0;color:#fff}
 
     .page{max-width:920px;margin:0 auto;padding:28px 20px}
     .page-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
-    .page-header h1{font-size:1.3rem;font-weight:700;color:#64b5f6}
-    .sys-badge{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);
-      border-radius:16px;padding:4px 14px;font-size:.82rem;color:rgba(255,255,255,.55);
+    .page-header h1{font-size:1.3rem;font-weight:700;color:#1d4ed8}
+    .sys-badge{background:rgba(30,64,175,0.042);border:1px solid #c7dbf3;
+      border-radius:16px;padding:4px 14px;font-size:.82rem;color:#475569;
       display:flex;align-items:center;gap:6px}
 
-    .page-tabs{display:flex;gap:0;border-bottom:2px solid #1e3a5f;margin-bottom:24px}
+    .page-tabs{display:flex;gap:0;border-bottom:2px solid #9ec5f3;margin-bottom:24px}
     .page-tab{padding:10px 24px;font-size:.95rem;font-weight:600;cursor:pointer;
-      color:#555;border-bottom:3px solid transparent;margin-bottom:-2px;transition:color .2s}
-    .page-tab:hover{color:#90caf9}
-    .page-tab.active{color:#fff;border-bottom-color:#42a5f5}
+      color:#475569;border-bottom:3px solid transparent;margin-bottom:-2px;transition:color .2s}
+    .page-tab:hover{color:#1e3a8a}
+    .page-tab.active{color:#0f172a;border-bottom-color:#42a5f5}
     .tab-pane{display:none}
     .tab-pane.active{display:block}
 
-    .form-card{background:#1a2a3a;border:1px solid #1e3a5f;border-radius:16px;padding:22px;margin-bottom:22px}
-    .form-card h2{font-size:.9rem;color:#90caf9;margin-bottom:14px;font-weight:600}
+    .form-card{background:#ffffff;border:1px solid #9ec5f3;border-radius:16px;padding:22px;margin-bottom:22px}
+    .form-card h2{font-size:.9rem;color:#1e3a8a;margin-bottom:14px;font-weight:600}
     .form-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
     .field{display:flex;flex-direction:column;gap:5px}
-    .field label{font-size:.78rem;color:#90caf9}
-    .field input[type=text]{background:#0f1923;border:1px solid #1e3a5f;border-radius:8px;
-      padding:9px 13px;color:#fff;font-size:.95rem;font-family:inherit}
+    .field label{font-size:.78rem;color:#1e3a8a}
+    .field input[type=text]{background:#ffffff;border:1px solid #9ec5f3;border-radius:8px;
+      padding:9px 13px;color:#0f172a;font-size:.95rem;font-family:inherit}
     .field input:focus{outline:none;border-color:#42a5f5}
     .field.name-f{flex:1;min-width:160px}
     .field.prefix-f{width:88px}
@@ -53,7 +53,7 @@
     .color-row{display:flex;gap:7px;flex-wrap:wrap}
     .swatch{width:26px;height:26px;border-radius:50%;cursor:pointer;
       border:3px solid transparent;transition:transform .15s}
-    .swatch.sel{border-color:#fff;transform:scale(1.2)}
+    .swatch.sel{border-color:#1e40af;transform:scale(1.2)}
 
     .btn-add{background:linear-gradient(135deg,#42a5f5,#1565c0);color:#fff;border:none;
       border-radius:10px;padding:10px 22px;font-size:.9rem;font-weight:700;cursor:pointer;
@@ -61,7 +61,7 @@
     .btn-add:hover{opacity:.85}
 
     .item-list{display:flex;flex-direction:column;gap:8px}
-    .item-row{background:#1a2a3a;border:1px solid #1e3a5f;border-radius:12px;
+    .item-row{background:#ffffff;border:1px solid #9ec5f3;border-radius:12px;
       padding:14px 18px;display:flex;align-items:center;gap:14px}
     .item-badge{width:40px;height:40px;border-radius:9px;display:flex;align-items:center;
       justify-content:center;font-size:1rem;font-weight:900;color:#000;flex-shrink:0}
@@ -69,42 +69,42 @@
       align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
     .item-info{flex:1}
     .item-info .i-name{font-size:1rem;font-weight:700}
-    .item-info .i-meta{font-size:.78rem;color:#90caf9;margin-top:2px}
+    .item-info .i-meta{font-size:.78rem;color:#1e3a8a;margin-top:2px}
     .item-actions{display:flex;gap:7px}
     .btn-edit,.btn-del{border:none;border-radius:8px;padding:6px 14px;
       font-size:.82rem;font-weight:600;cursor:pointer;transition:opacity .2s;font-family:inherit}
     .btn-edit{background:#1565c0;color:#fff}
     .btn-del{background:#b71c1c;color:#fff}
     .btn-edit:hover,.btn-del:hover{opacity:.8}
-    .empty-msg{text-align:center;color:#2a3a4a;padding:28px;font-size:.9rem}
+    .empty-msg{text-align:center;color:#64748b;padding:28px;font-size:.9rem}
 
     .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);
       z-index:100;align-items:center;justify-content:center;padding:20px}
     .modal-bg.open{display:flex}
-    .modal{background:#1a2a3a;border:1px solid #1e3a5f;border-radius:16px;
+    .modal{background:#ffffff;border:1px solid #9ec5f3;border-radius:16px;
       padding:26px;width:100%;max-width:400px}
-    .modal h3{font-size:1.05rem;color:#64b5f6;margin-bottom:18px}
+    .modal h3{font-size:1.05rem;color:#1d4ed8;margin-bottom:18px}
     .modal .form-row{flex-direction:column}
     .modal-btns{display:flex;gap:10px;margin-top:18px;justify-content:flex-end}
     .btn-save{background:linear-gradient(135deg,#42a5f5,#1565c0);color:#fff;border:none;
       border-radius:8px;padding:9px 22px;font-size:.9rem;font-weight:700;cursor:pointer;font-family:inherit}
-    .btn-cancel{background:#1e3a5f;color:#ccc;border:none;border-radius:8px;
+    .btn-cancel{background:#dbeafe;color:#1e293b;border:none;border-radius:8px;
       padding:9px 18px;font-size:.9rem;cursor:pointer;font-family:inherit}
 
     .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
-      background:#1a2a3a;border:1px solid #42a5f5;color:#fff;padding:10px 26px;
+      background:#ffffff;border:1px solid #42a5f5;color:#0f172a;padding:10px 26px;
       border-radius:30px;font-size:.9rem;transition:transform .3s;z-index:200}
     .toast.show{transform:translateX(-50%) translateY(0)}
 
-    .tk-row{background:#1a2a3a;border:1px solid #1e3a5f;border-radius:10px;
+    .tk-row{background:#ffffff;border:1px solid #9ec5f3;border-radius:10px;
       padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:grab;
       margin-bottom:7px;transition:background .2s}
-    .tk-row:hover{background:#1e3050}
-    .tk-drag{color:#2a4060;font-size:1rem;flex-shrink:0}
-    .tk-input{flex:1;background:transparent;border:none;color:#ccc;
+    .tk-row:hover{background:#eef5ff}
+    .tk-drag{color:#64748b;font-size:1rem;flex-shrink:0}
+    .tk-input{flex:1;background:transparent;border:none;color:#1e293b;
       font-size:.88rem;font-family:inherit;outline:none}
-    .tk-input:focus{color:#fff}
-    .btn-del-tk{background:none;border:1px solid #b71c1c;color:#ef5350;
+    .tk-input:focus{color:#0f172a}
+    .btn-del-tk{background:none;border:1px solid #b71c1c;color:#b91c1c;
       border-radius:6px;width:24px;height:24px;cursor:pointer;font-size:.85rem;
       display:flex;align-items:center;justify-content:center;flex-shrink:0}
     .btn-del-tk:hover{background:#b71c1c;color:#fff}
@@ -112,34 +112,34 @@
     /* ── Print designer ── */
     .print-designer-wrap{display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start}
     .pd-left{display:flex;flex-direction:column;gap:14px}
-    .pd-section{background:#1a2a3a;border:1px solid #1e3a5f;border-radius:14px;padding:18px}
-    .pd-sec-title{font-size:.82rem;font-weight:700;color:#90caf9;margin-bottom:14px;
+    .pd-section{background:#ffffff;border:1px solid #9ec5f3;border-radius:14px;padding:18px}
+    .pd-sec-title{font-size:.82rem;font-weight:700;color:#1e3a8a;margin-bottom:14px;
       display:flex;align-items:center;gap:7px}
     .pd-sec-title::before{content:'';display:block;width:3px;height:14px;
       background:#42a5f5;border-radius:2px}
     .pd-field{margin-bottom:11px}
     .pd-field:last-child{margin-bottom:0}
-    .pd-field label{display:block;font-size:.76rem;color:#64b5f6;margin-bottom:5px}
+    .pd-field label{display:block;font-size:.76rem;color:#1d4ed8;margin-bottom:5px}
     .pd-field input[type=text],.pd-field input[type=number],.pd-field textarea,.pd-field select{
-      width:100%;background:#0f1923;border:1px solid #1e3a5f;border-radius:8px;
-      padding:9px 12px;color:#fff;font-size:.9rem;font-family:inherit;transition:border-color .2s}
+      width:100%;background:#ffffff;border:1px solid #9ec5f3;border-radius:8px;
+      padding:9px 12px;color:#0f172a;font-size:.9rem;font-family:inherit;transition:border-color .2s}
     .pd-field input:focus,.pd-field textarea:focus,.pd-field select:focus{
       outline:none;border-color:#42a5f5}
     .pd-field textarea{resize:vertical;min-height:64px;line-height:1.5}
-    .pd-field select option{background:#0d1f33}
+    .pd-field select option{background:#ffffff}
     .pd-range-row{display:flex;align-items:center;gap:8px}
     .pd-range-row input[type=range]{flex:1;accent-color:#42a5f5;cursor:pointer}
-    .pd-range-val{font-size:.75rem;color:#90caf9;min-width:32px;text-align:right;
+    .pd-range-val{font-size:.75rem;color:#1e3a8a;min-width:32px;text-align:right;
       font-variant-numeric:tabular-nums;flex-shrink:0}
     .pd-ck{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;
       margin-bottom:9px;padding:2px 0}
     .pd-ck input{width:15px;height:15px;accent-color:#42a5f5;cursor:pointer;flex-shrink:0}
-    .pd-ck span{font-size:.84rem;color:#90caf9}
+    .pd-ck span{font-size:.84rem;color:#1e3a8a}
     .pd-paper-btns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px}
-    .pd-paper-btn{flex:1;min-width:64px;background:#0f1923;border:1.5px solid #1e3a5f;
-      color:#64b5f6;border-radius:9px;padding:9px 4px;font-size:.78rem;font-weight:600;
+    .pd-paper-btn{flex:1;min-width:64px;background:#ffffff;border:1.5px solid #9ec5f3;
+      color:#1d4ed8;border-radius:9px;padding:9px 4px;font-size:.78rem;font-weight:600;
       cursor:pointer;text-align:center;font-family:inherit;transition:all .18s;line-height:1.4}
-    .pd-paper-btn:hover{border-color:#42a5f5;color:#fff}
+    .pd-paper-btn:hover{border-color:#42a5f5;color:#0f172a}
     .pd-paper-btn.active{background:#1565c0;border-color:#42a5f5;color:#fff}
     .pd-paper-btn small{display:block;font-size:.65rem;font-weight:400;opacity:.7;margin-top:1px}
     .pd-printer-row{display:flex;gap:8px;align-items:stretch}
@@ -148,25 +148,25 @@
       padding:8px 13px;font-size:.8rem;cursor:pointer;font-family:inherit;
       white-space:nowrap;transition:opacity .2s}
     .pd-ref-btn:hover{opacity:.82}
-    .pd-hint{font-size:.7rem;color:#3a5a78;margin-top:6px;line-height:1.5}
+    .pd-hint{font-size:.7rem;color:#475569;margin-top:6px;line-height:1.5}
     .print-mode-btns{display:flex;gap:8px;margin-top:6px}
-    .print-mode-btn{flex:1;padding:10px 12px;border-radius:10px;border:2px solid rgba(255,255,255,.1);
-      background:rgba(255,255,255,.04);color:rgba(255,255,255,.55);font-size:.85rem;font-weight:600;
+    .print-mode-btn{flex:1;padding:10px 12px;border-radius:10px;border:2px solid #c7dbf3;
+      background:rgba(30,64,175,0.024);color:#475569;font-size:.85rem;font-weight:600;
       cursor:pointer;transition:all .2s;text-align:center}
-    .print-mode-btn:hover{border-color:rgba(66,165,245,.4);color:rgba(255,255,255,.8)}
-    .print-mode-btn.on{border-color:#42a5f5;background:rgba(66,165,245,.15);color:#90caf9}
+    .print-mode-btn:hover{border-color:rgba(66,165,245,.4);color:#1e293b}
+    .print-mode-btn.on{border-color:#42a5f5;background:rgba(66,165,245,.15);color:#1e3a8a}
     .local-print-note{display:none}
     .pd-custom-size{display:none;margin-top:10px}
     .pd-custom-size.show{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 
     /* Right preview */
     .pd-right{position:sticky;top:20px;display:flex;flex-direction:column;gap:10px}
-    .pd-preview-lbl{font-size:.72rem;color:#3a5a78;letter-spacing:2px;text-transform:uppercase}
+    .pd-preview-lbl{font-size:.72rem;color:#475569;letter-spacing:2px;text-transform:uppercase}
     .pd-preview-wrap{background:#e8e8e8;border-radius:12px;padding:14px;
       display:flex;justify-content:center;align-items:flex-start;min-height:280px;overflow:auto}
     #slipPreview{background:#fff;color:#000;font-family:'Segoe UI',Tahoma,sans-serif;
       border-radius:3px;box-shadow:0 2px 10px rgba(0,0,0,.2);flex-shrink:0}
-    .pd-size-lbl{font-size:.75rem;color:#90caf9;text-align:center}
+    .pd-size-lbl{font-size:.75rem;color:#1e3a8a;text-align:center}
     .pd-test-btn{background:linear-gradient(135deg,#00695c,#004d40);color:#fff;
       border:none;border-radius:10px;padding:11px;font-size:.88rem;font-weight:700;
       cursor:pointer;font-family:inherit;width:100%;transition:opacity .2s}
@@ -179,22 +179,22 @@
     /* ── Screen designer ── */
     .sd-wrap{display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start}
     .sd-left{display:flex;flex-direction:column;gap:14px}
-    .sd-section{background:#1a2a3a;border:1px solid #1e3a5f;border-radius:14px;padding:18px}
-    .sd-sec-title{font-size:.82rem;font-weight:700;color:#90caf9;margin-bottom:14px;
+    .sd-section{background:#ffffff;border:1px solid #9ec5f3;border-radius:14px;padding:18px}
+    .sd-sec-title{font-size:.82rem;font-weight:700;color:#1e3a8a;margin-bottom:14px;
       display:flex;align-items:center;gap:7px}
     .sd-sec-title::before{content:'';display:block;width:3px;height:14px;
       background:#42a5f5;border-radius:2px}
     .sd-field{margin-bottom:12px}
     .sd-field:last-child{margin-bottom:0}
-    .sd-field label{display:block;font-size:.76rem;color:#64b5f6;margin-bottom:6px}
-    .sd-field select{width:100%;background:#0f1923;border:1px solid #1e3a5f;border-radius:8px;
-      padding:9px 12px;color:#fff;font-size:.9rem;font-family:inherit;transition:border-color .2s}
+    .sd-field label{display:block;font-size:.76rem;color:#1d4ed8;margin-bottom:6px}
+    .sd-field select{width:100%;background:#ffffff;border:1px solid #9ec5f3;border-radius:8px;
+      padding:9px 12px;color:#0f172a;font-size:.9rem;font-family:inherit;transition:border-color .2s}
     .sd-field select:focus{outline:none;border-color:#42a5f5}
-    .sd-field select option{background:#0d1f33}
+    .sd-field select option{background:#ffffff}
     .sd-ck{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;
       margin-bottom:9px;padding:2px 0}
     .sd-ck input{width:15px;height:15px;accent-color:#42a5f5;cursor:pointer;flex-shrink:0}
-    .sd-ck span{font-size:.84rem;color:#90caf9}
+    .sd-ck span{font-size:.84rem;color:#1e3a8a}
 
     /* bg presets */
     .bg-presets{display:flex;flex-wrap:wrap;gap:8px}
@@ -202,68 +202,68 @@
       border:3px solid transparent;transition:all .18s;position:relative;
       display:flex;align-items:flex-end;padding:3px;overflow:hidden}
     .bg-chip:hover{transform:scale(1.07)}
-    .bg-chip.on{border-color:#fff;box-shadow:0 0 0 2px rgba(255,255,255,.3);transform:scale(1.05)}
+    .bg-chip.on{border-color:#1e40af;box-shadow:0 0 0 2px rgba(255,255,255,.3);transform:scale(1.05)}
     .bg-chip-lbl{font-size:.55rem;font-weight:700;color:#fff;
       background:rgba(0,0,0,.45);border-radius:4px;padding:1px 4px;
       width:100%;text-align:center;position:relative;z-index:1}
 
     /* option buttons 3-way */
     .opt-btns{display:flex;gap:6px}
-    .opt-btn{flex:1;padding:9px 4px;background:#0f1923;border:1.5px solid #1e3a5f;
-      color:#64b5f6;border-radius:9px;font-size:.8rem;font-weight:600;
+    .opt-btn{flex:1;padding:9px 4px;background:#ffffff;border:1.5px solid #9ec5f3;
+      color:#1d4ed8;border-radius:9px;font-size:.8rem;font-weight:600;
       cursor:pointer;text-align:center;font-family:inherit;transition:all .18s}
-    .opt-btn:hover{border-color:#42a5f5;color:#fff}
+    .opt-btn:hover{border-color:#42a5f5;color:#0f172a}
     .opt-btn.on{background:#1565c0;border-color:#42a5f5;color:#fff}
 
     /* preview panel */
     .sd-right{position:sticky;top:20px;display:flex;flex-direction:column;gap:10px}
-    .sd-preview-lbl{font-size:.72rem;color:#3a5a78;letter-spacing:2px;text-transform:uppercase}
+    .sd-preview-lbl{font-size:.72rem;color:#475569;letter-spacing:2px;text-transform:uppercase}
     .sd-preview-wrap{border-radius:16px;overflow:hidden;
-      box-shadow:0 4px 24px rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.08)}
+      box-shadow:0 4px 24px rgba(0,0,0,.5);border:1px solid #c7dbf3}
     .sd-save-btn{background:linear-gradient(135deg,#42a5f5,#1565c0);color:#fff;
       border:none;border-radius:12px;padding:14px;font-size:.95rem;font-weight:700;
       cursor:pointer;font-family:inherit;width:100%;transition:opacity .2s;margin-top:4px}
     .sd-save-btn:hover{opacity:.85}
-    .sd-hint{font-size:.7rem;color:#3a5a78;margin-top:5px;line-height:1.5}
+    .sd-hint{font-size:.7rem;color:#475569;margin-top:5px;line-height:1.5}
 
     /* ── Screen designer v2 ── */
     .scd-wrap{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start}
     .scd-left{display:flex;flex-direction:column;gap:14px}
     .scd-right{position:sticky;top:20px;display:flex;flex-direction:column;gap:10px}
-    .scd-preview-lbl{font-size:.72rem;color:#3a5a78;letter-spacing:2px;text-transform:uppercase;margin-bottom:2px}
+    .scd-preview-lbl{font-size:.72rem;color:#475569;letter-spacing:2px;text-transform:uppercase;margin-bottom:2px}
     .scd-card{
-      background:#141f2e;border:1px solid #1e3a5f;border-radius:16px;padding:20px;
+      background:#ffffff;border:1px solid #9ec5f3;border-radius:16px;padding:20px;
       display:flex;flex-direction:column;gap:14px;
     }
     .scd-card-hdr{
-      font-size:.84rem;font-weight:700;color:#90caf9;
+      font-size:.84rem;font-weight:700;color:#1e3a8a;
       display:flex;align-items:center;gap:8px;
-      padding-bottom:12px;border-bottom:1px solid #1a2a3a;
+      padding-bottom:12px;border-bottom:1px solid #c7dbf3;
     }
     .scd-card-hdr::before{content:'';display:block;width:3px;height:15px;background:#42a5f5;border-radius:2px;flex-shrink:0}
-    .scd-lbl{font-size:.74rem;color:#64b5f6;margin-bottom:5px;display:block;font-weight:600;letter-spacing:.3px}
+    .scd-lbl{font-size:.74rem;color:#1d4ed8;margin-bottom:5px;display:block;font-weight:600;letter-spacing:.3px}
     .scd-field{display:flex;flex-direction:column}
     .scd-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     .scd-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
     .scd-opt-row{display:flex;gap:5px;flex-wrap:wrap}
     .scd-opt{
-      flex:1;padding:8px 4px;background:#0f1923;border:1.5px solid #1e3a5f;
-      color:#64b5f6;border-radius:9px;font-size:.78rem;font-weight:600;
+      flex:1;padding:8px 4px;background:#ffffff;border:1.5px solid #9ec5f3;
+      color:#1d4ed8;border-radius:9px;font-size:.78rem;font-weight:600;
       cursor:pointer;text-align:center;font-family:inherit;transition:all .18s;
     }
-    .scd-opt:hover{border-color:#42a5f5;color:#fff}
+    .scd-opt:hover{border-color:#42a5f5;color:#0f172a}
     .scd-opt.on{background:#1565c0;border-color:#42a5f5;color:#fff}
     .scd-slider{width:100%;cursor:pointer;accent-color:#42a5f5;margin:4px 0 2px}
-    .scd-slider-val{font-size:.7rem;color:#64b5f6;font-family:'Courier New',monospace;text-align:right}
+    .scd-slider-val{font-size:.7rem;color:#1d4ed8;font-family:'Courier New',monospace;text-align:right}
     .scd-num-input{
-      width:80px;background:#0a1520;border:1px solid #1e3a5f;
-      border-radius:8px;color:#fff;font-size:.9rem;
+      width:80px;background:#ffffff;border:1px solid #9ec5f3;
+      border-radius:8px;color:#0f172a;font-size:.9rem;
       padding:7px 8px;text-align:center;font-family:inherit;outline:none;
     }
     .scd-num-input:focus{border-color:#42a5f5}
     .scd-text-input{
-      width:100%;background:#0a1520;border:1px solid #1e3a5f;border-radius:9px;
-      color:#fff;font-size:.9rem;padding:9px 12px;font-family:inherit;outline:none;
+      width:100%;background:#ffffff;border:1px solid #9ec5f3;border-radius:9px;
+      color:#0f172a;font-size:.9rem;padding:9px 12px;font-family:inherit;outline:none;
     }
     .scd-text-input:focus{border-color:#42a5f5}
     .scd-ck-row{
@@ -271,14 +271,14 @@
       padding:5px 0;
     }
     .scd-ck-row input{width:16px;height:16px;accent-color:#42a5f5;cursor:pointer;flex-shrink:0}
-    .scd-ck-row span{font-size:.84rem;color:#90caf9}
+    .scd-ck-row span{font-size:.84rem;color:#1e3a8a}
     .scd-btn-sm{
       background:#1565c0;color:#fff;border:none;border-radius:9px;
       padding:8px 14px;font-size:.78rem;font-weight:700;cursor:pointer;
       white-space:nowrap;font-family:inherit;transition:opacity .2s;flex-shrink:0;
     }
     .scd-btn-sm:hover{opacity:.82}
-    .scd-hint-text{font-size:.7rem;color:#3a5a78;margin-top:4px;line-height:1.5}
+    .scd-hint-text{font-size:.7rem;color:#475569;margin-top:4px;line-height:1.5}
 
     /* Typography grid */
     .scd-typo-grid{
@@ -286,10 +286,10 @@
       gap:8px 10px;align-items:center;
     }
     .scd-typo-hdr{
-      font-size:.65rem;color:#3a5a78;letter-spacing:1.5px;text-transform:uppercase;
-      padding-bottom:5px;border-bottom:1px solid #1a2a3a;
+      font-size:.65rem;color:#475569;letter-spacing:1.5px;text-transform:uppercase;
+      padding-bottom:5px;border-bottom:1px solid #c7dbf3;
     }
-    .scd-typo-lbl{font-size:.82rem;color:rgba(255,255,255,.75)}
+    .scd-typo-lbl{font-size:.82rem;color:#1e293b}
 
     /* Simplified color picker (full) */
     .scp-wrap{width:100%}
@@ -297,15 +297,15 @@
     .scp-btn{
       position:relative;cursor:pointer;flex-shrink:0;
       width:40px;height:40px;border-radius:10px;overflow:hidden;
-      border:2px solid rgba(255,255,255,.22);
+      border:2px solid #c7dbf3;
     }
     .scp-btn input[type=color]{
       position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;
     }
     .scp-preview{width:100%;height:100%;transition:background .15s}
     .scp-hex{
-      flex:1;background:#0a1520;border:1px solid #1e3a5f;border-radius:7px;
-      color:#e0e0e0;font-size:.85rem;padding:8px 10px;
+      flex:1;background:#ffffff;border:1px solid #9ec5f3;border-radius:7px;
+      color:#1e293b;font-size:.85rem;padding:8px 10px;
       font-family:'Courier New',monospace;outline:none;letter-spacing:.5px;
     }
     .scp-hex:focus{border-color:#42a5f5}
@@ -315,143 +315,143 @@
       border:2px solid transparent;transition:transform .12s,border-color .12s;
     }
     .scp-dot:hover{transform:scale(1.15)}
-    .scp-dot.on{border-color:#fff;transform:scale(1.1);box-shadow:0 0 0 2px rgba(255,255,255,.22)}
+    .scp-dot.on{border-color:#1e40af;transform:scale(1.1);box-shadow:0 0 0 2px rgba(255,255,255,.22)}
 
     /* Inline picker (for typography table) */
     .scp-inline{display:flex;align-items:center;gap:6px}
     .scp-inline-btn{
       position:relative;cursor:pointer;flex-shrink:0;
       width:34px;height:34px;border-radius:8px;overflow:hidden;
-      border:2px solid rgba(255,255,255,.2);
+      border:2px solid #c7dbf3;
     }
     .scp-inline-btn input[type=color]{
       position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;
     }
     .scp-inline-prev{width:100%;height:100%;transition:background .15s}
     .scp-inline-hex{
-      width:78px;background:#0a1520;border:1px solid #1e3a5f;
-      border-radius:6px;color:#ccc;font-size:.75rem;
+      width:78px;background:#ffffff;border:1px solid #9ec5f3;
+      border-radius:6px;color:#1e293b;font-size:.75rem;
       padding:5px 7px;font-family:'Courier New',monospace;outline:none;
     }
     .scp-inline-hex:focus{border-color:#42a5f5}
 
     /* ── Network pane ── */
     .net-intro{background:rgba(66,165,245,.08);border:1px solid rgba(66,165,245,.25);
-      border-radius:12px;padding:14px 18px;font-size:.88rem;color:rgba(255,255,255,.7);
+      border-radius:12px;padding:14px 18px;font-size:.88rem;color:#1e293b;
       line-height:1.7;margin-bottom:22px}
-    .net-section-title{font-size:.78rem;font-weight:700;color:#64b5f6;
+    .net-section-title{font-size:.78rem;font-weight:700;color:#1d4ed8;
       letter-spacing:2px;text-transform:uppercase;margin:20px 0 10px}
     .net-url-row{display:flex;align-items:center;gap:10px;
-      background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);
+      background:#eef5ff;border:1px solid #c7dbf3;
       border-radius:11px;padding:11px 15px;margin-bottom:8px;transition:border-color .2s}
     .net-url-row:hover{border-color:rgba(100,181,246,.4)}
-    .net-iface{font-size:.7rem;color:rgba(255,255,255,.35);min-width:80px;
+    .net-iface{font-size:.7rem;color:#475569;min-width:80px;
       white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .net-url-text{font-family:'Courier New',monospace;font-size:.95rem;
-      color:#80deea;flex:1;word-break:break-all}
+      color:#0e7490;flex:1;word-break:break-all}
     .net-copy-btn{background:rgba(66,165,245,.18);border:1px solid rgba(66,165,245,.35);
-      color:#90caf9;border-radius:8px;padding:5px 14px;font-size:.8rem;
+      color:#1e3a8a;border-radius:8px;padding:5px 14px;font-size:.8rem;
       cursor:pointer;white-space:nowrap;transition:background .2s;font-weight:600}
     .net-copy-btn:hover{background:rgba(66,165,245,.32)}
-    .net-copy-btn.copied{background:rgba(76,175,80,.25);border-color:rgba(76,175,80,.4);color:#a5d6a7}
+    .net-copy-btn.copied{background:rgba(76,175,80,.25);border-color:rgba(76,175,80,.4);color:#15803d}
     .net-role-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-bottom:22px}
-    .net-role-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);
+    .net-role-card{background:rgba(30,64,175,0.024);border:1px solid #c7dbf3;
       border-radius:14px;padding:14px 16px;transition:border-color .2s}
     .net-role-card:hover{border-color:rgba(100,181,246,.35)}
     .net-role-icon{font-size:1.6rem;margin-bottom:8px}
-    .net-role-title{font-size:.88rem;font-weight:700;color:#fff;margin-bottom:4px}
-    .net-role-desc{font-size:.75rem;color:rgba(255,255,255,.45);line-height:1.5;margin-bottom:10px}
+    .net-role-title{font-size:.88rem;font-weight:700;color:#0f172a;margin-bottom:4px}
+    .net-role-desc{font-size:.75rem;color:#475569;line-height:1.5;margin-bottom:10px}
     .net-role-path{font-family:'Courier New',monospace;font-size:.78rem;
-      color:#4dd0e1;background:rgba(0,0,0,.3);border-radius:6px;
+      color:#0e7490;background:#eef5ff;border-radius:6px;
       padding:4px 8px;display:inline-block}
-    .net-refresh-btn{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);
-      color:rgba(255,255,255,.6);border-radius:9px;padding:8px 20px;
+    .net-refresh-btn{background:rgba(30,64,175,0.036);border:1px solid #c7dbf3;
+      color:#1e293b;border-radius:9px;padding:8px 20px;
       font-size:.85rem;cursor:pointer;transition:background .2s;margin-top:4px}
-    .net-refresh-btn:hover{background:rgba(255,255,255,.12)}
-    .net-localhost-note{background:rgba(255,213,79,.07);border:1px solid rgba(255,213,79,.2);
-      border-radius:10px;padding:10px 14px;font-size:.8rem;color:rgba(255,213,79,.8);
+    .net-refresh-btn:hover{background:rgba(30,64,175,0.072)}
+    .net-localhost-note{background:#fffbeb;border:1px solid rgba(255,213,79,.2);
+      border-radius:10px;padding:10px 14px;font-size:.8rem;color:#92400e;
       margin-top:14px;line-height:1.6}
     .net-action-btn{background:linear-gradient(135deg,#1565c0,#0d47a1);
       border:1px solid rgba(66,165,245,.4);color:#90caf9;border-radius:10px;
       padding:9px 20px;font-size:.88rem;font-weight:700;cursor:pointer;transition:opacity .2s}
     .net-action-btn:hover{opacity:.8}
     .net-action-btn:active{opacity:.6}
-    .net-action-btn.restarting{background:rgba(255,255,255,.08);color:rgba(255,255,255,.4);pointer-events:none}
+    .net-action-btn.restarting{background:rgba(30,64,175,0.048);color:#475569;pointer-events:none}
 
     /* ── Toggle switch ── */
     .sf-toggle{position:relative;display:inline-block;width:38px;height:22px;flex-shrink:0}
     .sf-toggle input{opacity:0;width:0;height:0}
-    .sf-toggle-slider{position:absolute;inset:0;background:#1e3a5f;border-radius:22px;transition:.3s;cursor:pointer}
+    .sf-toggle-slider{position:absolute;inset:0;background:#dbeafe;border-radius:22px;transition:.3s;cursor:pointer}
     .sf-toggle-slider::before{content:'';position:absolute;width:16px;height:16px;left:3px;bottom:3px;
       background:#fff;border-radius:50%;transition:.3s}
     .sf-toggle input:checked + .sf-toggle-slider{background:#42a5f5}
     .sf-toggle input:checked + .sf-toggle-slider::before{transform:translateX(16px)}
 
     /* ── HIS pttype rule row ── */
-    .pttype-row{background:#0f1923;border:1px solid #1e3a5f;border-radius:10px;
+    .pttype-row{background:#ffffff;border:1px solid #9ec5f3;border-radius:10px;
       padding:10px 14px;display:flex;align-items:center;gap:10px;margin-bottom:7px;flex-wrap:wrap}
     .pttype-code{font-family:'Courier New',monospace;font-size:.9rem;font-weight:700;
-      color:#80deea;background:#0d1f33;padding:3px 9px;border-radius:6px;min-width:56px;text-align:center}
-    .pttype-name{flex:1;font-size:.88rem;color:#ccc;min-width:100px}
-    .pttype-auto{font-size:.78rem;color:#90caf9;background:#1a2a3a;padding:3px 8px;border-radius:6px;
+      color:#0e7490;background:#ffffff;padding:3px 9px;border-radius:6px;min-width:56px;text-align:center}
+    .pttype-name{flex:1;font-size:.88rem;color:#1e293b;min-width:100px}
+    .pttype-auto{font-size:.78rem;color:#1e3a8a;background:#ffffff;padding:3px 8px;border-radius:6px;
       max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .pttype-auto.none{color:#2a4060}
+    .pttype-auto.none{color:#64748b}
 
     /* ── Color picker ── */
     .cpk{width:100%}
     .cpk-top{display:flex;align-items:center;gap:9px;margin-bottom:8px}
     .cpk-prev{width:36px;height:36px;border-radius:9px;
-      border:2px solid rgba(255,255,255,.18);flex-shrink:0;transition:background .15s}
-    .cpk-hex{flex:1;background:#0a1520;border:1px solid #1e3a5f;border-radius:7px;
-      color:#e0e0e0;font-size:.86rem;padding:7px 10px;
+      border:2px solid #c7dbf3;flex-shrink:0;transition:background .15s}
+    .cpk-hex{flex:1;background:#ffffff;border:1px solid #9ec5f3;border-radius:7px;
+      color:#1e293b;font-size:.86rem;padding:7px 10px;
       font-family:'Courier New',monospace;outline:none;letter-spacing:.5px}
     .cpk-hex:focus{border-color:#42a5f5}
     .cpk-sw{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
     .cpk-dot{width:26px;height:26px;border-radius:5px;cursor:pointer;flex-shrink:0;
       border:2px solid transparent;transition:transform .12s,border-color .12s,box-shadow .12s}
     .cpk-dot:hover{transform:scale(1.12)}
-    .cpk-dot.on{border-color:#fff;box-shadow:0 0 0 2px rgba(255,255,255,.25);transform:scale(1.1)}
+    .cpk-dot.on{border-color:#1e40af;box-shadow:0 0 0 2px rgba(255,255,255,.25);transform:scale(1.1)}
     .cpk-rgb{display:flex;flex-direction:column;gap:6px}
     .cpk-row{display:flex;align-items:center;gap:8px}
     .cpk-lbl{font-size:.78rem;font-weight:800;width:14px;flex-shrink:0}
-    .cpk-lbl.r{color:#ef5350}.cpk-lbl.g{color:#66bb6a}.cpk-lbl.b{color:#42a5f5}
+    .cpk-lbl.r{color:#b91c1c}.cpk-lbl.g{color:#66bb6a}.cpk-lbl.b{color:#1d4ed8}
     .cpk-sl{flex:1;cursor:pointer;border-radius:2px}
     .cpk-sl.sl-r{accent-color:#ef5350}
     .cpk-sl.sl-g{accent-color:#66bb6a}
     .cpk-sl.sl-b{accent-color:#42a5f5}
-    .cpk-num{font-size:.72rem;color:#90caf9;width:26px;text-align:right;
+    .cpk-num{font-size:.72rem;color:#1e3a8a;width:26px;text-align:right;
       flex-shrink:0;font-variant-numeric:tabular-nums;font-family:'Courier New',monospace}
 
     /* ── Layout Order (drag-drop) ── */
-    .pd-lo-item{background:#0f1923;border:1px solid #1e3a5f;border-radius:8px;
+    .pd-lo-item{background:#ffffff;border:1px solid #9ec5f3;border-radius:8px;
       padding:8px 10px;display:flex;align-items:center;gap:8px;cursor:grab;
       transition:background .15s;user-select:none}
-    .pd-lo-item:hover{background:#1a2a3a;border-color:#42a5f5}
+    .pd-lo-item:hover{background:#ffffff;border-color:#42a5f5}
     .pd-lo-item.dragging{opacity:.5;background:#1565c0}
     .pd-lo-item.drag-over{border-color:#42a5f5;border-style:dashed}
-    .pd-lo-drag{color:#2a4060;font-size:.9rem;flex-shrink:0}
-    .pd-lo-label{flex:1;font-size:.85rem;color:#90caf9;font-weight:500}
+    .pd-lo-drag{color:#64748b;font-size:.9rem;flex-shrink:0}
+    .pd-lo-label{flex:1;font-size:.85rem;color:#1e3a8a;font-weight:500}
     .pd-lo-icon{font-size:1rem;flex-shrink:0}
-    .pd-lo-del{background:none;border:1px solid #3a2a2a;color:#ef9a9a;border-radius:6px;
+    .pd-lo-del{background:none;border:1px solid #fca5a5;color:#b91c1c;border-radius:6px;
       width:24px;height:24px;cursor:pointer;font-size:.8rem;flex-shrink:0;line-height:1}
     .pd-lo-del:hover{background:rgba(239,83,80,.15);border-color:#ef5350}
     .pd-lo-actions{display:flex;gap:8px;margin-top:10px}
 
     /* ── Per-section style row (align / bold / color) ── */
     .pd-style-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:4px 0 11px}
-    .pd-style-lbl{font-size:.72rem;color:#64b5f6;min-width:62px}
-    .pd-seg{display:inline-flex;border:1px solid #1e3a5f;border-radius:7px;overflow:hidden}
-    .pd-seg button{background:#0f1923;border:none;color:#64b5f6;padding:5px 9px;font-size:.74rem;
+    .pd-style-lbl{font-size:.72rem;color:#1d4ed8;min-width:62px}
+    .pd-seg{display:inline-flex;border:1px solid #9ec5f3;border-radius:7px;overflow:hidden}
+    .pd-seg button{background:#ffffff;border:none;color:#1d4ed8;padding:5px 9px;font-size:.74rem;
       cursor:pointer;font-family:inherit}
-    .pd-seg button+button{border-left:1px solid #1e3a5f}
+    .pd-seg button+button{border-left:1px solid #9ec5f3}
     .pd-seg button.on{background:#1565c0;color:#fff}
-    .pd-bold-btn{background:#0f1923;border:1px solid #1e3a5f;color:#64b5f6;border-radius:7px;
+    .pd-bold-btn{background:#ffffff;border:1px solid #9ec5f3;color:#1d4ed8;border-radius:7px;
       padding:4px 10px;font-weight:900;font-size:.8rem;cursor:pointer;font-family:inherit}
     .pd-bold-btn.on{background:#1565c0;border-color:#42a5f5;color:#fff}
-    .pd-color-sel{background:#0f1923;border:1px solid #1e3a5f;color:#cfd8dc;border-radius:7px;
+    .pd-color-sel{background:#ffffff;border:1px solid #9ec5f3;color:#1e293b;border-radius:7px;
       padding:4px 6px;font-size:.74rem;font-family:inherit}
     .pd-radio-row{display:flex;gap:16px;flex-wrap:wrap;margin-top:4px}
-    .pd-radio-row label{display:flex;align-items:center;gap:5px;cursor:pointer;font-size:.82rem;color:#cfd8dc}
+    .pd-radio-row label{display:flex;align-items:center;gap:5px;cursor:pointer;font-size:.82rem;color:#1e293b}
 
     /* ── Logo ── */
     .pd-logo-box{display:flex;align-items:center;gap:10px;margin-bottom:11px}
@@ -460,13 +460,70 @@
     .pd-logo-thumb img{max-width:100%;max-height:100%}
 
     /* ── Custom text blocks ── */
-    .pd-ct-item{background:#0f1923;border:1px solid #1e3a5f;border-radius:10px;padding:10px;margin-bottom:10px}
-    .pd-ct-item textarea{width:100%;background:#0b141c;border:1px solid #1e3a5f;border-radius:8px;
-      padding:8px 10px;color:#fff;font-size:.88rem;font-family:inherit;resize:vertical;min-height:44px}
+    .pd-ct-item{background:#ffffff;border:1px solid #9ec5f3;border-radius:10px;padding:10px;margin-bottom:10px}
+    .pd-ct-item textarea{width:100%;background:#ffffff;border:1px solid #9ec5f3;border-radius:8px;
+      padding:8px 10px;color:#0f172a;font-size:.88rem;font-family:inherit;resize:vertical;min-height:44px}
     .pd-ct-item textarea:focus{outline:none;border-color:#42a5f5}
     .pd-ct-ctrl{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px}
-    .pd-ct-ctrl input[type=number]{width:58px;background:#0b141c;border:1px solid #1e3a5f;border-radius:7px;
-      padding:4px 6px;color:#fff;font-size:.8rem;text-align:center}
+    .pd-ct-ctrl input[type=number]{width:58px;background:#ffffff;border:1px solid #9ec5f3;border-radius:7px;
+      padding:4px 6px;color:#0f172a;font-size:.8rem;text-align:center}
+
+    /* ── Pastel theme: larger text, roomier inputs, clear card borders ── */
+    html{font-size:18px}
+    /* global brightness/saturation (🎨 widget) is for the dark display screens; keep this page's colours true */
+    body{filter:none !important}
+    nav{background:linear-gradient(90deg,#0d3b5e,#0f4c75);border-bottom:none;height:58px;
+      box-shadow:0 2px 10px rgba(13,59,94,.25)}
+    nav .logo{color:#ffffff}
+    nav a{color:#dbeafe;font-weight:600}
+    nav a:hover{background:rgba(255,255,255,.15)}
+    nav a.active{background:#ffffff;color:#0d3b5e}
+    .page{max-width:1180px;padding:30px 24px}
+    .page-header h1{color:#0d3b5e;font-size:1.45rem;font-weight:800}
+    .sys-badge{background:#ffffff;border-color:#9ec5f3;color:#1e3a8a;font-weight:600}
+    .page-tabs{flex-wrap:wrap;border-bottom-color:#9ec5f3;background:#ffffffaa;border-radius:12px 12px 0 0}
+    .page-tab{padding:12px 18px;color:#334e7a;font-weight:700}
+    .page-tab:hover{color:#1d4ed8}
+    .page-tab.active{color:#0d3b5e;border-bottom-color:#1565c0;background:#ffffff}
+    .form-card,.pd-section,.sd-section,.scd-card,.item-row,.modal{
+      border:1.5px solid #9ec5f3;box-shadow:0 4px 14px rgba(30,64,175,.08)}
+    .form-card h2,.pd-sec-title,.sd-sec-title,.scd-card-hdr{color:#0d3b5e;font-weight:800}
+    .scd-card-hdr{border-bottom-color:#dbeafe}
+    .field label,.pd-field label,.sd-field label,.scd-lbl{color:#1e3a8a;font-weight:700}
+    .field input[type=text],.pd-field input[type=text],.pd-field input[type=number],.pd-field textarea,
+    .pd-field select,.sd-field select,.scd-text-input,.pd-ct-item textarea,#sdFont{
+      padding:12px 16px;font-size:1rem;border:1.5px solid #9ec5f3;border-radius:10px;background:#f7fbff}
+    .field input:focus,.pd-field input:focus,.pd-field textarea:focus,.pd-field select:focus,
+    .sd-field select:focus,.scd-text-input:focus,.pd-ct-item textarea:focus{
+      border-color:#1d4ed8;background:#ffffff;box-shadow:0 0 0 3px rgba(29,78,216,.18)}
+    .pd-ck input,.sd-ck input,.scd-ck-row input{width:20px;height:20px}
+    .pd-ck span,.sd-ck span,.scd-ck-row span{color:#1e293b;font-size:.9rem}
+    .pd-preview-wrap{background:#eef5ff;border:1.5px solid #9ec5f3}
+    .print-designer-wrap{grid-template-columns:1fr 320px}
+    .net-role-path{display:block;word-break:break-all;font-size:.72rem}
+    .tp-modal{max-width:640px}
+    .tp-stage{background:repeating-linear-gradient(45deg,#e2e8f0 0 10px,#edf2f7 10px 20px);border:1.5px solid #9ec5f3;
+      border-radius:12px;padding:24px;display:flex;justify-content:center;align-items:flex-start;
+      max-height:62vh;overflow:auto}
+    .tp-paper{background:#fff;color:#000;flex-shrink:0;font-family:'Segoe UI',Tahoma,sans-serif;box-shadow:0 6px 18px rgba(15,23,42,.25),0 0 0 1px #cbd5e1}
+    .tp-info{margin-top:12px;font-size:.85rem;color:#1e3a8a;line-height:1.7}
+    .tp-info b{color:#0d3b5e}
+    .modal-bg{background:rgba(15,23,42,.45)}
+
+    /* ── Print: fit A4, keep pastel colours, hide action buttons ── */
+    @page{size:A4;margin:12mm}
+    @media print{
+      html{font-size:13pt}
+      body{-webkit-print-color-adjust:exact;print-color-adjust:exact;background:#e6f3ff !important;filter:none !important}
+      nav,.page-tabs,.toast,.modal-bg,#_uiPnl,.no-print,
+      .btn-add,.btn-save,.btn-cancel,.btn-edit,.btn-del,.btn-del-tk,
+      .pd-save-btn,.pd-test-btn,.sd-save-btn,.pd-ref-btn,.scd-btn-sm,.pd-lo-del,.pd-lo-actions,
+      .net-copy-btn,.net-refresh-btn,.net-action-btn,button[onclick*="save" i],button[onclick*="print" i]{display:none !important}
+      .page{max-width:100%;padding:0}
+      .print-designer-wrap,.sd-wrap,.scd-wrap{grid-template-columns:1fr 70mm}
+      .pd-right,.sd-right,.scd-right{position:static}
+      .form-card,.pd-section,.sd-section,.scd-card,.item-row{box-shadow:none;break-inside:avoid}
+    }
   </style>
 </head>
 <body>
@@ -488,6 +545,7 @@
   <div class="page-tabs">
     <div class="page-tab active" onclick="switchTab('types',this)">ประเภทคิว</div>
     <div class="page-tab"        onclick="switchTab('counters',this)">ช่องบริการ</div>
+    <div class="page-tab"        onclick="switchTab('forward',this)">🔀 ส่งต่อคิว</div>
     <div class="page-tab"        onclick="switchTab('ticker',this)">ข้อความวิ่ง</div>
     <div class="page-tab"        onclick="switchTab('his',this)">🏥 HIS</div>
     <div class="page-tab"        onclick="switchTab('print',this)">🖨 แบบฟอร์มปริ้น</div>
@@ -508,7 +566,7 @@
           <label>Prefix</label>
           <input type="text" id="tPrefix" placeholder="A" maxlength="3"
             style="text-transform:uppercase;text-align:center;font-size:1.2rem;font-weight:700"/>
-          <label style="display:flex;align-items:center;gap:5px;margin-top:7px;cursor:pointer;font-size:.75rem;color:#90caf9;white-space:nowrap">
+          <label style="display:flex;align-items:center;gap:5px;margin-top:7px;cursor:pointer;font-size:.75rem;color:#1e3a8a;white-space:nowrap">
             <input type="checkbox" id="tNoPrefix" onchange="onNoPrefixChange('tPrefix','tNoPrefix')" style="accent-color:#ffa726;width:14px;height:14px"/>
             ไม่ใช้ Prefix
           </label>
@@ -521,11 +579,11 @@
       <div class="field" style="margin-bottom:16px">
         <label>ใช้สำหรับ</label>
         <div style="display:flex;gap:18px;margin-top:8px;flex-wrap:wrap">
-          <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:.84rem;color:#90caf9">
+          <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:.84rem;color:#1e3a8a">
             <input type="checkbox" id="tForOpd" checked style="accent-color:#42a5f5;width:16px;height:16px"/>
             🏥 ผู้ป่วยนอก (OPD)
           </label>
-          <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:.84rem;color:#a5d6a7">
+          <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:.84rem;color:#15803d">
             <input type="checkbox" id="tForIpd" style="accent-color:#4caf50;width:16px;height:16px"/>
             🛏 ผู้ป่วยใน (IPD)
           </label>
@@ -548,7 +606,7 @@
         <button class="btn-add" onclick="addTicker()">+ เพิ่ม</button>
       </div>
     </div>
-    <div style="font-size:.8rem;color:#555;margin-bottom:10px">💡 ลากแถวเพื่อเรียงลำดับ · แก้ไขโดยตรงในช่องข้อความ</div>
+    <div style="font-size:.8rem;color:#475569;margin-bottom:10px">💡 ลากแถวเพื่อเรียงลำดับ · แก้ไขโดยตรงในช่องข้อความ</div>
     <div class="item-list" id="tickerList"><div class="empty-msg">กำลังโหลด...</div></div>
     <button class="btn-add" style="width:100%;margin-top:16px;padding:13px;border-radius:12px;font-size:.95rem"
       onclick="saveTicker()">✓ บันทึกทั้งหมด</button>
@@ -580,7 +638,7 @@
 
         <!-- Print mode -->
         <div class="pd-section">
-          <div class="pd-sec-title">🖨 โหมดการพิมพ์ <span style="font-size:.68rem;color:#555;font-weight:400">(ตั้งค่าเฉพาะเครื่องนี้)</span></div>
+          <div class="pd-sec-title">🖨 โหมดการพิมพ์ <span style="font-size:.68rem;color:#475569;font-weight:400">(ตั้งค่าเฉพาะเครื่องนี้)</span></div>
           <div class="print-mode-btns">
             <div class="print-mode-btn on" id="pmBtnHost" onclick="setPrintMode('host')">
               🖥 HOST (Server)<br/><span style="font-size:.72rem;font-weight:400;opacity:.7">ปริ้นที่เครื่อง Server</span>
@@ -699,10 +757,10 @@
             </div></div>
           <div class="pd-field"><label>ตำแหน่งประเภทคิว</label>
             <div style="display:flex;gap:16px;margin-top:4px">
-              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:.82rem;color:#cfd8dc">
+              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:.82rem;color:#1e293b">
                 <input type="radio" name="pdTypePos" id="pdTypePosAbove" value="above" onchange="updatePreview()" checked> บนหมายเลขคิว
               </label>
-              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:.82rem;color:#cfd8dc">
+              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:.82rem;color:#1e293b">
                 <input type="radio" name="pdTypePos" id="pdTypePosLeft" value="left" onchange="updatePreview()"> ซ้ายหมายเลขคิว
               </label>
             </div>
@@ -756,12 +814,12 @@
               </div></div>
             <label class="pd-ck"><input type="checkbox" id="pdBarcodeText" onchange="updatePreview()" checked><span>แสดงตัวเลขใต้บาร์โค้ด</span></label>
             <div class="pd-style" data-sec="barcode" data-opts="align" data-label="ตำแหน่ง"></div>
-            <div class="pd-field"><label>ข้อมูลที่ใช้สร้างบาร์โค้ด</label>
+            <div class="pd-field"><label>ข้อมูลที่ใช้สร้างบาร์โค้ด (ติ๊กได้มากกว่า 1)</label>
               <div class="pd-radio-row" style="flex-direction:column;gap:8px;margin-top:6px">
-                <label><input type="radio" name="pdBarcodeSrc" id="pdBarcodeQn" value="qn" onchange="updatePreview()" checked> QN — หมายเลขคิว (ovst.oqueue)</label>
-                <label><input type="radio" name="pdBarcodeSrc" id="pdBarcodeHn" value="hn" onchange="updatePreview()"> HN — เลขประจำตัวผู้ป่วย (ovst.hn)</label>
+                <label><input type="checkbox" name="pdBarcodeSrc" id="pdBarcodeQn" value="qn" onchange="onBarcodeSrc(this)" checked> QN — หมายเลขคิว (ovst.oqueue)</label>
+                <label><input type="checkbox" name="pdBarcodeSrc" id="pdBarcodeHn" value="hn" onchange="onBarcodeSrc(this)"> HN — เลขประจำตัวผู้ป่วย (ovst.hn)</label>
               </div>
-              <div class="pd-hint" style="margin-top:6px">💡 บาร์โค้ดจะไม่แสดงถ้าคิวนั้นไม่มีข้อมูล HN/QN (เช่น ออกคิวแบบไม่ผูกผู้ป่วย)</div>
+              <div class="pd-hint" style="margin-top:6px">💡 ติ๊กทั้ง 2 ช่องจะพิมพ์บาร์โค้ด QN และ HN เรียงกัน · บาร์โค้ดจะไม่แสดงถ้าคิวนั้นไม่มีข้อมูล HN/QN (เช่น ออกคิวแบบไม่ผูกผู้ป่วย)</div>
             </div>
           </div>
         </div>
@@ -807,7 +865,7 @@
             <label style="font-size:.82rem;color:#2c3e50;white-space:nowrap">จำนวนสำเนา</label>
             <input type="number" id="pdCopies" min="1" max="10" value="1"
               style="width:64px;padding:4px 6px;border:1px solid #b0c4de;border-radius:6px;font-size:.9rem;text-align:center">
-            <span style="font-size:.78rem;color:#5a7a9a">ชุด / ครั้ง</span>
+            <span style="font-size:.78rem;color:#475569">ชุด / ครั้ง</span>
           </div>
         </div>
 
@@ -818,7 +876,7 @@
             <label>ฟ้อนต์</label>
             <div style="display:flex;gap:8px;align-items:center">
               <select id="pdFont" onchange="updatePreview()"
-                style="flex:1;background:#0f1923;border:1px solid #2a4060;border-radius:8px;padding:7px 10px;color:#fff;font-size:.88rem">
+                style="flex:1;background:#ffffff;border:1px solid #9ec5f3;border-radius:8px;padding:7px 10px;color:#0f172a;font-size:.88rem">
                 <option value="">— ค่าเริ่มต้นระบบ —</option>
               </select>
               <button class="pd-ref-btn" onclick="loadPdFonts()">📥 โหลดฟ้อนต์</button>
@@ -830,7 +888,7 @@
         <!-- Layout Order -->
         <div class="pd-section">
           <div class="pd-sec-title">📐 ลำดับการแสดงผล</div>
-          <div style="font-size:.72rem;color:#3a5a78;margin-bottom:12px">💡 ลากแถวเพื่อเรียงลำดับ — เพิ่มเส้นคั่นได้หลายจุด</div>
+          <div style="font-size:.72rem;color:#475569;margin-bottom:12px">💡 ลากแถวเพื่อเรียงลำดับ — เพิ่มเส้นคั่นได้หลายจุด</div>
           <div id="pdLayoutOrder" style="display:flex;flex-direction:column;gap:6px"></div>
           <div class="pd-lo-actions">
             <button class="pd-ref-btn" onclick="addLayoutDivider()">+ เส้นคั่น</button>
@@ -860,63 +918,27 @@
       <!-- LEFT: controls -->
       <div class="scd-left">
 
-        <!-- 1. ธีมพื้นหลัง -->
+        <div class="scd-hint-text" style="font-size:.85rem;color:#1e3a8a;margin:0 0 4px">🎨 สีหน้าจอออกคิวกำหนดไว้ตายตัว (ฟ้าอ่อน ตัวอักษรเข้ม อ่านง่าย) — ปรับได้เฉพาะฟ้อนต์ ขนาด และการแสดงผล</div>
+
+        <!-- 1. การ์ดประเภทคิว -->
         <div class="scd-card">
-          <div class="scd-card-hdr">🎨 ธีมพื้นหลัง</div>
-          <div class="scd-field">
-            <label class="scd-lbl">เลือกธีมสำเร็จรูป</label>
-            <div class="bg-presets" id="bgPresets"></div>
-          </div>
-          <div class="scd-row-3">
-            <div class="scd-field">
-              <label class="scd-lbl">สีบน</label>
-              <div id="bgC1Cpk"></div>
-            </div>
-            <div class="scd-field">
-              <label class="scd-lbl">สีกลาง</label>
-              <div id="bgC2Cpk"></div>
-            </div>
-            <div class="scd-field">
-              <label class="scd-lbl">สีเข้ม</label>
-              <div id="bgC3Cpk"></div>
-            </div>
+          <div class="scd-card-hdr">📐 ขนาดการ์ดประเภทคิว</div>
+          <div class="scd-opt-row" id="sdCardSizeBtns">
+            <button class="scd-opt" data-v="compact" onclick="setSdOpt('cardSize','compact',this)">เล็ก</button>
+            <button class="scd-opt on" data-v="normal" onclick="setSdOpt('cardSize','normal',this)">ปกติ</button>
+            <button class="scd-opt" data-v="large" onclick="setSdOpt('cardSize','large',this)">ใหญ่</button>
           </div>
         </div>
 
-        <!-- 2. สีหลักและการ์ด -->
+        <!-- 2. ฟ้อนต์และขนาดตัวอักษร -->
         <div class="scd-card">
-          <div class="scd-card-hdr">✨ สีหลักและการ์ดประเภทคิว</div>
-          <div class="scd-row-2">
-            <div class="scd-field">
-              <label class="scd-lbl">สีหลัก (Accent) — ปุ่ม / ขอบ</label>
-              <div id="accentCpk"></div>
-            </div>
-            <div class="scd-field">
-              <label class="scd-lbl">ขนาดการ์ด</label>
-              <div class="scd-opt-row" id="sdCardSizeBtns">
-                <button class="scd-opt" data-v="compact" onclick="setSdOpt('cardSize','compact',this)">เล็ก</button>
-                <button class="scd-opt on" data-v="normal" onclick="setSdOpt('cardSize','normal',this)">ปกติ</button>
-                <button class="scd-opt" data-v="large" onclick="setSdOpt('cardSize','large',this)">ใหญ่</button>
-              </div>
-              <label class="scd-lbl" style="margin-top:10px">สไตล์การ์ด</label>
-              <div class="scd-opt-row" id="sdCardStyleBtns">
-                <button class="scd-opt on" data-v="glass" onclick="setSdOpt('cardStyle','glass',this)">Glass</button>
-                <button class="scd-opt" data-v="solid" onclick="setSdOpt('cardStyle','solid',this)">Solid</button>
-                <button class="scd-opt" data-v="outline" onclick="setSdOpt('cardStyle','outline',this)">Outline</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 3. ฟ้อนต์และข้อความ -->
-        <div class="scd-card">
-          <div class="scd-card-hdr">🔤 ฟ้อนต์และข้อความ</div>
+          <div class="scd-card-hdr">🔤 ฟ้อนต์และขนาดตัวอักษร</div>
 
           <!-- Global font selector -->
           <div class="scd-field">
             <label class="scd-lbl">ฟ้อนต์หลัก (ใช้กับทั้งหน้า)</label>
             <div style="display:flex;gap:8px;align-items:center">
-              <select id="sdFont" onchange="sdPreview()" style="flex:1;background:#0a1520;border:1px solid #1e3a5f;border-radius:9px;padding:9px 12px;color:#fff;font-size:.9rem;font-family:inherit;outline:none">
+              <select id="sdFont" onchange="sdPreview()" style="flex:1;background:#ffffff;border:1px solid #9ec5f3;border-radius:9px;padding:9px 12px;color:#0f172a;font-size:.9rem;font-family:inherit;outline:none">
                 <option value="Kanit">Kanit</option>
                 <option value="Sarabun">Sarabun</option>
                 <option value="Prompt">Prompt</option>
@@ -933,56 +955,29 @@
 
           <!-- Typography table -->
           <div>
-            <div class="scd-typo-grid">
+            <div class="scd-typo-grid" style="grid-template-columns:1fr 90px">
               <div class="scd-typo-hdr">รายการ</div>
               <div class="scd-typo-hdr">ขนาด (px)</div>
-              <div class="scd-typo-hdr">สีข้อความ</div>
 
               <div class="scd-typo-lbl">หัวข้อหน้า</div>
               <input type="number" class="scd-num-input" id="sdTitleFs" min="14" max="52" value="24" oninput="sdPreview()">
-              <div id="titleColorCpk"></div>
 
               <div class="scd-typo-lbl">ชื่อประเภทคิว</div>
               <input type="number" class="scd-num-input" id="sdCardNameFs" min="10" max="30" value="15" oninput="sdPreview()">
-              <div id="cardNameColorCpk"></div>
 
               <div class="scd-typo-lbl">จำนวนคิวรอ</div>
               <input type="number" class="scd-num-input" id="sdWaitFs" min="9" max="24" value="12" oninput="sdPreview()">
-              <div id="waitNumColorCpk"></div>
 
               <div class="scd-typo-lbl">ป้าย QN / HN</div>
               <input type="number" class="scd-num-input" id="sdBarLblSz" min="7" max="18" value="10" oninput="sdPreview()">
-              <div id="barLabelColorCpk"></div>
 
               <div class="scd-typo-lbl">ข้อความช่องกรอก</div>
               <input type="number" class="scd-num-input" id="sdInputFs" min="12" max="30" value="17" oninput="sdPreview()">
-              <div id="barTextColorCpk"></div>
             </div>
           </div>
         </div>
 
-        <!-- 4. แถบค้นหา -->
-        <div class="scd-card">
-          <div class="scd-card-hdr">🔍 แถบค้นหา QN / HN</div>
-          <div class="scd-row-2">
-            <div class="scd-field">
-              <label class="scd-lbl">สีพื้นหลังแถบ</label>
-              <div id="barBgCpk"></div>
-              <label class="scd-lbl" style="margin-top:10px">ความโปร่งใส %</label>
-              <input type="range" class="scd-slider" id="sdBarBgOp" min="10" max="100" value="78" oninput="this.nextElementSibling.textContent=this.value+'%';sdPreview()">
-              <span class="scd-slider-val">78%</span>
-            </div>
-            <div class="scd-field">
-              <label class="scd-lbl">สีขอบช่องกรอก</label>
-              <div id="barBorderCpk"></div>
-              <label class="scd-lbl" style="margin-top:10px">ความทึบพื้นหลังช่องกรอก %</label>
-              <input type="range" class="scd-slider" id="sdInputBg" min="0" max="60" value="8" oninput="this.nextElementSibling.textContent=this.value+'%';sdPreview()">
-              <span class="scd-slider-val">8%</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 5. อื่น ๆ -->
+        <!-- 3. อื่น ๆ -->
         <div class="scd-card">
           <div class="scd-card-hdr">⚙ ทั่วไป</div>
           <div class="scd-field">
@@ -1021,7 +1016,7 @@
         <div style="display:flex;align-items:center;gap:8px">
           <div id="srvStatusDot" style="width:10px;height:10px;border-radius:50%;
             background:#4caf50;box-shadow:0 0 8px #4caf5088;flex-shrink:0"></div>
-          <span id="srvStatusText" style="font-size:.88rem;color:rgba(255,255,255,.75)">Server กำลังทำงาน</span>
+          <span id="srvStatusText" style="font-size:.88rem;color:#1e293b">Server กำลังทำงาน</span>
         </div>
 
         <button id="btnRestartSrv" class="net-action-btn" onclick="restartServer()">
@@ -1035,10 +1030,10 @@
           onmouseout="this.style.background='rgba(255,255,255,.05)'">
           <input type="checkbox" id="autoStartChk" onchange="setAutoStart(this.checked)"
             style="width:17px;height:17px;accent-color:#42a5f5;cursor:pointer"/>
-          <span style="font-size:.88rem;color:rgba(255,255,255,.8)">เปิด Server อัตโนมัติเมื่อเปิดเครื่อง</span>
+          <span style="font-size:.88rem;color:#1e293b">เปิด Server อัตโนมัติเมื่อเปิดเครื่อง</span>
         </label>
 
-        <span id="autoStartStatus" style="font-size:.78rem;color:rgba(255,255,255,.35)"></span>
+        <span id="autoStartStatus" style="font-size:.78rem;color:#475569"></span>
       </div>
     </div>
 
@@ -1051,7 +1046,7 @@
       </div>
 
       <div class="net-section-title">ที่อยู่ Server บนเครือข่าย</div>
-      <div id="netAddressList"><div style="color:rgba(255,255,255,.4);font-size:.85rem">กำลังตรวจสอบ IP...</div></div>
+      <div id="netAddressList"><div style="color:#475569;font-size:.85rem">กำลังตรวจสอบ IP...</div></div>
       <button class="net-refresh-btn" onclick="loadNetInfo()">↻ รีเฟรช</button>
 
       <div class="net-localhost-note">
@@ -1095,18 +1090,18 @@
       </div>
 
       <div class="net-section-title">วิธีเชื่อมต่อจากเครื่องอื่น</div>
-      <div style="background:rgba(0,0,0,.25);border-radius:12px;padding:16px 20px;font-size:.85rem;color:rgba(255,255,255,.65);line-height:2">
-        <div><b style="color:#80deea">①</b> &nbsp;ตรวจสอบให้แน่ใจว่าเครื่องทุกเครื่องอยู่ใน <b style="color:#fff">LAN เดียวกัน</b> (Wi-Fi หรือสาย LAN)</div>
-        <div><b style="color:#80deea">②</b> &nbsp;เปิด <b style="color:#fff">เว็บเบราว์เซอร์</b> บนเครื่องที่ต้องการเชื่อมต่อ</div>
-        <div><b style="color:#80deea">③</b> &nbsp;พิมพ์ที่อยู่ Server ด้านบน แล้วต่อด้วยหน้าที่ต้องการ เช่น <span id="netExampleUrl" style="font-family:monospace;color:#4dd0e1">http://192.168.1.x:3000/queue.html?sys=1</span></div>
-        <div><b style="color:#80deea">④</b> &nbsp;ข้อมูลคิวจะ <b style="color:#fff">ซิงค์แบบ Real-time</b> ทันทีที่มีการออกหรือเรียกคิว</div>
+      <div style="background:#eef5ff;border-radius:12px;padding:16px 20px;font-size:.85rem;color:#1e293b;line-height:2">
+        <div><b style="color:#0e7490">①</b> &nbsp;ตรวจสอบให้แน่ใจว่าเครื่องทุกเครื่องอยู่ใน <b style="color:#0f172a">LAN เดียวกัน</b> (Wi-Fi หรือสาย LAN)</div>
+        <div><b style="color:#0e7490">②</b> &nbsp;เปิด <b style="color:#0f172a">เว็บเบราว์เซอร์</b> บนเครื่องที่ต้องการเชื่อมต่อ</div>
+        <div><b style="color:#0e7490">③</b> &nbsp;พิมพ์ที่อยู่ Server ด้านบน แล้วต่อด้วยหน้าที่ต้องการ เช่น <span id="netExampleUrl" style="font-family:monospace;color:#0e7490">http://192.168.1.x:3000/queue.html?sys=1</span></div>
+        <div><b style="color:#0e7490">④</b> &nbsp;ข้อมูลคิวจะ <b style="color:#0f172a">ซิงค์แบบ Real-time</b> ทันทีที่มีการออกหรือเรียกคิว</div>
       </div>
 
       <div class="net-section-title" style="margin-top:22px">เสียงประกาศเรียกคิว</div>
       <div style="background:rgba(102,187,106,.06);border:1px solid rgba(102,187,106,.2);border-radius:12px;padding:16px 20px">
-        <div style="font-size:.85rem;color:rgba(255,255,255,.7);line-height:1.7">
-          🌐 <b style="color:#a5d6a7">หน้าแสดงคิว (display) ใช้เสียง Google Translate</b> ในการประกาศหมายเลขคิวโดยอัตโนมัติ — ไม่ต้องติดตั้งเสียงเพิ่มที่เครื่อง Client เลย<br>
-          <span style="color:rgba(255,255,255,.45);font-size:.78rem">ต้องการอินเทอร์เน็ตขณะประกาศคิว (เสียงจะถูกแคชไว้ที่เซิร์ฟเวอร์เพื่อความเร็วในครั้งถัดไป)</span>
+        <div style="font-size:.85rem;color:#1e293b;line-height:1.7">
+          🌐 <b style="color:#15803d">หน้าแสดงคิว (display) ใช้เสียง Google Translate</b> ในการประกาศหมายเลขคิวโดยอัตโนมัติ — ไม่ต้องติดตั้งเสียงเพิ่มที่เครื่อง Client เลย<br>
+          <span style="color:#475569;font-size:.78rem">ต้องการอินเทอร์เน็ตขณะประกาศคิว (เสียงจะถูกแคชไว้ที่เซิร์ฟเวอร์เพื่อความเร็วในครั้งถัดไป)</span>
         </div>
       </div>
 
@@ -1128,6 +1123,21 @@
     <div class="item-list" id="counterList"><div class="empty-msg">กำลังโหลด...</div></div>
   </div>
 
+  <!-- Forward queue to other systems -->
+  <div class="tab-pane" id="pane-forward">
+    <div class="form-card">
+      <h2>🔀 ส่งต่อคิวไปยังระบบอื่น (ใช้เลขคิวเดียวกัน)</h2>
+      <div style="font-size:.85rem;color:#334155;line-height:1.7;margin-bottom:14px">
+        เลือกระบบที่หน้าเรียกคิวของระบบนี้ส่งคิวต่อไปได้ เช่น ห้องยา → การเงิน (แสดงเฉพาะระบบที่สร้างจากห้องตรวจตอน login)<br>
+        หลังเรียกคิวแล้ว จะมีปุ่ม <b style="color:#6d28d9">➜ ส่งต่อ</b> คิวเลขเดิมจะเข้ารายการรอของระบบปลายทางตามเวลาออกคิวเดิม<br>
+        ระบบที่เชื่อมกันจะใช้เลขคิวต่อเนื่องร่วมกัน (ตามตัวอักษรนำหน้าเดียวกัน) เลขจึงไม่ซ้ำกัน<br>
+        ถ้าคนไข้อาจไปอีกฝั่งก่อน ให้ตั้งค่าที่ระบบปลายทางให้ส่งกลับมาได้ด้วย
+      </div>
+      <div id="fwdList" style="display:flex;flex-direction:column;gap:8px"><div class="empty-msg">กำลังโหลด...</div></div>
+      <button class="btn-add" style="margin-top:16px" onclick="saveForward()">💾 บันทึก</button>
+    </div>
+  </div>
+
   <!-- HIS / Lookup config -->
   <div class="tab-pane" id="pane-his">
 
@@ -1136,40 +1146,40 @@
       <h2>📟 ค้นหาจากบาร์โค้ด</h2>
 
       <div class="field" style="margin-bottom:14px">
-        <label style="font-size:.78rem;color:#90caf9;margin-bottom:8px;display:block">ดึงข้อมูลจาก field</label>
+        <label style="font-size:.78rem;color:#1e3a8a;margin-bottom:8px;display:block">ดึงข้อมูลจาก field</label>
         <div style="display:flex;gap:18px">
           <label style="display:flex;align-items:center;gap:7px;cursor:pointer">
             <input type="radio" name="barcodeField" id="bfHN" value="hn" checked
               style="accent-color:#42a5f5;width:15px;height:15px"/>
-            <span style="font-size:.9rem">HN &nbsp;<code style="background:#0f1923;padding:2px 7px;border-radius:5px;font-size:.8rem;color:#80deea">ovst.hn</code></span>
+            <span style="font-size:.9rem">HN &nbsp;<code style="background:#ffffff;padding:2px 7px;border-radius:5px;font-size:.8rem;color:#0e7490">ovst.hn</code></span>
           </label>
           <label style="display:flex;align-items:center;gap:7px;cursor:pointer">
             <input type="radio" name="barcodeField" id="bfQN" value="qn"
               style="accent-color:#42a5f5;width:15px;height:15px"/>
-            <span style="font-size:.9rem">QN &nbsp;<code style="background:#0f1923;padding:2px 7px;border-radius:5px;font-size:.8rem;color:#80deea">ovst.oqueue</code></span>
+            <span style="font-size:.9rem">QN &nbsp;<code style="background:#ffffff;padding:2px 7px;border-radius:5px;font-size:.8rem;color:#0e7490">ovst.oqueue</code></span>
           </label>
         </div>
       </div>
 
       <div class="form-row" style="gap:16px;margin-bottom:8px">
         <div class="field" style="flex:1;min-width:120px">
-          <label>ตัดอักขระนำหน้า <span style="color:#546e7a;font-weight:400">(0 = ไม่ตัด)</span></label>
+          <label>ตัดอักขระนำหน้า <span style="color:#475569;font-weight:400">(0 = ไม่ตัด)</span></label>
           <input type="number" id="barcodePrefixLen" value="0" min="0" max="20"
-            style="background:#0f1923;border:1px solid #1e3a5f;border-radius:8px;padding:9px 13px;color:#fff;font-size:.95rem;font-family:inherit;width:100%"/>
-          <small style="color:#546e7a;font-size:.72rem;margin-top:4px;display:block">เช่น บาร์โค้ด = "HN1234567" ตัด 2 = "1234567"</small>
+            style="background:#ffffff;border:1px solid #9ec5f3;border-radius:8px;padding:9px 13px;color:#0f172a;font-size:.95rem;font-family:inherit;width:100%"/>
+          <small style="color:#475569;font-size:.72rem;margin-top:4px;display:block">เช่น บาร์โค้ด = "HN1234567" ตัด 2 = "1234567"</small>
         </div>
         <div class="field" style="flex:1;min-width:120px">
-          <label>ความยาวที่ใช้ <span style="color:#546e7a;font-weight:400">(0 = ทั้งหมด)</span></label>
+          <label>ความยาวที่ใช้ <span style="color:#475569;font-weight:400">(0 = ทั้งหมด)</span></label>
           <input type="number" id="barcodeUseLen" value="0" min="0" max="30"
-            style="background:#0f1923;border:1px solid #1e3a5f;border-radius:8px;padding:9px 13px;color:#fff;font-size:.95rem;font-family:inherit;width:100%"/>
-          <small style="color:#546e7a;font-size:.72rem;margin-top:4px;display:block">เช่น ใช้แค่ 7 ตัว หลังตัดนำหน้าแล้ว</small>
+            style="background:#ffffff;border:1px solid #9ec5f3;border-radius:8px;padding:9px 13px;color:#0f172a;font-size:.95rem;font-family:inherit;width:100%"/>
+          <small style="color:#475569;font-size:.72rem;margin-top:4px;display:block">เช่น ใช้แค่ 7 ตัว หลังตัดนำหน้าแล้ว</small>
         </div>
       </div>
 
-      <div id="barcodePreview" style="background:#0f1923;border-radius:8px;padding:10px 14px;font-size:.8rem;color:#64b5f6;margin-top:4px;display:none"></div>
+      <div id="barcodePreview" style="background:#ffffff;border-radius:8px;padding:10px 14px;font-size:.8rem;color:#1d4ed8;margin-top:4px;display:none"></div>
       <div style="display:flex;gap:10px;align-items:center;margin-top:14px">
         <input type="text" id="barcodeTestInput" placeholder="ทดสอบ: พิมพ์บาร์โค้ดตัวอย่าง"
-          style="flex:1;background:#0f1923;border:1px solid #1e3a5f;border-radius:8px;padding:9px 13px;color:#fff;font-size:.9rem;font-family:inherit"
+          style="flex:1;background:#ffffff;border:1px solid #9ec5f3;border-radius:8px;padding:9px 13px;color:#0f172a;font-size:.9rem;font-family:inherit"
           oninput="previewBarcode(this.value)"/>
       </div>
     </div>
@@ -1178,7 +1188,7 @@
     <div class="form-card">
       <h2>🏷 เงื่อนไขสิทธิการรักษา</h2>
 
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid #1e3a5f">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid #9ec5f3">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
           <div class="sf-toggle" style="display:inline-flex"><input type="checkbox" id="allowAllPtypes" onchange="onAllowAllChange()"/><span class="sf-toggle-slider"></span></div>
           <span style="font-size:.88rem">อนุญาตทุกสิทธิ (ไม่กรอง)</span>
@@ -1187,23 +1197,23 @@
 
       <div id="pttypeRulesWrap">
         <!-- Add new rule -->
-        <div style="background:#0f1923;border-radius:12px;padding:16px;margin-bottom:14px">
-          <div style="font-size:.78rem;color:#90caf9;font-weight:600;margin-bottom:10px">+ เพิ่มสิทธิการรักษา</div>
+        <div style="background:#ffffff;border-radius:12px;padding:16px;margin-bottom:14px">
+          <div style="font-size:.78rem;color:#1e3a8a;font-weight:600;margin-bottom:10px">+ เพิ่มสิทธิการรักษา</div>
           <div class="form-row" style="gap:10px;flex-wrap:wrap;margin-bottom:10px">
             <div class="field" style="width:110px">
               <label>รหัสสิทธิ (pttype)</label>
               <input type="text" id="ptCode" placeholder="เช่น UC" maxlength="10"
-                style="text-transform:uppercase;background:#1a2a3a;border:1px solid #1e3a5f;border-radius:8px;padding:9px 13px;color:#fff;font-size:.95rem;font-family:inherit;width:100%"/>
+                style="text-transform:uppercase;background:#ffffff;border:1px solid #9ec5f3;border-radius:8px;padding:9px 13px;color:#0f172a;font-size:.95rem;font-family:inherit;width:100%"/>
             </div>
             <div class="field" style="flex:1;min-width:140px">
               <label>ชื่อสิทธิ</label>
               <input type="text" id="ptName" placeholder="เช่น บัตรทอง / ข้าราชการ" maxlength="60"
-                style="background:#1a2a3a;border:1px solid #1e3a5f;border-radius:8px;padding:9px 13px;color:#fff;font-size:.95rem;font-family:inherit;width:100%"/>
+                style="background:#ffffff;border:1px solid #9ec5f3;border-radius:8px;padding:9px 13px;color:#0f172a;font-size:.95rem;font-family:inherit;width:100%"/>
             </div>
             <div class="field" style="flex:1;min-width:150px">
               <label>ประเภทคิว (อัตโนมัติ)</label>
               <select id="ptAutoType"
-                style="width:100%;background:#1a2a3a;border:1px solid #1e3a5f;border-radius:8px;padding:9px 13px;color:#fff;font-size:.88rem;font-family:inherit">
+                style="width:100%;background:#ffffff;border:1px solid #9ec5f3;border-radius:8px;padding:9px 13px;color:#0f172a;font-size:.88rem;font-family:inherit">
                 <option value="">— ไม่ระบุ (เลือกเอง) —</option>
               </select>
             </div>
@@ -1230,7 +1240,7 @@
       <div class="field" style="width:100%">
         <label>Prefix</label>
         <input type="text" id="etPrefix" maxlength="3" style="text-transform:uppercase;font-size:1.2rem;font-weight:700"/>
-        <label style="display:flex;align-items:center;gap:5px;margin-top:7px;cursor:pointer;font-size:.75rem;color:#90caf9">
+        <label style="display:flex;align-items:center;gap:5px;margin-top:7px;cursor:pointer;font-size:.75rem;color:#1e3a8a">
           <input type="checkbox" id="etNoPrefix" onchange="onNoPrefixChange('etPrefix','etNoPrefix')" style="accent-color:#ffa726;width:14px;height:14px"/>
           ไม่ใช้ Prefix (ออกเลขล้วน เช่น 001, 002)
         </label>
@@ -1239,11 +1249,11 @@
       <div class="field" style="width:100%">
         <label>ใช้สำหรับ</label>
         <div style="display:flex;gap:18px;margin-top:8px;flex-wrap:wrap">
-          <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:.84rem;color:#90caf9">
+          <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:.84rem;color:#1e3a8a">
             <input type="checkbox" id="etForOpd" style="accent-color:#42a5f5;width:16px;height:16px"/>
             🏥 ผู้ป่วยนอก (OPD)
           </label>
-          <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:.84rem;color:#a5d6a7">
+          <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:.84rem;color:#15803d">
             <input type="checkbox" id="etForIpd" style="accent-color:#4caf50;width:16px;height:16px"/>
             🛏 ผู้ป่วยใน (IPD)
           </label>
@@ -1268,6 +1278,19 @@
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closeModal('modalCounter')">ยกเลิก</button>
       <button class="btn-save"   onclick="saveCounter()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Test-print preview: the slip at its real paper size before it is sent to the printer -->
+<div class="modal-bg" id="modalTestPrint">
+  <div class="modal tp-modal">
+    <h3>🖨 ตัวอย่างก่อนพิมพ์</h3>
+    <div class="tp-stage" id="tpStage"><div class="tp-paper" id="tpPaper"></div></div>
+    <div class="tp-info" id="tpInfo"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('modalTestPrint')">ปิด</button>
+      <button class="btn-save"   onclick="confirmTestPrint()">🖨 พิมพ์</button>
     </div>
   </div>
 </div>
@@ -1379,11 +1402,36 @@ socket.on('types_updated',          t  => { queueTypes = t; renderTypes(); });
 socket.on('counters_updated',       c  => { counters   = c; renderCounters(); });
 socket.on('display_config_updated', dc => { tickerMsgs = dc.tickerMessages||[]; renderTicker(); });
 
+// ── Forward targets (systems[].forwardTo) ──
+function loadForward() {
+  // Only systems created from a ห้องตรวจ at login (dept-systems) are offered
+  fetch(`/api/sys/${sysId}/forward-candidates`).then(r => r.json()).then(list => {
+    const deptLbl = s => s.depts.length
+      ? s.depts.map(d => `🏥 ${!d.name ? 'ห้องตรวจ ' + d.code : d.name.startsWith(d.code) ? d.name : d.name + ' (' + d.code + ')'}`).join(', ')
+      : '⚠ ไม่ได้ผูกกับห้องตรวจ';
+    document.getElementById('fwdList').innerHTML = list.length ? list.map(s => `
+      <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid #9ec5f3;border-radius:10px;cursor:pointer">
+        <input type="checkbox" class="fwd-cb" value="${s.id}" ${s.selected ? 'checked' : ''} style="width:18px;height:18px">
+        <span style="font-size:1.1rem">${s.icon || '📋'}</span>
+        <span style="font-weight:700">${s.name}</span>
+        <span style="color:#1e3a8a;font-size:.8rem">${deptLbl(s)}</span>
+        <span style="color:#475569;font-size:.75rem;margin-left:auto">#${s.id}</span>
+      </label>`).join('') : '<div class="empty-msg" style="color:#90a4ae">ยังไม่มีระบบของห้องตรวจอื่น — ให้ login เลือกห้องตรวจแล้วสร้างระบบคิวก่อน</div>';
+  });
+}
+function saveForward() {
+  const forwardTo = [...document.querySelectorAll('.fwd-cb:checked')].map(c => Number(c.value));
+  fetch(`/api/systems/${sysId}/forward`, { method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ forwardTo }) })
+  .then(r => r.json()).then(d => toast(d.success ? '✅ บันทึกการส่งต่อคิวแล้ว' : (d.message || 'บันทึกไม่สำเร็จ')));
+}
+
 function switchTab(name, el) {
   document.querySelectorAll('.page-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('pane-' + name).classList.add('active');
+  if (name === 'forward') loadForward();
   if (name === 'print' && !printTabLoaded) {
     printTabLoaded = true;
     loadPrintMode();
@@ -1423,15 +1471,15 @@ function renderTypes() {
   if (!queueTypes.length) { el.innerHTML = '<div class="empty-msg">ยังไม่มีประเภทคิว</div>'; return; }
   el.innerHTML = queueTypes.map(t => {
     const fm = t.forMode || 'both';
-    const modeBadge = fm === 'opd'  ? `<span style="background:rgba(66,165,245,.18);border:1px solid rgba(66,165,245,.4);color:#90caf9;border-radius:6px;padding:1px 8px;font-size:.7rem;font-weight:700">🏥 OPD</span>`
-                    : fm === 'ipd'  ? `<span style="background:rgba(76,175,80,.18);border:1px solid rgba(76,175,80,.4);color:#a5d6a7;border-radius:6px;padding:1px 8px;font-size:.7rem;font-weight:700">🛏 IPD</span>`
-                    : `<span style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#7e8c99;border-radius:6px;padding:1px 8px;font-size:.7rem">OPD+IPD</span>`;
+    const modeBadge = fm === 'opd'  ? `<span style="background:rgba(66,165,245,.18);border:1px solid rgba(66,165,245,.4);color:#1e3a8a;border-radius:6px;padding:1px 8px;font-size:.7rem;font-weight:700">🏥 OPD</span>`
+                    : fm === 'ipd'  ? `<span style="background:rgba(76,175,80,.18);border:1px solid rgba(76,175,80,.4);color:#15803d;border-radius:6px;padding:1px 8px;font-size:.7rem;font-weight:700">🛏 IPD</span>`
+                    : `<span style="background:rgba(30,64,175,0.048);border:1px solid #c7dbf3;color:#475569;border-radius:6px;padding:1px 8px;font-size:.7rem">OPD+IPD</span>`;
     return `
     <div class="item-row">
       <div class="item-badge" style="background:${t.color}">${t.prefix || '#'}</div>
       <div class="item-info">
         <div class="i-name">${t.name} &nbsp;${modeBadge}</div>
-        <div class="i-meta">${t.prefix ? `Prefix: <b>${t.prefix}</b>` : '<b style="color:#ffa726">ไม่ใช้ Prefix</b> (ตัวเลขล้วน)'} &nbsp;|&nbsp; ${t.color}</div>
+        <div class="i-meta">${t.prefix ? `Prefix: <b>${t.prefix}</b>` : '<b style="color:#c2410c">ไม่ใช้ Prefix</b> (ตัวเลขล้วน)'} &nbsp;|&nbsp; ${t.color}</div>
       </div>
       <div class="item-actions">
         <button class="btn-edit" onclick="openEditType(${t.id})">แก้ไข</button>
@@ -1716,9 +1764,9 @@ function applyPrintCfgToForm(cfg) {
   // Barcode
   const sbc = !!cfg.showBarcode;
   document.getElementById('pdShowBarcode').checked = sbc;
-  const bcSrc = cfg.barcodeSource === 'hn' ? 'hn' : 'qn';
-  const bcSrcEl = document.getElementById(bcSrc === 'hn' ? 'pdBarcodeHn' : 'pdBarcodeQn');
-  if (bcSrcEl) bcSrcEl.checked = true;
+  const bcSrc = SlipRender.codeSources(cfg);
+  document.getElementById('pdBarcodeQn').checked = bcSrc.includes('qn');
+  document.getElementById('pdBarcodeHn').checked = bcSrc.includes('hn');
   togglePdSection('pdBarcodeFields', { checked: sbc });
   const bcType = cfg.barcodeType === 'qr' ? 'qr' : 'code128';
   document.getElementById(bcType === 'qr' ? 'pdBarcodeTypeQr' : 'pdBarcodeTypeBar').checked = true;
@@ -1786,7 +1834,8 @@ function collectPrintCfg() {
     queueNumFontSize: Number(document.getElementById('pdNumFs').value),
     showDateTime:     document.getElementById('pdShowDt').checked,
     showBarcode:      document.getElementById('pdShowBarcode').checked,
-    barcodeSource:    document.querySelector('input[name="pdBarcodeSrc"]:checked')?.value || 'qn',
+    barcodeSources:   barcodeSrcChecked(),
+    barcodeSource:    barcodeSrcChecked()[0],   // kept for older Print Agents
     barcodeType:      document.querySelector('input[name="pdBarcodeType"]:checked')?.value || 'code128',
     barcodeHeight:    Number(document.getElementById('pdBarcodeH').value) || 10,
     qrSize:           Number(document.getElementById('pdQrSize').value) || 25,
@@ -1911,7 +1960,7 @@ function renderCustomTexts() {
       <textarea rows="2" placeholder="พิมพ์ข้อความ เช่น ติดต่อสอบถาม โทร 0-xxxx-xxxx" oninput="setCustomText(${i},'text',this.value,false)">${escHtml(b.text)}</textarea>
       <div class="pd-ct-ctrl">
         <input type="number" min="6" max="40" value="${Number(b.fs) || 10}" title="ขนาดตัวอักษร (pt)" oninput="setCustomText(${i},'fs',Number(this.value)||10,false)"/>
-        <span style="font-size:.72rem;color:#64b5f6">pt</span>
+        <span style="font-size:.72rem;color:#1d4ed8">pt</span>
         ${styleControlsHtml({ align: b.align || 'center', bold: !!b.bold, color: b.color || 'black' }, ['align','bold','color'], `setCustomText(${i},`)}
         <button class="pd-lo-del" title="ลบข้อความนี้" onclick="removeCustomText(${i})">✕</button>
       </div>
@@ -1945,6 +1994,12 @@ function syncBarcodeTypeFields() {
   const qr = document.getElementById('pdBarcodeTypeQr').checked;
   document.getElementById('pdBarcodeHField').style.display = qr ? 'none' : '';
   document.getElementById('pdQrSizeField').style.display   = qr ? '' : 'none';
+}
+const barcodeSrcChecked = () => [...document.querySelectorAll('input[name="pdBarcodeSrc"]:checked')].map(e => e.value);
+// at least one of QN / HN stays ticked — to hide barcodes untick "แสดงบาร์โค้ดบนบัตรคิว"
+function onBarcodeSrc(el) {
+  if (!barcodeSrcChecked().length) el.checked = true;
+  updatePreview();
 }
 
 // ── Logo ──────────────────────────────────────────────────────────────────
@@ -2120,17 +2175,41 @@ function savePrintCfg() {
 }
 
 // Print area for test print (hidden, used only by testPrint)
-const _testPrintArea = document.createElement('div');
-_testPrintArea.id = 'testPrintArea';
-_testPrintArea.style.cssText = 'display:none;position:fixed;inset:0;z-index:9999;background:#fff;padding:8mm';
-document.body.appendChild(_testPrintArea);
+// Test print: show the slip at its real paper size first, then print it on confirm
+let _tpPending = null;
 
 async function testPrint() {
   const cfg      = collectPrintCfg();
   const sysName  = pdSysName || PD_SAMPLE.sysName;
   const ticket   = { ...PD_SAMPLE, sysName };
-  ticket.codeImg  = SlipRender.codeImage(cfg, ticket);
+  ticket.codeImgs = SlipRender.codeImages(cfg, ticket);
+  ticket.codeImg  = ticket.codeImgs[0] || null;
   const mode     = localStorage.getItem('queuePrintMode') || 'host';
+
+  const paper = document.getElementById('tpPaper');
+  paper.style.zoom = '';
+  document.getElementById('modalTestPrint').classList.add('open'); // visible first: the auto height is measured from layout
+  const { w, h, pageCss } = await SlipRender.preparePrint(paper, cfg, ticket);
+  // 1:1 on screen (96 px = 1 inch); zoom out only when the paper is wider than the window (A4)
+  const stage = document.getElementById('tpStage');
+  const fit = (stage.clientWidth - 48) / paper.offsetWidth;
+  if (fit > 0 && fit < 1) paper.style.zoom = fit.toFixed(3);
+
+  const sel = id => { const s = document.getElementById(id); return s && s.value ? s.options[s.selectedIndex].text : ''; };
+  const hostPrinter = mode === 'host' ? sel('pdPrinter') : '', localPrinter = mode === 'local' ? sel('pdLocalPrinter') : '';
+  const via = hostPrinter  ? `ส่งตรงไปเครื่องพิมพ์ <b>${hostPrinter}</b> ที่ Server`
+            : localPrinter ? `ส่งตรงไปเครื่องพิมพ์ <b>${localPrinter}</b> ผ่าน Print Agent`
+            : 'เปิดหน้าต่างพิมพ์ของเบราว์เซอร์ (ยังไม่ได้เลือกเครื่องพิมพ์)';
+  document.getElementById('tpInfo').innerHTML =
+    `📐 ขนาดกระดาษ <b>${w} × ${h} mm</b>${cfg.paperSize === 'a4' || cfg.customHeight ? '' : ' (ความยาวตามเนื้อหา)'}` +
+    `${paper.style.zoom ? ` · ย่อแสดง ${Math.round(paper.style.zoom * 100)}%` : ' · แสดงขนาดเท่าจริง'}<br>🖨 ${via}`;
+  _tpPending = { cfg, ticket, mode, pageCss };
+}
+
+async function confirmTestPrint() {
+  if (!_tpPending) return;
+  const { cfg, ticket, mode, pageCss } = _tpPending;
+  closeModal('modalTestPrint');
 
   // HOST mode: save config → print via server GDI+/ZPL pipeline
   if (mode === 'host') {
@@ -2168,14 +2247,21 @@ async function testPrint() {
     }
   }
 
-  // Fallback: browser print dialog (no printer configured) — page = exact configured paper size
-  _testPrintArea.style.cssText = 'display:none';
-  const { pageCss } = await SlipRender.preparePrint(_testPrintArea, cfg, ticket);
-  let ps = document.getElementById('_testPageStyle');
-  if (!ps) { ps = document.createElement('style'); ps.id='_testPageStyle'; document.head.appendChild(ps); }
-  ps.textContent = `@media print{${pageCss}body>*:not(#testPrintArea){display:none!important}#testPrintArea{display:block!important}}`;
-  window.print();
-  setTimeout(() => { ps.textContent = ''; }, 1000);
+  // Fallback: browser print dialog. Printed from its own iframe so this page's CSS (@page A4, theme) can't
+  // change the paper — the dialog shows exactly the slip-sized page.
+  const paper = document.getElementById('tpPaper');
+  const fr = document.createElement('iframe');
+  fr.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0';
+  document.body.appendChild(fr);
+  const doc = fr.contentDocument;
+  doc.open();
+  doc.write(`<!doctype html><html><head><meta charset="utf-8"><title>ทดสอบพิมพ์</title><style>${pageCss}body{font-family:'Segoe UI',Tahoma,sans-serif;color:#000}</style></head>` +
+            `<body><div style="${paper.getAttribute('style').replace(/zoom:[^;]*;?/, '')}">${paper.innerHTML}</div></body></html>`);
+  doc.close();
+  await SlipRender.whenImagesReady(doc.body);
+  fr.contentWindow.addEventListener('afterprint', () => setTimeout(() => fr.remove(), 0));
+  fr.contentWindow.focus();
+  fr.contentWindow.print();
 }
 
 socket.on('print_config_updated', cfg => { /* live update if needed */ });
@@ -2184,157 +2270,15 @@ socket.on('print_config_updated', cfg => { /* live update if needed */ });
 // SCREEN DESIGNER
 // ═══════════════════════════════════════════════════════════════
 
-const BG_PRESETS = {
-  pastel: { name:'Pastel', t:'linear-gradient(135deg,#f2f9ff,#bfe0fb)', c:['#f2f9ff','#dceefe','#bfe0fb'] },
-  teal:   { name:'Teal',   t:'linear-gradient(135deg,#26c6da,#00838f)', c:['#29b6c8','#0097a7','#00696f'] },
-  ocean:  { name:'Ocean',  t:'linear-gradient(135deg,#1e88e5,#0d47a1)', c:['#1e88e5','#0d47a1','#0b3574'] },
-  purple: { name:'Purple', t:'linear-gradient(135deg,#9c27b0,#4a148c)', c:['#9c27b0','#6a1b9a','#4a148c'] },
-  forest: { name:'Forest', t:'linear-gradient(135deg,#43a047,#1b5e20)', c:['#43a047','#2e7d32','#1b5e20'] },
-  dark:   { name:'Dark',   t:'linear-gradient(135deg,#455a64,#1c313a)', c:['#455a64','#263238','#0d1b21'] },
-  sunset: { name:'Sunset', t:'linear-gradient(135deg,#ef6c00,#8d0000)', c:['#ef6c00','#bf360c','#7f0000'] },
-  blue:   { name:'Blue',   t:'linear-gradient(135deg,#039be5,#01579b)', c:['#039be5','#0277bd','#01579b'] },
-  rose:   { name:'Rose',   t:'linear-gradient(135deg,#d81b60,#880e4f)', c:['#d81b60','#c2185b','#880e4f'] },
-};
-
 let sdCfg = {
-  fontFamily:'Kanit', bgPreset:'teal',
-  bgC1:'#29b6c8', bgC2:'#0097a7', bgC3:'#00696f',
-  accentColor:'#00bcd4',
-  cardSize:'normal', cardStyle:'glass',
+  fontFamily:'Kanit', cardSize:'normal',
   showScannerCard:true, showToggles:true,
-  navOpacity:45,
-  titleFontSize:24, titleColor:'#ffd54f',
-  cardNameFontSize:15, cardNameColor:'#ffffff',
-  cardWaitFontSize:12, cardWaitNumColor:'#ffd54f',
+  titleFontSize:34, cardNameFontSize:24, cardWaitFontSize:17,
 };
-// live color state (synced with cpk widgets)
-let sdAccent       = '#00bcd4';
-let sdBgC1         = '#29b6c8';
-let sdBgC2         = '#0097a7';
-let sdBgC3         = '#00696f';
-let sdTitleColor   = '#ffd54f';
-let sdCardNameClr  = '#ffffff';
-let sdWaitNumClr   = '#ffd54f';
-let sdBarBgColor   = '#001c28';
-let sdBarLabelClr  = '#00bcd4';
-let sdBarBorderClr = '#00bcd4';
-let sdBarTextClr   = '#ffffff';
-let sdBarPHColor   = '#ffffff';
-
-// ── Screen Designer v2: simplified color pickers (no RGB sliders) ─────────
-
-const SCREEN_PALETTE = [
-  // White / black / grey
-  '#ffffff','#f5f5f5','#9e9e9e','#616161','#424242','#212121','#000000',
-  // Blue
-  '#2196f3','#1976d2','#1565c0','#0d47a1','#0288d1','#01579b',
-  // Cyan / Teal
-  '#00e5ff','#00bcd4','#0097a7','#00838f','#006064',
-  // Green
-  '#00e676','#4caf50','#388e3c','#2e7d32','#1b5e20',
-  // Yellow / Amber / Orange
-  '#ffea00','#ffc107','#ff8f00','#ff6d00','#e65100',
-  // Red / Pink
-  '#ff1744','#f44336','#d32f2f','#b71c1c',
-  '#ff4081','#e91e63','#c2185b','#880e4f',
-  // Purple / Indigo
-  '#7c4dff','#9c27b0','#7b1fa2','#6a1b9a',
-  '#3f51b5','#303f9f','#1a237e',
-  // Dark backgrounds
-  '#1a2a3a','#0d1f33','#0f1923','#001c28',
-];
-
-function buildSimplePicker(id, initHex, onChange) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el._scpChange = onChange;
-  const hex = (initHex || '#ffffff').toLowerCase();
-  el.innerHTML = `
-    <div class="scp-wrap">
-      <div class="scp-top">
-        <label class="scp-btn">
-          <input type="color" value="${hex}" oninput="_scpNative(this)">
-          <div class="scp-preview" style="background:${hex}"></div>
-        </label>
-        <input class="scp-hex" type="text" value="${hex}" maxlength="7" spellcheck="false"
-          oninput="_scpHex(this)" onblur="_scpHexBlur(this)">
-      </div>
-      <div class="scp-grid">
-        ${SCREEN_PALETTE.map(c=>`<div class="scp-dot${c.toLowerCase()===hex?' on':''}" style="background:${c}" title="${c.toLowerCase()}" onclick="_scpPick(this,'${c.toLowerCase()}')"></div>`).join('')}
-      </div>
-    </div>`;
-}
-
-function buildInlinePicker(id, initHex, onChange) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el._scpChange = onChange;
-  const hex = (initHex || '#ffffff').toLowerCase();
-  el.innerHTML = `
-    <div class="scp-inline">
-      <label class="scp-inline-btn">
-        <input type="color" value="${hex}" oninput="_scpInlineNative(this)">
-        <div class="scp-inline-prev" style="background:${hex}"></div>
-      </label>
-      <input class="scp-inline-hex" type="text" value="${hex}" maxlength="7" spellcheck="false"
-        oninput="_scpInlineHex(this)" onblur="_scpInlineHexBlur(this)">
-    </div>`;
-}
-
-function _scpNative(input) {
-  const wrap = input.closest('.scp-wrap');
-  const c = input.value.toLowerCase();
-  wrap.querySelector('.scp-preview').style.background = c;
-  wrap.querySelector('.scp-hex').value = c;
-  wrap.querySelectorAll('.scp-dot').forEach(d => d.classList.toggle('on', d.title === c));
-  const ctr = wrap.parentElement; if (ctr._scpChange) ctr._scpChange(c);
-}
-function _scpPick(dot, c) {
-  const wrap = dot.closest('.scp-wrap');
-  wrap.querySelector('.scp-preview').style.background = c;
-  wrap.querySelector('input[type=color]').value = c;
-  wrap.querySelector('.scp-hex').value = c;
-  wrap.querySelectorAll('.scp-dot').forEach(d => d.classList.toggle('on', d.title === c));
-  const ctr = wrap.parentElement; if (ctr._scpChange) ctr._scpChange(c);
-}
-function _scpHex(input) {
-  const v = input.value.trim();
-  if (!/^#[0-9a-fA-F]{6}$/.test(v)) return;
-  const c = v.toLowerCase();
-  const wrap = input.closest('.scp-wrap');
-  wrap.querySelector('.scp-preview').style.background = c;
-  wrap.querySelector('input[type=color]').value = c;
-  wrap.querySelectorAll('.scp-dot').forEach(d => d.classList.toggle('on', d.title === c));
-  const ctr = wrap.parentElement; if (ctr._scpChange) ctr._scpChange(c);
-}
-function _scpHexBlur(input) {
-  if (!/^#[0-9a-fA-F]{6}$/.test(input.value.trim())) {
-    const s = input.closest('.scp-wrap').querySelector('.scp-preview').style.background;
-    if (/^#/.test(s)) input.value = s;
-  }
-}
-function _scpInlineNative(input) {
-  const wrap = input.closest('.scp-inline');
-  const c = input.value.toLowerCase();
-  wrap.querySelector('.scp-inline-prev').style.background = c;
-  wrap.querySelector('.scp-inline-hex').value = c;
-  const ctr = wrap.parentElement; if (ctr._scpChange) ctr._scpChange(c);
-}
-function _scpInlineHex(input) {
-  const v = input.value.trim();
-  if (!/^#[0-9a-fA-F]{6}$/.test(v)) return;
-  const c = v.toLowerCase();
-  const wrap = input.closest('.scp-inline');
-  wrap.querySelector('.scp-inline-prev').style.background = c;
-  wrap.querySelector('input[type=color]').value = c;
-  const ctr = wrap.parentElement; if (ctr._scpChange) ctr._scpChange(c);
-}
-function _scpInlineHexBlur(input) {
-  if (!/^#[0-9a-fA-F]{6}$/.test(input.value.trim())) {
-    const s = input.closest('.scp-inline').querySelector('.scp-inline-prev').style.background;
-    if (/^#/.test(s)) input.value = s;
-  }
-}
+// colour keys saved by older versions — the kiosk theme is fixed now, so they are dropped on save
+const SD_OLD_COLOR_KEYS = ['bgPreset','bgC1','bgC2','bgC3','accentColor','cardStyle','navOpacity','titleColor',
+  'cardNameColor','cardWaitNumColor','barBgColor','barBgOpacity','barInputBg','barInputBorderColor',
+  'barInputTextColor','barPlaceholderColor','barPlaceholderOpacity','barLabelColor'];
 
 const PD_FONTS_FALLBACK = [
   'Segoe UI','Tahoma','Arial','Calibri','Verdana',
@@ -2380,102 +2324,20 @@ async function loadSdFonts() {
 // ── Screen Designer init & helpers ────────────────────────────────────────
 
 function initScreenDesigner() {
-  // Preset chips
-  const wrap = document.getElementById('bgPresets');
-  wrap.innerHTML = Object.entries(BG_PRESETS).map(([k,p]) =>
-    `<div class="bg-chip${sdCfg.bgPreset===k?' on':''}" data-bg="${k}"
-       style="background:${p.t}" title="${p.name}" onclick="setBgPreset('${k}',this)">
-       <span class="bg-chip-lbl">${p.name}</span></div>`
-  ).join('');
-
-  // 3 bg color pickers (native color input + swatch palette)
-  sdBgC1 = sdCfg.bgC1 || '#29b6c8';
-  sdBgC2 = sdCfg.bgC2 || '#0097a7';
-  sdBgC3 = sdCfg.bgC3 || '#00696f';
-  buildSimplePicker('bgC1Cpk', sdBgC1, c => { sdBgC1=c; clearBgPreset(); sdPreview(); });
-  buildSimplePicker('bgC2Cpk', sdBgC2, c => { sdBgC2=c; clearBgPreset(); sdPreview(); });
-  buildSimplePicker('bgC3Cpk', sdBgC3, c => { sdBgC3=c; clearBgPreset(); sdPreview(); });
-
-  // Accent color picker
-  sdAccent = sdCfg.accentColor || '#00bcd4';
-  buildSimplePicker('accentCpk', sdAccent, c => { sdAccent=c; sdPreview(); });
-
-  // Font selector
   document.getElementById('sdFont').value = sdCfg.fontFamily || 'Kanit';
 
-  // Typography number inputs (no slider value-display span needed)
-  document.getElementById('sdTitleFs').value    = sdCfg.titleFontSize    || 24;
-  document.getElementById('sdCardNameFs').value = sdCfg.cardNameFontSize || 15;
-  document.getElementById('sdWaitFs').value     = sdCfg.cardWaitFontSize || 12;
-  document.getElementById('sdBarLblSz').value   = sdCfg.barLabelSize     || 10;
-  document.getElementById('sdInputFs').value    = sdCfg.barInputFontSize || 17;
+  // Typography sizes (the kiosk enforces the same minimums)
+  document.getElementById('sdTitleFs').value    = Math.max(sdCfg.titleFontSize    || 0, 34);
+  document.getElementById('sdCardNameFs').value = Math.max(sdCfg.cardNameFontSize || 0, 24);
+  document.getElementById('sdWaitFs').value     = Math.max(sdCfg.cardWaitFontSize || 0, 17);
+  document.getElementById('sdBarLblSz').value   = Math.max(sdCfg.barLabelSize     || 0, 15);
+  document.getElementById('sdInputFs').value    = Math.max(sdCfg.barInputFontSize || 0, 26);
 
-  // Inline color pickers in typography table
-  sdTitleColor  = sdCfg.titleColor       || '#ffd54f';
-  sdCardNameClr = sdCfg.cardNameColor    || '#ffffff';
-  sdWaitNumClr  = sdCfg.cardWaitNumColor || '#ffd54f';
-  sdBarLabelClr  = sdCfg.barLabelColor   || sdAccent;
-  sdBarTextClr   = sdCfg.barInputTextColor || '#ffffff';
-  buildInlinePicker('titleColorCpk',    sdTitleColor,  c => { sdTitleColor=c;  sdPreview(); });
-  buildInlinePicker('cardNameColorCpk', sdCardNameClr, c => { sdCardNameClr=c; sdPreview(); });
-  buildInlinePicker('waitNumColorCpk',  sdWaitNumClr,  c => { sdWaitNumClr=c;  sdPreview(); });
-  buildInlinePicker('barLabelColorCpk', sdBarLabelClr, c => { sdBarLabelClr=c; sdPreview(); });
-  buildInlinePicker('barTextColorCpk',  sdBarTextClr,  c => { sdBarTextClr=c;  sdPreview(); });
+  setActiveSdOpt('sdCardSizeBtns', sdCfg.cardSize || 'normal');
 
-  // Bar section full pickers
-  sdBarBgColor   = sdCfg.barBgColor          || '#001c28';
-  sdBarBorderClr = sdCfg.barInputBorderColor  || sdAccent;
-  sdBarPHColor   = sdCfg.barPlaceholderColor  || '#ffffff';
-  buildSimplePicker('barBgCpk',     sdBarBgColor,   c => { sdBarBgColor=c;   sdPreview(); });
-  buildSimplePicker('barBorderCpk', sdBarBorderClr, c => { sdBarBorderClr=c; sdPreview(); });
-
-  // Sliders — update the sibling span display
-  const barBgOp = sdCfg.barBgOpacity ?? 78;
-  const inputBg = sdCfg.barInputBg   ?? 8;
-  const elBgOp  = document.getElementById('sdBarBgOp');
-  const elInpBg = document.getElementById('sdInputBg');
-  if (elBgOp)  { elBgOp.value  = barBgOp; if (elBgOp.nextElementSibling)  elBgOp.nextElementSibling.textContent  = barBgOp + '%'; }
-  if (elInpBg) { elInpBg.value = inputBg; if (elInpBg.nextElementSibling) elInpBg.nextElementSibling.textContent = inputBg + '%'; }
-
-  // Card size & style
-  setActiveSdOpt('sdCardSizeBtns',  sdCfg.cardSize  || 'normal');
-  setActiveSdOpt('sdCardStyleBtns', sdCfg.cardStyle || 'glass');
-
-  // Show/hide checkboxes
   document.getElementById('sdShowScanner').checked = sdCfg.showScannerCard !== false;
   document.getElementById('sdShowToggles').checked = sdCfg.showToggles !== false;
 
-  sdPreview();
-}
-
-function clearBgPreset() {
-  sdCfg.bgPreset = '';
-  document.querySelectorAll('.bg-chip').forEach(c => c.classList.remove('on'));
-}
-
-function setBgPreset(key, el) {
-  if (key === 'pastel') {
-    // light background → dark, larger text so everything stays readable
-    const [c1, c2, c3] = BG_PRESETS.pastel.c;
-    Object.assign(sdCfg, {
-      bgPreset:'pastel', bgC1:c1, bgC2:c2, bgC3:c3, accentColor:'#0a8fc0',
-      titleColor:'#0a6fa8', cardNameColor:'#123a5a', cardWaitNumColor:'#e65100',
-      cardNameFontSize:Math.max(sdCfg.cardNameFontSize || 0, 22), cardWaitFontSize:Math.max(sdCfg.cardWaitFontSize || 0, 16),
-      barBgColor:'#ffffff', barBgOpacity:92, barInputBg:100, barInputTextColor:'#123a5a',
-      barPlaceholderColor:'#123a5a', barPlaceholderOpacity:45, barLabelColor:'#0a6fa8',
-      barLabelSize:Math.max(sdCfg.barLabelSize || 0, 14), barInputFontSize:Math.max(sdCfg.barInputFontSize || 0, 24),
-    });
-    initScreenDesigner();
-    return;
-  }
-  document.querySelectorAll('.bg-chip').forEach(c => c.classList.remove('on'));
-  el.classList.add('on');
-  sdCfg.bgPreset = key;
-  const [c1,c2,c3] = BG_PRESETS[key].c;
-  sdBgC1=c1; sdBgC2=c2; sdBgC3=c3;
-  buildSimplePicker('bgC1Cpk', sdBgC1, c => { sdBgC1=c; clearBgPreset(); sdPreview(); });
-  buildSimplePicker('bgC2Cpk', sdBgC2, c => { sdBgC2=c; clearBgPreset(); sdPreview(); });
-  buildSimplePicker('bgC3Cpk', sdBgC3, c => { sdBgC3=c; clearBgPreset(); sdPreview(); });
   sdPreview();
 }
 
@@ -2492,169 +2354,97 @@ function setActiveSdOpt(groupId, val) {
 }
 
 function sdPreview() {
-  // Collect current values
+  // Mirrors queue.html's fixed light-blue kiosk theme; only font / sizes / visibility come from the form
   const headerTitle = document.getElementById('sdHeaderTitle').value.trim();
-  const headerFs    = document.getElementById('sdHeaderFs').value;
-  const c1     = sdBgC1;
-  const c2     = sdBgC2;
-  const c3     = sdBgC3;
-  const accent = sdAccent;
-  const font   = document.getElementById('sdFont').value;
-  const titleFs    = document.getElementById('sdTitleFs').value;
-  const cardNameFs = document.getElementById('sdCardNameFs').value;
-  const waitFs     = document.getElementById('sdWaitFs').value;
-  const titleClr   = sdTitleColor;
-  const cardNameClr= sdCardNameClr;
-  const waitNumClr = sdWaitNumClr;
-  const showScanner= document.getElementById('sdShowScanner').checked;
-  const showToggles= document.getElementById('sdShowToggles').checked;
-  // bottom bar
-  const barBgOp    = document.getElementById('sdBarBgOp').value;
-  const barLblSz   = document.getElementById('sdBarLblSz').value;
-  const inputBgPct = document.getElementById('sdInputBg').value;
-  const inputFs    = document.getElementById('sdInputFs').value;
-  const phOp       = document.getElementById('sdPHOp').value;
-  const barBgRgba  = hexToRgb(sdBarBgColor);
-  const barBgCss   = `rgba(${barBgRgba.r},${barBgRgba.g},${barBgRgba.b},${barBgOp/100})`;
-  const inputBgCss = `rgba(255,255,255,${inputBgPct/100})`;
-  const phRgb      = hexToRgb(sdBarPHColor);
-  const phCss      = `rgba(${phRgb.r},${phRgb.g},${phRgb.b},${phOp/100})`;
+  const font        = document.getElementById('sdFont').value;
+  const titleFs     = Math.max(Number(document.getElementById('sdTitleFs').value) || 0, 34);
+  const cardNameFs  = Math.max(Number(document.getElementById('sdCardNameFs').value) || 0, 24);
+  const waitFs      = Math.max(Number(document.getElementById('sdWaitFs').value) || 0, 17);
+  const barLblSz    = Math.max(Number(document.getElementById('sdBarLblSz').value) || 0, 15);
+  const inputFs     = Math.max(Number(document.getElementById('sdInputFs').value) || 0, 26);
+  const showScanner = document.getElementById('sdShowScanner').checked;
+  const showToggles = document.getElementById('sdShowToggles').checked;
+  const px = v => Math.round(v * 0.5) + 'px';   // the preview is a half-size mock of the kiosk
 
-  // Card size metrics
-  const szMap = {
-    compact:{ p:'12px 10px', ics:'40px' },
-    normal: { p:'22px 18px', ics:'52px' },
-    large:  { p:'30px 24px', ics:'64px' },
-  };
+  const szMap = { compact:{ p:'8px 6px', ics:'22px' }, normal:{ p:'12px 9px', ics:'28px' }, large:{ p:'16px 12px', ics:'34px' } };
   const sz = szMap[sdCfg.cardSize] || szMap.normal;
-  const csMap = {
-    glass:   `background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(8px)`,
-    solid:   `background:rgba(0,0,0,.35);border:1px solid rgba(0,0,0,.45)`,
-    outline: `background:transparent;border:2px solid rgba(255,255,255,.45)`,
-  };
-  const cs = csMap[sdCfg.cardStyle] || csMap.glass;
 
-  const sampleCards = ['ทั่วไป','พิเศษ','ด่วน'].map((n,i) => {
-    const colors=['#42a5f5','#66bb6a','#ffd54f'];
-    const pfx=['A','B','C'];
-    return `<div style="border-radius:14px;padding:${sz.p};text-align:center;min-width:66px;
-      flex:1;${cs};cursor:pointer">
-      <div style="width:${sz.ics};height:${sz.ics};border-radius:11px;background:${colors[i]};
-        margin:0 auto 7px;display:flex;align-items:center;justify-content:center;
-        font-size:1rem;font-weight:900;color:#000">${pfx[i]}</div>
-      <div style="font-size:${cardNameFs}px;font-weight:700;color:${cardNameClr}">${n}</div>
-      <div style="font-size:${waitFs}px;color:rgba(255,255,255,.45);margin-top:3px">รอ <b style="color:${waitNumClr}">0</b> คน</div>
-    </div>`;
-  }).join('');
+  const sampleCards = ['ทั่วไป','พิเศษ','ด่วน'].map((n, i) => `
+    <div style="border-radius:12px;padding:${sz.p};text-align:center;flex:1;background:#fff;
+      border:1.5px solid #bcd7f3;box-shadow:0 4px 12px rgba(30,64,175,.10)">
+      <div style="width:${sz.ics};height:${sz.ics};border-radius:8px;background:${['#42a5f5','#66bb6a','#ffd54f'][i]};
+        margin:0 auto 5px;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:900;color:#000">${'ABC'[i]}</div>
+      <div style="font-size:${px(cardNameFs)};font-weight:800;color:#0d3b5e">${n}</div>
+      <div style="font-size:${px(waitFs)};color:#334155;margin-top:2px">รอ <b style="color:#c2410c">0</b> คน</div>
+    </div>`).join('');
 
   const scannerBlock = showScanner ? `
-    <div style="background:#fff;border-radius:16px;padding:9px;margin-bottom:10px;
-      box-shadow:0 10px 30px rgba(0,0,0,.3);width:100%;max-width:220px">
-      <div style="background:#111;border-radius:8px;aspect-ratio:4/3;
-        display:flex;align-items:center;justify-content:center;font-size:1.4rem">📷</div>
-      <div style="background:#f5f5f5;color:#555;font-size:.6rem;padding:3px 8px;
-        border-radius:0 0 6px 6px;text-align:center">กดปุ่มด้านล่างเพื่อเริ่มสแกน</div>
-    </div>
-    <button style="background:linear-gradient(135deg,${accent},${c2});color:#fff;
-      border:none;border-radius:28px;padding:8px 24px;font-size:.78rem;font-weight:700;
-      cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.3);margin-bottom:8px">📷 อ่านคิวอาร์โค้ด</button>
-  ` : '';
+    <div style="width:100%;background:#f4f9ff;border-radius:10px;margin-bottom:8px;
+      box-shadow:0 0 0 1.5px #bcd7f3,0 0 0 4px #fff,0 8px 20px rgba(30,64,175,.12)">
+      <div style="background:#0b1820;border-radius:10px 10px 0 0;aspect-ratio:16/8;display:flex;
+        flex-direction:column;align-items:center;justify-content:center;color:#fff;font-size:.6rem;font-weight:600;gap:3px">
+        <span style="font-size:1.3rem">📷</span>กดปุ่ม "สแกนคิวบาร์โค้ด" เพื่อเปิดกล้อง</div>
+      <div style="background:#fff;color:#0d47a1;font-size:.55rem;font-weight:800;text-align:center;padding:4px;
+        border-radius:0 0 10px 10px">พร้อมรับบัตรคิว — ยิงบาร์โค้ด HN หรือกรอกข้อมูลด้านล่าง</div>
+    </div>` : '';
 
+  const pill = (icon, label, on) => `
+    <div style="flex:1;background:#fff;border:1.5px solid #bcd7f3;border-radius:9px;padding:6px 8px;
+      display:flex;align-items:center;gap:6px">
+      <span style="font-size:.8rem">${icon}</span>
+      <span style="flex:1;font-size:.6rem;font-weight:800;color:#0d3b5e">${label}</span>
+      <span style="width:24px;height:13px;border-radius:13px;background:${on ? 'linear-gradient(135deg,#00e676,#00c853)' : '#cbd5e1'}"></span>
+    </div>`;
   const togglesBlock = showToggles ? `
-    <div style="display:flex;flex-direction:column;gap:6px;width:100%;max-width:280px;margin-bottom:8px">
-      <div style="background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.12);
-        border-radius:22px;padding:6px 12px;display:flex;align-items:center;gap:9px">
-        <div style="width:32px;height:18px;background:linear-gradient(135deg,#00e676,#00c853);border-radius:18px;flex-shrink:0"></div>
-        <div style="font-size:.7rem;font-weight:700;color:rgba(255,255,255,.88)">สแกนอัตโนมัติ</div>
-      </div>
-      <div style="background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.12);
-        border-radius:22px;padding:6px 12px;display:flex;align-items:center;gap:9px">
-        <div style="width:32px;height:18px;background:rgba(255,255,255,.18);border-radius:18px;flex-shrink:0"></div>
-        <div style="font-size:.7rem;font-weight:700;color:rgba(255,255,255,.88)">ปริ้นทันที</div>
-      </div>
-    </div>
-  ` : '';
+    <div style="display:flex;gap:6px;width:100%;margin-bottom:8px">${pill('📷','สแกนคิวบาร์โค้ด',false)}${pill('🎫','พิมพ์บัตรคิว',true)}</div>` : '';
 
-  const html = `
-    <div style="font-family:'${font}',Kanit,sans-serif;
-      background:
-        radial-gradient(ellipse 90% 70% at 0% 0%,   ${c1}8c 0%,transparent 55%),
-        radial-gradient(ellipse 70% 55% at 100% 0%,  ${c2}72 0%,transparent 55%),
-        linear-gradient(145deg,${c1} 0%,${c2} 45%,${c3} 100%);
-      min-height:480px;display:flex;flex-direction:column;color:#fff">
-
-      <div style="background:rgba(0,0,0,.3);backdrop-filter:blur(10px);
-        padding:0 12px;height:36px;display:flex;align-items:center;gap:6px;
-        border-bottom:1px solid rgba(255,255,255,.1)">
-        <span style="font-size:${headerFs}rem;font-weight:900;color:#ffd54f">${headerTitle || '⬡ ระบบคิว'}</span>
-        <span style="background:rgba(255,255,255,.18);color:#fff;font-size:.58rem;
-          padding:2px 7px;border-radius:11px">ออกคิว</span>
-        <span style="font-size:.58rem;color:rgba(255,255,255,.45);margin-left:auto">👤 เจ้าหน้าที่</span>
-      </div>
-
-      <div style="flex:1;padding:10px;display:flex;flex-direction:column;align-items:center">
-        <div style="background:rgba(0,0,0,.14);border:1px solid rgba(255,255,255,.15);
-          border-radius:18px;padding:2px 10px;font-size:.58rem;
-          color:rgba(255,255,255,.65);margin-bottom:10px">📋 ระบบคิวการเงิน</div>
-
-        ${showScanner ? `<div style="font-size:${titleFs}px;font-weight:700;color:${titleClr};
-          margin-bottom:10px;text-align:center;letter-spacing:.5px">สแกนบาร์โค้ดจากใบนำทาง</div>` : ''}
-        ${scannerBlock}
-        ${togglesBlock}
-
-        <div style="font-size:.52rem;color:rgba(255,255,255,.4);
-          letter-spacing:2px;margin-bottom:8px;text-transform:uppercase">เลือกประเภทการให้บริการ</div>
-        <div style="display:flex;gap:7px;justify-content:center;width:100%">${sampleCards}</div>
-      </div>
-
-      <div style="margin:0 8px 8px;background:${barBgCss};
-        backdrop-filter:blur(20px);border:1px solid ${sdBarBorderClr||accent+'52'};
-        border-radius:14px;padding:7px 9px;display:flex;align-items:stretch;gap:7px">
-        <div style="flex:1;display:flex;flex-direction:column;gap:2px">
-          <div style="font-size:${barLblSz}px;color:${sdBarLabelClr||accent};letter-spacing:1.5px;font-weight:700">QN — เลขคิว</div>
-          <div style="background:${inputBgCss};border:1.5px solid ${sdBarBorderClr||accent+'44'};
-            border-radius:7px;padding:6px 9px;font-size:${inputFs}px;color:${phCss}">กรอกเลขคิว</div>
-        </div>
-        <div style="width:1px;background:rgba(255,255,255,.1);align-self:stretch;margin:2px 0"></div>
-        <div style="flex:1;display:flex;flex-direction:column;gap:2px">
-          <div style="font-size:${barLblSz}px;color:${sdBarLabelClr||accent};letter-spacing:1.5px;font-weight:700">HN — เลขประจำตัว</div>
-          <div style="background:${inputBgCss};border:1.5px solid ${sdBarBorderClr||accent+'44'};
-            border-radius:7px;padding:6px 9px;font-size:${inputFs}px;color:${phCss}">กรอก HN</div>
-        </div>
-        <button style="background:linear-gradient(145deg,${accent},${c2});
-          border:none;color:#fff;border-radius:9px;padding:0 12px;
-          font-size:${inputFs}px;font-weight:700;cursor:pointer;flex-shrink:0">🔍</button>
-      </div>
+  const field = (lbl, ph) => `
+    <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+      <div style="font-size:${px(barLblSz)};color:#0d47a1;font-weight:800">${lbl}</div>
+      <div style="background:#f4f9ff;border:1.5px solid #9ec5f3;border-radius:7px;padding:4px 6px;text-align:center;
+        font-size:${px(inputFs)};color:rgba(15,42,74,.45)">${ph}</div>
     </div>`;
 
-  document.getElementById('sdPreviewWrap').innerHTML = html;
+  document.getElementById('sdPreviewWrap').innerHTML = `
+    <div style="font-family:'${font}',Kanit,sans-serif;min-height:480px;display:flex;flex-direction:column;color:#0f2a4a;
+      background:radial-gradient(ellipse 85% 65% at 0% 0%,rgba(255,255,255,.95) 0%,transparent 60%),
+                 linear-gradient(160deg,#f3f8ff 0%,#e1eefc 50%,#cfe3f8 100%)">
+      <div style="background:rgba(255,255,255,.92);border-bottom:1.5px solid #c9ddf5;padding:0 10px;height:32px;
+        display:flex;align-items:center;gap:6px">
+        <span style="font-size:.75rem;font-weight:900;color:#0d3b5e">${headerTitle || '⬡ ระบบคิว'}</span>
+        <span style="background:#1565c0;color:#fff;font-size:.55rem;font-weight:700;padding:2px 8px;border-radius:10px">ออกคิว</span>
+        <span style="font-size:.55rem;color:#1e3a8a;margin-left:auto">👤 เจ้าหน้าที่</span>
+      </div>
+      <div style="flex:1;padding:10px;display:flex;flex-direction:column;align-items:center">
+        <div style="font-size:${px(titleFs)};font-weight:900;color:#0d3b5e;margin-bottom:8px;text-align:center">
+          สแกนคิวอาร์โค้ด / รับบัตรคิว</div>
+        ${scannerBlock}
+        ${togglesBlock}
+        <div style="font-size:.6rem;font-weight:800;color:#0d3b5e;margin-bottom:6px">เลือกประเภทการให้บริการ</div>
+        <div style="display:flex;gap:6px;width:100%">${sampleCards}</div>
+      </div>
+      <div style="margin:0 8px 8px;background:rgba(255,255,255,.96);border:1.5px solid #bcd7f3;border-radius:12px;
+        padding:6px 8px;display:flex;align-items:stretch;gap:6px;box-shadow:0 6px 18px rgba(30,64,175,.14)">
+        ${field('QN — เลขคิว','กรอกเลขคิว')}
+        <div style="width:1px;background:#d6e6f8"></div>
+        ${field('HN — เลขประจำตัว','กรอก HN')}
+        <div style="background:linear-gradient(145deg,#1e88e5,#1565c0);color:#fff;border-radius:9px;padding:0 10px;
+          display:flex;align-items:center;font-size:.9rem">🔍</div>
+      </div>
+    </div>`;
 }
 
 function saveScreenCfg() {
+  SD_OLD_COLOR_KEYS.forEach(k => delete sdCfg[k]);
   Object.assign(sdCfg, {
-    fontFamily:            document.getElementById('sdFont').value,
-    bgC1:                  sdBgC1,
-    bgC2:                  sdBgC2,
-    bgC3:                  sdBgC3,
-    accentColor:           sdAccent,
-    titleFontSize:         Number(document.getElementById('sdTitleFs').value),
-    titleColor:            sdTitleColor,
-    cardNameFontSize:      Number(document.getElementById('sdCardNameFs').value),
-    cardNameColor:         sdCardNameClr,
-    cardWaitFontSize:      Number(document.getElementById('sdWaitFs').value),
-    cardWaitNumColor:      sdWaitNumClr,
-    showScannerCard:       document.getElementById('sdShowScanner').checked,
-    showToggles:           document.getElementById('sdShowToggles').checked,
-    barBgColor:            sdBarBgColor,
-    barBgOpacity:          Number(document.getElementById('sdBarBgOp').value),
-    barInputBg:            Number(document.getElementById('sdInputBg').value),
-    barInputBorderColor:   sdBarBorderClr,
-    barInputTextColor:     sdBarTextClr,
-    barInputFontSize:      Number(document.getElementById('sdInputFs').value),
-    barPlaceholderColor:   sdBarPHColor,
-    barPlaceholderOpacity: Number(document.getElementById('sdPHOp').value),
-    barLabelColor:         sdBarLabelClr,
-    barLabelSize:          Number(document.getElementById('sdBarLblSz').value),
+    fontFamily:       document.getElementById('sdFont').value,
+    titleFontSize:    Number(document.getElementById('sdTitleFs').value),
+    cardNameFontSize: Number(document.getElementById('sdCardNameFs').value),
+    cardWaitFontSize: Number(document.getElementById('sdWaitFs').value),
+    showScannerCard:  document.getElementById('sdShowScanner').checked,
+    showToggles:      document.getElementById('sdShowToggles').checked,
+    barInputFontSize: Number(document.getElementById('sdInputFs').value),
+    barLabelSize:     Number(document.getElementById('sdBarLblSz').value),
   });
 
   fetch(`/api/sys/${sysId}/screen-config`, {
@@ -2765,7 +2555,7 @@ function loadNetInfo() {
       const sysQ   = `?sys=${sysId}`;
 
       if (!info.ips || !info.ips.length) {
-        list.innerHTML = '<div style="color:rgba(255,255,255,.4);font-size:.85rem">ไม่พบ IP Address บน LAN (อาจเชื่อมต่อผ่าน localhost เท่านั้น)</div>';
+        list.innerHTML = '<div style="color:#475569;font-size:.85rem">ไม่พบ IP Address บน LAN (อาจเชื่อมต่อผ่าน localhost เท่านั้น)</div>';
       } else {
         list.innerHTML = info.ips.map(entry => {
           const url = `http://${entry.ip}:${port}`;
@@ -2794,7 +2584,7 @@ function loadNetInfo() {
     })
     .catch(() => {
       document.getElementById('netAddressList').innerHTML =
-        '<div style="color:#ef9a9a;font-size:.85rem">ไม่สามารถโหลดข้อมูล Server ได้</div>';
+        '<div style="color:#b91c1c;font-size:.85rem">ไม่สามารถโหลดข้อมูล Server ได้</div>';
     });
 }
 
@@ -2874,7 +2664,7 @@ function renderPttypeRules() {
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;flex-shrink:0">
         <div class="sf-toggle"><input type="checkbox" ${r.enabled !== false ? 'checked' : ''}
           onchange="togglePtRule(${i},this.checked)"/><span class="sf-toggle-slider"></span></div>
-        <span style="font-size:.75rem;color:#546e7a">เปิด</span>
+        <span style="font-size:.75rem;color:#475569">เปิด</span>
       </label>
       <button onclick="deletePtRule(${i})" class="btn-del" style="font-size:.78rem;padding:4px 10px;flex-shrink:0">ลบ</button>
     </div>`;
@@ -2923,18 +2713,6 @@ fetch(`/api/sys/${sysId}/screen-config`)
   .then(r => r.json())
   .then(cfg => {
     Object.assign(sdCfg, cfg);
-    sdAccent      = sdCfg.accentColor      || '#00bcd4';
-    sdBgC1        = sdCfg.bgC1             || '#29b6c8';
-    sdBgC2        = sdCfg.bgC2             || '#0097a7';
-    sdBgC3        = sdCfg.bgC3             || '#00696f';
-    sdTitleColor  = sdCfg.titleColor            || '#ffd54f';
-    sdCardNameClr = sdCfg.cardNameColor         || '#ffffff';
-    sdWaitNumClr  = sdCfg.cardWaitNumColor      || '#ffd54f';
-    sdBarBgColor  = sdCfg.barBgColor            || '#001c28';
-    sdBarLabelClr = sdCfg.barLabelColor         || '';
-    sdBarBorderClr= sdCfg.barInputBorderColor   || '';
-    sdBarTextClr  = sdCfg.barInputTextColor     || '#ffffff';
-    sdBarPHColor  = sdCfg.barPlaceholderColor   || '#ffffff';
   });
 
 // Load display config for custom settings
@@ -2948,31 +2726,31 @@ fetch(`/api/sys/${sysId}/display-config`)
   });
 </script>
 <div id="_uiPnl" style="position:fixed;bottom:16px;right:16px;z-index:10000;font-family:'Segoe UI',Tahoma,sans-serif">
-  <button onclick="_uiToggle()" title="ปรับสีหน้าจอ" style="width:40px;height:40px;border-radius:50%;border:1.5px solid rgba(255,255,255,.25);background:rgba(13,31,51,.85);color:#90caf9;font-size:1.1rem;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)">🎨</button>
-  <div id="_uiBox" style="display:none;position:absolute;bottom:48px;right:0;width:220px;background:#0d1f33;border:1px solid #1e3a5f;border-radius:14px;padding:14px 16px;box-shadow:0 4px 20px rgba(0,0,0,.6)">
-    <div style="font-size:.8rem;color:#90caf9;font-weight:700;margin-bottom:12px">🎨 ปรับสีหน้าจอ</div>
+  <button onclick="_uiToggle()" title="ปรับสีหน้าจอ" style="width:40px;height:40px;border-radius:50%;border:1.5px solid #c7dbf3;background:#ffffff;color:#1e3a8a;font-size:1.1rem;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)">🎨</button>
+  <div id="_uiBox" style="display:none;position:absolute;bottom:48px;right:0;width:220px;background:#ffffff;border:1px solid #9ec5f3;border-radius:14px;padding:14px 16px;box-shadow:0 4px 20px rgba(0,0,0,.6)">
+    <div style="font-size:.8rem;color:#1e3a8a;font-weight:700;margin-bottom:12px">🎨 ปรับสีหน้าจอ</div>
     <div style="margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between;font-size:.72rem;color:#ccc;margin-bottom:4px"><span>☀ ความสว่าง</span><span id="_brLbl" style="color:#ffd54f;font-weight:700">1.00</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:.72rem;color:#1e293b;margin-bottom:4px"><span>☀ ความสว่าง</span><span id="_brLbl" style="color:#b45309;font-weight:700">1.00</span></div>
       <input id="_brSlider" type="range" min="0.4" max="1.6" step="0.05" value="1" style="width:100%;accent-color:#ffd54f;cursor:pointer"/>
     </div>
     <div style="margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;font-size:.72rem;color:#ccc;margin-bottom:4px"><span>🎨 ความสด</span><span id="_stLbl" style="color:#80deea;font-weight:700">1.20</span></div>
-      <input id="_stSlider" type="range" min="0.3" max="2.5" step="0.05" value="1.2" style="width:100%;accent-color:#80deea;cursor:pointer"/>
+      <div style="display:flex;justify-content:space-between;font-size:.72rem;color:#1e293b;margin-bottom:4px"><span>🎨 ความสด</span><span id="_stLbl" style="color:#0e7490;font-weight:700">1.00</span></div>
+      <input id="_stSlider" type="range" min="0.3" max="2.5" step="0.05" value="1" style="width:100%;accent-color:#80deea;cursor:pointer"/>
     </div>
-    <button onclick="_uiReset()" style="width:100%;background:rgba(255,255,255,.06);border:1px solid #1e3a5f;color:#90caf9;border-radius:8px;padding:6px;font-size:.75rem;cursor:pointer;font-family:inherit">↺ รีเซ็ต</button>
+    <button onclick="_uiReset()" style="width:100%;background:rgba(30,64,175,0.036);border:1px solid #9ec5f3;color:#1e3a8a;border-radius:8px;padding:6px;font-size:.75rem;cursor:pointer;font-family:inherit">↺ รีเซ็ต</button>
   </div>
 </div>
 <script>
 (function(){
   var BK='qf_brightness',SK='qf_saturation';
-  function _applyV(b,s){b=parseFloat(b)||1;s=parseFloat(s)||1.2;localStorage.setItem(BK,b);localStorage.setItem(SK,s);document.body.style.filter='brightness('+b+') saturate('+s+')';var bl=document.getElementById('_brLbl'),sl=document.getElementById('_stLbl'),bs=document.getElementById('_brSlider'),ss=document.getElementById('_stSlider');if(bl)bl.textContent=b.toFixed(2);if(bs)bs.value=b;if(sl)sl.textContent=s.toFixed(2);if(ss)ss.value=s;}
+  function _applyV(b,s){b=parseFloat(b)||1;s=parseFloat(s)||1;localStorage.setItem(BK,b);localStorage.setItem(SK,s);document.body.style.filter='brightness('+b+') saturate('+s+')';var bl=document.getElementById('_brLbl'),sl=document.getElementById('_stLbl'),bs=document.getElementById('_brSlider'),ss=document.getElementById('_stSlider');if(bl)bl.textContent=b.toFixed(2);if(bs)bs.value=b;if(sl)sl.textContent=s.toFixed(2);if(ss)ss.value=s;}
   window._applyGlobalColor=_applyV;
-  function _applyF(){_applyV(parseFloat(localStorage.getItem(BK)||'1'),parseFloat(localStorage.getItem(SK)||'1.2'));}
+  function _applyF(){_applyV(parseFloat(localStorage.getItem(BK)||'1'),parseFloat(localStorage.getItem(SK)||'1'));}
   _applyF();
   fetch('/api/global-config').then(function(r){return r.json();}).then(function(d){if(d&&d.brightness!=null)_applyV(d.brightness,d.saturation);}).catch(function(){});
   window._uiToggle=function(){var b=document.getElementById('_uiBox');b.style.display=b.style.display==='none'?'block':'none';};
-  window._uiReset=function(){_applyV(1,1.2);fetch('/api/global-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({brightness:1,saturation:1.2})}).catch(function(){});};
-  document.addEventListener('DOMContentLoaded',function(){_applyF();document.getElementById('_brSlider').oninput=function(){var b=parseFloat(this.value),s=parseFloat(localStorage.getItem(SK)||'1.2');_applyV(b,s);fetch('/api/global-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({brightness:b,saturation:s})}).catch(function(){});};document.getElementById('_stSlider').oninput=function(){var b=parseFloat(localStorage.getItem(BK)||'1'),s=parseFloat(this.value);_applyV(b,s);fetch('/api/global-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({brightness:b,saturation:s})}).catch(function(){});};});
+  window._uiReset=function(){_applyV(1,1);fetch('/api/global-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({brightness:1,saturation:1})}).catch(function(){});};
+  document.addEventListener('DOMContentLoaded',function(){_applyF();document.getElementById('_brSlider').oninput=function(){var b=parseFloat(this.value),s=parseFloat(localStorage.getItem(SK)||'1');_applyV(b,s);fetch('/api/global-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({brightness:b,saturation:s})}).catch(function(){});};document.getElementById('_stSlider').oninput=function(){var b=parseFloat(localStorage.getItem(BK)||'1'),s=parseFloat(this.value);_applyV(b,s);fetch('/api/global-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({brightness:b,saturation:s})}).catch(function(){});};});
 })();
 if(typeof socket!=='undefined')socket.on('global_config_updated',d=>{if(window._applyGlobalColor&&d&&d.brightness!=null)window._applyGlobalColor(d.brightness,d.saturation);});
 </script>

@@ -403,6 +403,124 @@
       font-family:'Kanit',sans-serif;font-size:.88rem;cursor:pointer;transition:all .22s}
     .btn-new:hover{background:rgba(255,255,255,.22)}
 
+    /* ── Fixed kiosk theme (not user-editable): soft light-blue page, white surfaces, dark navy text ── */
+    body{
+      background:
+        radial-gradient(ellipse 85% 65% at 0% 0%,   rgba(255,255,255,.95) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 55% at 100% 0%,  rgba(219,234,254,.9)  0%, transparent 60%),
+        radial-gradient(ellipse 80% 60% at 50% 115%, rgba(147,197,253,.45) 0%, transparent 60%),
+        linear-gradient(160deg,#f3f8ff 0%,#e1eefc 50%,#cfe3f8 100%);
+      background-attachment:fixed;color:#0f2a4a;
+    }
+    nav{background:rgba(255,255,255,.92);border-bottom:1.5px solid #c9ddf5;box-shadow:0 2px 12px rgba(30,64,175,.08)}
+    .nav-logo{color:#0d3b5e}
+    nav a{color:#1e3a8a;font-weight:700}
+    nav a:hover{background:#e0edff}
+    nav a.active{background:#1565c0;color:#fff}
+    .nav-officer{color:#1e3a8a;font-weight:600}
+
+    .kiosk-logo{background:#fff;border-color:#c9ddf5;box-shadow:0 4px 14px rgba(30,64,175,.08)}
+    .kiosk-logo-name{color:#475569;font-size:.8rem}
+    .kiosk-logo-sys{color:#0d3b5e;font-size:1.05rem;font-weight:800}
+    .kiosk-title{color:#0d3b5e;font-size:2.3rem;text-shadow:0 2px 0 #fff}
+
+    .kiosk-scanner-frame{background:#f4f9ff;
+      box-shadow:0 0 0 2px #bcd7f3,0 0 0 7px #fff,0 16px 40px rgba(30,64,175,.14)}
+    .kiosk-scanner-frame::before{
+      background:
+        radial-gradient(circle 7px at 14px 14px,#93c5fd 50%,transparent 50%),
+        radial-gradient(circle 7px at calc(100% - 14px) 14px,#93c5fd 50%,transparent 50%),
+        radial-gradient(circle 7px at 14px calc(100% - 36px),#93c5fd 50%,transparent 50%),
+        radial-gradient(circle 7px at calc(100% - 14px) calc(100% - 36px),#93c5fd 50%,transparent 50%)}
+    .no-camera{color:#fff}
+    .no-camera span{font-size:1.05rem}
+    .kiosk-scan-statusbar{background:#fff;border-top-color:#d6e6f8;color:#0d47a1;font-size:1rem;font-weight:800}
+
+    .kiosk-toggle-row{max-width:720px}
+    .kiosk-pill{max-width:300px;background:#fff;border:1.5px solid #bcd7f3;box-shadow:0 4px 14px rgba(30,64,175,.08)}
+    .kiosk-pill:hover{background:#fff;border-color:#60a5fa}
+    .kp-label{color:#0d3b5e;font-size:1.05rem;font-weight:800}
+    .kp-knob{background:#cbd5e1}
+    .kp-onlbl{color:#64748b;font-size:.68rem}
+    .kp-sw input:checked ~ .kp-onlbl{color:#15803d}
+
+    .btn-help-kiosk{background:#fff;border-color:#bcd7f3;color:#1565c0}
+    .btn-help-kiosk:hover{border-color:#60a5fa;color:#0d47a1}
+
+    .bottom-bar{background:rgba(255,255,255,.96);border:1.5px solid #bcd7f3;box-shadow:0 10px 36px rgba(30,64,175,.16)}
+    .bar-field-lbl{color:#0d47a1;font-size:1rem;font-weight:800}
+    .bar-sep{background:#d6e6f8}
+    .bar-input{background:#f4f9ff;border:2px solid #9ec5f3;color:#0f172a;font-size:1.6rem;font-weight:800}
+    .bar-input::placeholder{color:rgba(15,42,74,.45);font-weight:500}
+    .bar-input:focus,.bar-input.active-field{border-color:#1565c0;background:#fff;box-shadow:0 0 0 4px rgba(21,101,192,.15)}
+    /* ── Issue mode (ตามประเภท / ตามจำนวนยา) ── */
+    .btn-issue-mode{margin-left:auto;background:#fff;border:1.5px solid #bcd7f3;color:#1e3a8a;border-radius:18px;
+      padding:5px 14px;font-size:.88rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+    .btn-issue-mode:hover{border-color:#60a5fa;background:#eef5ff}
+    .btn-issue-mode b{color:#1565c0}
+    .btn-issue-mode + .nav-officer{margin-left:10px}
+    .issue-notice{width:100%;border-radius:14px;padding:12px 18px;margin-bottom:16px;font-size:1.15rem;font-weight:700;text-align:center}
+    .issue-notice.wait{background:#eef5ff;border:1.5px solid #bcd7f3;color:#1e3a8a}
+    .issue-notice.ok{background:#e8f5e9;border:1.5px solid #81c784;color:#1b5e20}
+    .issue-notice.warn{background:#fff8e1;border:1.5px solid #ffcc80;color:#8a4b00}
+    .im-overlay{position:fixed;inset:0;z-index:80;background:rgba(15,42,74,.45);display:none;align-items:center;justify-content:center;padding:16px}
+    .im-overlay.show{display:flex}
+    .im-box{background:#fff;border-radius:18px;width:100%;max-width:640px;max-height:92vh;overflow:auto;padding:22px 24px;
+      box-shadow:0 20px 60px rgba(15,42,74,.35);color:#0f2a4a}
+    .im-box h3{font-size:1.3rem;color:#0d3b5e;margin-bottom:14px}
+    .im-opt{display:flex;gap:12px;align-items:flex-start;border:1.5px solid #d6e6f8;border-radius:12px;padding:12px 14px;margin-bottom:10px;cursor:pointer}
+    .im-opt:has(input:checked){border-color:#1565c0;background:#f4f9ff}
+    .im-opt input{margin-top:4px;width:18px;height:18px;accent-color:#1565c0}
+    .im-opt b{font-size:1.05rem;color:#0d3b5e}
+    .im-opt small{display:block;color:#475569;font-size:.88rem;margin-top:2px;font-weight:400}
+    .im-rules{border:1.5px solid #d6e6f8;border-radius:12px;padding:12px;margin-top:4px}
+    .im-row{display:grid;grid-template-columns:1.6fr .8fr .8fr .7fr 34px;gap:8px;align-items:center;margin-bottom:8px}
+    .im-row.im-head{font-size:.8rem;font-weight:700;color:#1e3a8a;margin-bottom:4px}
+    .im-row input{width:100%;border:1.5px solid #bcd7f3;border-radius:8px;padding:8px 10px;font-size:1rem;font-family:inherit;color:#0f172a;min-width:0}
+    .im-row input:focus{outline:none;border-color:#1565c0}
+    .im-row input.pfx{text-transform:uppercase;text-align:center;font-weight:800}
+    .im-del{border:1px solid #fca5a5;background:#fff;color:#b91c1c;border-radius:8px;height:36px;cursor:pointer;font-size:1rem}
+    .im-add{border:1.5px dashed #90bde8;background:#f8fbff;color:#1565c0;border-radius:10px;padding:8px;width:100%;cursor:pointer;font-weight:700;font-family:inherit}
+    .im-hint{font-size:.82rem;color:#475569;margin-top:10px;line-height:1.6}
+    .im-err{color:#b91c1c;font-weight:700;min-height:22px;margin-top:10px;font-size:.92rem}
+    .im-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}
+    .im-btns button{border-radius:10px;padding:10px 22px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit}
+    .im-cancel{background:#fff;border:1.5px solid #cbd5e1;color:#334155}
+    .im-save{background:linear-gradient(135deg,#1e88e5,#1565c0);border:none;color:#fff}
+    /* label + 📌 badge stay on one line, so picking a box never pushes its input down */
+    .bar-field-lbl{display:flex;align-items:center;white-space:nowrap;min-width:0}
+    .def-pin{flex-shrink:0;margin-left:8px;padding:0 7px;border-radius:9px;background:#fff7d6;border:1px solid #f5c542;
+      color:#8a5a00;font-size:.62em;font-weight:700;letter-spacing:0;text-transform:none;line-height:1.6}
+    .btn-bar-search{background:linear-gradient(145deg,#1e88e5,#1565c0);box-shadow:0 4px 16px rgba(21,101,192,.35)}
+    .btn-bar-search:hover{background:linear-gradient(145deg,#2196f3,#1976d2);box-shadow:0 7px 22px rgba(21,101,192,.45)}
+
+    .pt-card,.drug-card{background:#fff;border:1.5px solid #bcd7f3;box-shadow:0 6px 22px rgba(30,64,175,.08)}
+    .pt-ava{background:linear-gradient(135deg,#1e88e5,#1565c0)}
+    .pt-name,.drug-summary,.drug-item-name{color:#0d3b5e}
+    .pt-tag{background:#eaf3ff;border-color:#bcd7f3;color:#1e3a8a}
+    .pt-tag b{color:#0d3b5e}
+    .btn-back{background:#fff;border-color:#bcd7f3;color:#1565c0}
+    .btn-back:hover{background:#eaf3ff;color:#0d47a1}
+    .drug-item{background:#f4f9ff;border-color:#d6e6f8}
+    .drug-item-usage{color:#334155}
+    .drug-item-meta{color:#475569}
+    .drug-item-meta b{color:#1565c0}
+
+    .cards-lbl{color:#0d3b5e;font-size:1.25rem;font-weight:800}
+    .q-card{background:#fff;border:1.5px solid #bcd7f3;box-shadow:0 6px 20px rgba(30,64,175,.10)}
+    .q-card:hover{border-color:#60a5fa;box-shadow:0 14px 34px rgba(30,64,175,.20)}
+    .qc-name{color:#0d3b5e;font-size:1.55rem}
+    .qc-wait{color:#334155;font-size:1.1rem}
+    .qc-wait strong{color:#c2410c;font-size:1.3rem}
+    .no-types{color:#475569;font-size:1rem}
+    .type-group{background:rgba(255,255,255,.55)}
+
+    .result-overlay{background:rgba(15,42,74,.55)}
+    .result-card{background:linear-gradient(160deg,#1e88e5,#0d47a1);border-color:rgba(255,255,255,.3)}
+    .res-lbl{color:rgba(255,255,255,.85);font-size:.85rem}
+    .res-pt{color:#fff;font-size:1rem}
+    .res-time{color:rgba(255,255,255,.8);font-size:.9rem}
+
     /* Print */
     #printDynArea{display:none}
     @media print{
@@ -420,6 +538,7 @@
   <a href="#" id="navCashier">เรียกคิว</a>
   <a href="#" id="navDisplay" target="_blank">แสดงคิว</a>
   <a href="#" id="navSettings">ตั้งค่า</a>
+  <button class="btn-issue-mode" id="btnIssueMode" onclick="openIssueMode()" title="ตั้งค่าการออกคิวของระบบนี้">⚙ ออกคิว: <b id="issueModeLbl">ตามประเภท</b></button>
   <span class="nav-officer" id="navOfficer"></span>
   <label class="nav-ipd-toggle" for="chkIpd" id="navIpdToggle" title="เปิด/ปิด โหมดผู้ป่วยใน (IPD)">
     <span>🛏</span>
@@ -512,8 +631,33 @@
       <div class="drug-list" id="drugList"></div>
     </div>
 
+    <div class="issue-notice" id="issueNotice" style="display:none"></div>
     <div class="cards-lbl">เลือกประเภทการให้บริการ</div>
     <div class="cards-grid" id="cardsGrid"><div class="no-types">กำลังโหลด...</div></div>
+  </div>
+</div>
+
+<!-- Issue mode settings -->
+<div class="im-overlay" id="imOverlay">
+  <div class="im-box">
+    <h3>⚙ การตั้งค่าการออกคิว</h3>
+    <label class="im-opt"><input type="radio" name="imMode" value="type" onchange="syncIssueModeUI()"/>
+      <div><b>1. ออกคิวตามประเภท</b><small>ค้นหาผู้ป่วยแล้วเลือกประเภทคิวเอง (แบบที่ใช้อยู่ปัจจุบัน)</small></div></label>
+    <label class="im-opt"><input type="radio" name="imMode" value="drug" onchange="syncIssueModeUI()"/>
+      <div><b>2. ออกคิวตามจำนวนยา</b><small>สแกน / กรอก QN หรือ HN แล้วระบบนับรายการยาของ visit วันนี้ และออกคิวตามช่วงที่ตั้งไว้ทันที</small></div></label>
+    <div class="im-rules" id="imRules">
+      <div class="im-row im-head"><span>ชื่อประเภท</span><span>จำนวนยา ตั้งแต่</span><span>ถึง</span><span>Prefix</span><span></span></div>
+      <div id="imRows"></div>
+      <button class="im-add" onclick="addIssueRule()">+ เพิ่มประเภท</button>
+      <div class="im-hint">• นับรายการยาไม่ซ้ำ (icode ขึ้นต้น 1) จาก opitemrece ของ VN วันนี้ — เหมือนคอลัมน์ "จำนวนยา" ในหน้าเรียกคิว<br>
+        • ระบบสร้างประเภทคิวตาม Prefix ให้เอง เลขคิวจะเป็น เช่น S001, L001<br>
+        • ถ้าจำนวนยาไม่อยู่ในช่วงใด (เช่น ไม่มียา หรือเกินช่วง) จะให้เลือกประเภทคิวเองแทน · ใช้กับผู้ป่วยนอก (OPD) เท่านั้น</div>
+    </div>
+    <div class="im-err" id="imErr"></div>
+    <div class="im-btns">
+      <button class="im-cancel" onclick="closeIssueMode()">ยกเลิก</button>
+      <button class="im-save" onclick="saveIssueMode()">💾 บันทึก</button>
+    </div>
   </div>
 </div>
 
@@ -540,7 +684,7 @@
   </div>
   <div class="bar-sep"></div>
   <div class="bar-field">
-    <div class="bar-field-lbl">🏥 &nbsp;HN — เลขประจำตัว</div>
+    <div class="bar-field-lbl" id="hnFieldLbl">🏥 &nbsp;HN — เลขประจำตัว</div>
     <input class="bar-input" id="hnInput" type="text" placeholder="กรอก HN" autocomplete="off" inputmode="numeric"/>
   </div>
   <button class="btn-bar-search" id="searchBtn" onclick="doLookup()">
@@ -558,6 +702,7 @@ socket.on('connect', () => socket.emit('join_sys', Number(sysId)));
 
 let queueTypes     = [];
 let typeWaiting    = {};
+let issueMode      = { mode: 'type', rules: [] };
 let sysInfo        = null;
 let printConfig    = {};
 let screenConfig   = {};
@@ -610,10 +755,29 @@ function applyIpdMode() {
   if (frame) frame.style.boxShadow = ipd
     ? '0 0 0 2px #2e7d32, 0 0 0 6px #ffffff, 0 16px 44px rgba(46,125,50,.28), inset 0 1px 0 rgba(255,255,255,.6)'
     : '';
-  // ย้าย cursor ไปยัง field ที่เหมาะสมกับ mode
+  // ย้าย cursor ไปยังช่องเริ่มต้นของ mode นี้ (ช่องที่คลิกเลือกไว้ล่าสุด)
+  updateFieldPin();
   const onScan = document.getElementById('scannerStep') &&
                  document.getElementById('scannerStep').style.display !== 'none';
-  if (onScan) setTimeout(() => (ipd ? qnEl : hnEl).focus(), 80);
+  if (onScan) setTimeout(focusPreferredField, 80);
+}
+
+// ── Default cursor field: the QN/AN or HN box the staff last clicked, remembered per OPD/IPD ──
+function fieldPrefKey() { return `qf_kiosk_field_${sysId}_${chkIpd.checked ? 'ipd' : 'opd'}`; }
+function preferredField() {
+  let v = null;
+  try { v = localStorage.getItem(fieldPrefKey()); } catch (e) {}
+  return v === 'qn' || v === 'hn' ? v : (chkIpd.checked ? 'qn' : 'hn');   // first time: AN for IPD, HN for OPD
+}
+function focusPreferredField() { (preferredField() === 'qn' ? qnEl : hnEl).focus(); }
+function updateFieldPin() {
+  const pref = preferredField();
+  [['qnFieldLbl', 'qn'], ['hnFieldLbl', 'hn']].forEach(([id, f]) => {
+    const lbl = document.getElementById(id);
+    if (!lbl) return;
+    lbl.querySelector('.def-pin')?.remove();
+    if (f === pref) lbl.insertAdjacentHTML('beforeend', '<span class="def-pin" title="cursor จะอยู่ช่องนี้ทุกครั้ง — คลิกอีกช่องเพื่อเปลี่ยน">📌 ช่องเริ่มต้น</span>');
+  });
 }
 applyIpdMode();
 
@@ -643,6 +807,7 @@ socket.on('print_config_updated', cfg => {
   if ((localStorage.getItem('queuePrintMode') || 'host') !== 'local') printConfig = cfg;
 });
 socket.on('types_updated', t  => { queueTypes = t; renderCards(); });
+socket.on('issue_mode_updated', m => { issueMode = m || issueMode; updateIssueModeLbl(); renderCards(); });
 socket.on('queue_issued',  ({typeWaiting:tw}) => { typeWaiting = tw; renderCards(); });
 socket.on('queue_called',  ({typeWaiting:tw}) => { typeWaiting = tw; renderCards(); });
 socket.on('queue_reset',   () => { typeWaiting = {}; renderCards(); backToScanner(); });
@@ -655,6 +820,8 @@ fetch(`/api/sys/${sysId}/status`).then(r=>r.json()).then(d => {
   sysInfo     = d.sysInfo;
   queueTypes  = d.queueTypes;
   typeWaiting = d.typeWaiting;
+  issueMode   = d.issueMode || issueMode;
+  updateIssueModeLbl();
   printConfig  = d.printConfig  || {};
   screenConfig = d.screenConfig || {};
   // If local mode, overlay with agent's own config (per-machine settings)
@@ -821,6 +988,11 @@ qnEl.addEventListener('input', () => { if (qnEl.value) hnEl.value = ''; syncFiel
 [hnEl, qnEl].forEach(el => el.addEventListener('keydown', e => {
   if (e.key === 'Enter') doLookup();
 }));
+// a click (not our own .focus() calls) makes that box the default until the other one is clicked
+[[hnEl, 'hn'], [qnEl, 'qn']].forEach(([el, f]) => el.addEventListener('pointerdown', () => {
+  try { localStorage.setItem(fieldPrefKey(), f); } catch (e) {}
+  updateFieldPin();
+}));
 
 // ── Lookup ────────────────────────────────────────────────────────────────
 function doLookup() {
@@ -886,7 +1058,9 @@ function doLookup() {
       stopScanner();
       showStep('type');
       if (!isIpdResult) loadPatientDrugs(d.patient.vn);
-      if (d.patient.autoTypeId) {
+      if (!isIpdResult && issueMode.mode === 'drug') {
+        autoIssueByDrugs(d.patient);
+      } else if (d.patient.autoTypeId) {
         setTimeout(() => getQueue(d.patient.autoTypeId), 180);
       }
     } else {
@@ -955,6 +1129,84 @@ function loadPatientDrugs(vn) {
   .catch(() => { summaryEl.innerHTML = '⚠ เกิดข้อผิดพลาดในการโหลดรายการยา'; });
 }
 
+// ── Issue by drug count ───────────────────────────────────────────────────
+function showNotice(kind, html) {
+  const el = document.getElementById('issueNotice');
+  if (!el) return;
+  el.className = 'issue-notice ' + kind;
+  el.innerHTML = html;
+  el.style.display = html ? '' : 'none';
+}
+async function autoIssueByDrugs(p) {
+  if (!p.vn) { showNotice('warn', '⚠ ไม่พบ VN ของการมาวันนี้ — กรุณาเลือกประเภทคิวเอง'); return; }
+  showNotice('wait', '⏳ กำลังนับรายการยา...');
+  let n = null;
+  try {
+    const r = await fetch('/api/drug-counts', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vns: [p.vn] }) }).then(x => x.json());
+    if (r.success) n = r.counts[String(p.vn).trim()] ?? 0;
+  } catch (e) {}
+  if (currentPatient !== p) return;   // staff already went back / looked up someone else
+  if (n === null) { showNotice('warn', '⚠ นับรายการยาไม่สำเร็จ — กรุณาเลือกประเภทคิวเอง'); return; }
+  const rule = (issueMode.rules || []).find(r => n >= r.min && n <= r.max && queueTypes.some(t => t.id === r.typeId));
+  if (!rule) {
+    showNotice('warn', `💊 ยา <b>${n}</b> รายการ — ไม่อยู่ในช่วงที่ตั้งไว้ กรุณาเลือกประเภทคิวเอง`);
+    return;
+  }
+  showNotice('ok', `💊 ยา <b>${n}</b> รายการ → <b>${escHtml(rule.name)}</b> (${escHtml(rule.prefix)}) — กำลังออกคิว...`);
+  setTimeout(() => { if (currentPatient === p) getQueue(rule.typeId); }, 500);
+}
+
+// ── Issue mode settings window ────────────────────────────────────────────
+function updateIssueModeLbl() {
+  const el = document.getElementById('issueModeLbl');
+  if (el) el.textContent = issueMode.mode === 'drug' ? '💊 ตามจำนวนยา' : '📋 ตามประเภท';
+}
+let _imRules = [];
+function openIssueMode() {
+  _imRules = (issueMode.rules || []).length
+    ? issueMode.rules.map(r => ({ ...r }))
+    : [{ name: 'ยาน้อย', min: 1, max: 3, prefix: 'S' }, { name: 'ยามาก', min: 4, max: 10, prefix: 'L' }];
+  document.querySelector(`input[name=imMode][value=${issueMode.mode === 'drug' ? 'drug' : 'type'}]`).checked = true;
+  document.getElementById('imErr').textContent = '';
+  renderIssueRules(); syncIssueModeUI();
+  document.getElementById('imOverlay').classList.add('show');
+}
+function closeIssueMode() { document.getElementById('imOverlay').classList.remove('show'); }
+function syncIssueModeUI() {
+  const drug = document.querySelector('input[name=imMode]:checked')?.value === 'drug';
+  document.getElementById('imRules').style.display = drug ? '' : 'none';
+}
+function renderIssueRules() {
+  document.getElementById('imRows').innerHTML = _imRules.map((r, i) => `
+    <div class="im-row">
+      <input value="${escHtml(r.name)}" placeholder="เช่น ยาน้อย" oninput="_imRules[${i}].name=this.value"/>
+      <input type="number" min="0" value="${r.min}" oninput="_imRules[${i}].min=this.value"/>
+      <input type="number" min="0" value="${r.max}" oninput="_imRules[${i}].max=this.value"/>
+      <input class="pfx" maxlength="3" value="${escHtml(r.prefix)}" oninput="_imRules[${i}].prefix=this.value.toUpperCase()"/>
+      <button class="im-del" title="ลบ" onclick="_imRules.splice(${i},1);renderIssueRules()">✕</button>
+    </div>`).join('');
+}
+function addIssueRule() {
+  const last = _imRules[_imRules.length - 1];
+  const from = last ? Number(last.max) + 1 : 1;
+  _imRules.push({ name: '', min: from, max: from + 4, prefix: '' });
+  renderIssueRules();
+}
+async function saveIssueMode() {
+  const mode = document.querySelector('input[name=imMode]:checked')?.value || 'type';
+  const err = document.getElementById('imErr');
+  err.textContent = '';
+  // switching back to "ตามประเภท" keeps the rules, so turning drug mode on again restores them
+  const rules = mode === 'drug' ? _imRules : (issueMode.rules || []);
+  const r = await fetch(`/api/sys/${sysId}/issue-mode`, { method: 'PUT', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mode, rules: rules.map(x => ({ ...x, min: Number(x.min), max: Number(x.max) })) }) })
+    .then(x => x.json()).catch(() => ({ success: false, message: 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้' }));
+  if (!r.success) { err.textContent = '✗ ' + (r.message || 'บันทึกไม่สำเร็จ'); return; }
+  issueMode = r.issueMode; updateIssueModeLbl(); renderCards(); closeIssueMode();
+  setStatus(mode === 'drug' ? '✓ เปลี่ยนเป็น "ออกคิวตามจำนวนยา" แล้ว' : '✓ เปลี่ยนเป็น "ออกคิวตามประเภท" แล้ว', '#15803d');
+}
+
 // ── Steps ─────────────────────────────────────────────────────────────────
 function showStep(step) {
   document.getElementById('scannerStep').style.display = step === 'scanner' ? '' : 'none';
@@ -977,17 +1229,21 @@ function backToScanner() {
   if (pttypeTag) pttypeTag.style.display = 'none';
   const drugCard = document.getElementById('drugCard');
   if (drugCard) { drugCard.style.display = 'none'; drugCard.classList.remove('open'); }
+  showNotice('', '');
   showStep('scanner');
   if (chkAutoScan.checked) setTimeout(() => startScanner(), 400);
-  // Focus ช่องที่เหมาะกับ mode ปัจจุบัน
-  setTimeout(() => (isIpd ? qnEl : hnEl).focus(), 300);
+  // Focus ช่องเริ่มต้นของ mode ปัจจุบัน
+  setTimeout(focusPreferredField, 300);
 }
 
 // ── Cards ─────────────────────────────────────────────────────────────────
 function renderCards() {
   const grid = document.getElementById('cardsGrid');
   const isIpd = chkIpd.checked;
-  const filteredTypes = queueTypes.filter(t => {
+  // the cards follow the issue mode: "ตามประเภท" → ordinary types only, "ตามจำนวนยา" → the drug-rule types
+  // (if the chosen mode has no types of its kind, show them all rather than an empty screen)
+  const byIssueMode = queueTypes.filter(t => issueMode.mode === 'drug' ? !!t.drugRule : !t.drugRule);
+  const filteredTypes = (byIssueMode.length ? byIssueMode : queueTypes).filter(t => {
     const m = t.forMode || 'both';
     return isIpd ? (m === 'ipd' || m === 'both') : (m === 'opd' || m === 'both');
   });
@@ -1018,62 +1274,18 @@ function renderCards() {
 }
 
 // ── Apply screen config ───────────────────────────────────────────────────
-const BG_PRESETS_Q = {
-  pastel: ['#f2f9ff','#dceefe','#bfe0fb'],
-  teal:   ['#29b6c8','#0097a7','#00696f'],
-  ocean:  ['#1e88e5','#0d47a1','#0b3574'],
-  purple: ['#9c27b0','#6a1b9a','#4a148c'],
-  forest: ['#43a047','#2e7d32','#1b5e20'],
-  dark:   ['#455a64','#263238','#0d1b21'],
-  sunset: ['#ef6c00','#bf360c','#7f0000'],
-  blue:   ['#039be5','#0277bd','#01579b'],
-  rose:   ['#d81b60','#c2185b','#880e4f'],
-};
-
-function hexToRgb(hex) {
-  const h = hex.replace('#','');
-  const n = parseInt(h.length===3 ? h.split('').map(c=>c+c).join('') : h, 16);
-  return { r:(n>>16)&255, g:(n>>8)&255, b:n&255 };
-}
-
-// WCAG relative luminance / contrast — keeps text readable whatever colours were saved
-function luminance(hex) {
-  const { r, g, b } = hexToRgb(hex || '#000');
-  const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
-  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
-}
-function contrast(a, b) {
-  const [x, y] = [luminance(a), luminance(b)].sort((p, q) => q - p);
-  return (x + 0.05) / (y + 0.05);
-}
-const INK = '#123a5a';
-// keep `fg` if it stands out on `bg`, otherwise dark ink (light bg) / white (dark bg)
-function readable(fg, bg, fallbackOnLight = INK) {
-  if (fg && /^#[0-9a-f]{3,6}$/i.test(fg) && contrast(fg, bg) >= 3.5) return fg;
-  return luminance(bg) > 0.4 ? fallbackOnLight : '#ffffff';
-}
-
+// Colours are fixed in the stylesheet (light-blue kiosk theme); only font, sizes and visibility are configurable.
 function applyScreenConfig(cfg) {
   if (!cfg || !Object.keys(cfg).length) return;
 
-  // Resolve background colors: preset wins (so choosing "pastel" in settings always applies), then explicit bgC1/2/3, then teal
-  let c1 = cfg.bgC1, c2 = cfg.bgC2, c3 = cfg.bgC3;
-  if (BG_PRESETS_Q[cfg.bgPreset]) [c1, c2, c3] = BG_PRESETS_Q[cfg.bgPreset];
-  if (!c1 || !c2 || !c3) [c1, c2, c3] = BG_PRESETS_Q.teal;
-  const light = luminance(c2) > 0.55;   // pastel / light backgrounds get light surfaces + dark text
-
-  const accent       = cfg.accentColor      || '#00bcd4';
-  const font         = cfg.fontFamily       || 'Kanit';
-  const titleFs      = cfg.titleFontSize    || 24;
-  const titleClr     = cfg.titleColor       || '#ffd54f';
+  const font = cfg.fontFamily || 'Kanit';
   // minimum sizes so the kiosk stays readable from a distance, even if smaller sizes were saved
-  const cardNameFs   = Math.max(cfg.cardNameFontSize || 0, 22);
-  const cardBg       = light ? '#ffffff' : c2;
-  const cardNameClr  = readable(cfg.cardNameColor || '#ffffff', cardBg);
-  const waitFs       = Math.max(cfg.cardWaitFontSize || 0, 16);
-  const waitNumClr   = readable(cfg.cardWaitNumColor || '#ffd54f', cardBg, '#e65100');
+  const titleFs    = Math.max(cfg.titleFontSize    || 0, 34);
+  const cardNameFs = Math.max(cfg.cardNameFontSize || 0, 24);
+  const waitFs     = Math.max(cfg.cardWaitFontSize || 0, 17);
+  const lblSz      = Math.max(cfg.barLabelSize     || 0, 15);
+  const inputFs    = Math.max(cfg.barInputFontSize || 0, 26);
 
-  // Card size
   const szMap = {
     compact: { p:'16px 14px', minW:'120px', maxW:'170px', ics:'44px' },
     normal:  { p:'26px 22px', minW:'148px', maxW:'200px', ics:'56px' },
@@ -1081,106 +1293,19 @@ function applyScreenConfig(cfg) {
   };
   const sz = szMap[cfg.cardSize] || szMap.normal;
 
-  // Card style
-  const csMap = {
-    glass:   'background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(8px)',
-    solid:   'background:rgba(0,0,0,.35);border:1px solid rgba(0,0,0,.45)',
-    outline: 'background:transparent;border:2px solid rgba(255,255,255,.45)',
-  };
-  const csMapLight = {
-    glass:   'background:rgba(255,255,255,.92);border:1.5px solid rgba(10,111,168,.16);box-shadow:0 8px 24px rgba(21,70,184,.10)',
-    solid:   'background:#ffffff;border:1.5px solid rgba(10,111,168,.22);box-shadow:0 8px 24px rgba(21,70,184,.12)',
-    outline: 'background:rgba(255,255,255,.55);border:2px solid ' + accent,
-  };
-  const cardCss = (light ? csMapLight : csMap)[cfg.cardStyle] || (light ? csMapLight : csMap).glass;
-
-  // Inject stylesheet
   let el = document.getElementById('_screenCfgStyle');
   if (!el) { el = document.createElement('style'); el.id = '_screenCfgStyle'; document.head.appendChild(el); }
-
   el.textContent = `
     @import url('https://fonts.googleapis.com/css2?family=${font.replace(/ /g,'+')}:wght@300;400;600;700;900&display=swap');
-    body {
-      font-family:'${font}','Kanit','Leelawadee UI',sans-serif !important;
-      background:
-        radial-gradient(ellipse 90% 70% at 0% 0%,   ${c1}8c 0%, transparent 55%),
-        radial-gradient(ellipse 70% 55% at 100% 0%,  ${c2}72 0%, transparent 55%),
-        radial-gradient(ellipse 80% 65% at 50% 120%, ${c3}99 0%, transparent 55%),
-        radial-gradient(ellipse 60% 50% at 100% 80%, ${c2}80 0%, transparent 55%),
-        linear-gradient(145deg,${c1} 0%,${c2} 45%,${c3} 100%) !important;
-    }
-    nav { background:${light ? 'rgba(255,255,255,.8)' : `rgba(0,0,0,${(cfg.navOpacity??45)/100})`} !important; }
-    ${light ? '' : `nav a, .nav-officer, .nav-logo { color:#ffffff !important; } nav a.active { background:${accent} !important; }`}
-    .qc-wait { color:${readable(light ? '#3d6070' : '#e0f2f1', cardBg)} !important; }
-
-    /* Scan title */
-    .scan-title {
-      font-size:${titleFs}px !important;
-      color:${readable(titleClr, c2, '#0a6fa8')} !important;
-      font-family:'${font}','Kanit',sans-serif !important;
-    }
-
-    /* Scan button */
-    .btn-scan-toggle {
-      background:linear-gradient(135deg,${accent},${c2}) !important;
-      box-shadow:0 6px 22px ${accent}66 !important;
-      font-family:'${font}','Kanit',sans-serif !important;
-    }
-    .btn-scan-toggle.stop { background:linear-gradient(135deg,#ef5350,#c62828) !important; }
-
-    /* Queue type cards */
-    .q-card {
-      ${cardCss} !important;
-      min-width:${sz.minW} !important;
-      max-width:${sz.maxW} !important;
-      padding:${sz.p} !important;
-    }
+    body, .bar-input, .btn-bar-search, .btn-back, .btn-help-kiosk { font-family:'${font}','Kanit','Leelawadee UI',sans-serif !important; }
+    .kiosk-title { font-size:${titleFs}px !important; }
+    .q-card { min-width:${sz.minW} !important; max-width:${sz.maxW} !important; padding:${sz.p} !important; }
     .qc-icon { width:${sz.ics} !important; height:${sz.ics} !important; }
-    .qc-name {
-      font-size:${cardNameFs}px !important;
-      color:${cardNameClr} !important;
-    }
+    .qc-name { font-size:${cardNameFs}px !important; }
     .qc-wait { font-size:${waitFs}px !important; }
-    .qc-wait strong { color:${waitNumClr} !important; font-size:${Math.round(waitFs*1.2)}px !important; }
-
-    /* Bottom bar */
-    ${(() => {
-      // light theme: white bar + dark text; dark theme: saved colours (made readable)
-      const barBgHex  = light ? '#ffffff' : (cfg.barBgColor || '#001c28');
-      const barBgOp   = light ? 0.92 : (cfg.barBgOpacity ?? 78) / 100;
-      const rgb       = hexToRgb(barBgHex);
-      const barBgCss  = `rgba(${rgb.r},${rgb.g},${rgb.b},${barBgOp})`;
-      const borderClr = cfg.barInputBorderColor || (accent+'52');
-      const inputBorderClr = cfg.barInputBorderColor || (accent+'44');
-      const lblClr    = readable(cfg.barLabelColor || accent, barBgHex, '#0a6fa8');
-      const lblSz     = Math.max(cfg.barLabelSize || 0, 14);
-      const inputBgCss= light ? '#f4faff' : `rgba(255,255,255,${(cfg.barInputBg ?? 8) / 100})`;
-      const inputClr  = readable(cfg.barInputTextColor || '#ffffff', light ? '#f4faff' : barBgHex);
-      const inputFs   = Math.max(cfg.barInputFontSize || 0, 24);
-      const phHex     = light ? INK : (cfg.barPlaceholderColor || '#ffffff');
-      const phOp      = light ? 0.45 : Math.max((cfg.barPlaceholderOpacity ?? 28) / 100, 0.5);
-      const phRgb     = hexToRgb(phHex);
-      const phCss     = `rgba(${phRgb.r},${phRgb.g},${phRgb.b},${phOp})`;
-      return `
-    .bottom-bar   { background:${barBgCss} !important; border-color:${borderClr} !important; }
-    .bar-field-lbl{ color:${lblClr} !important; font-size:${lblSz}px !important; }
-    .bar-input    {
-      background:${inputBgCss} !important;
-      border-color:${inputBorderClr} !important;
-      color:${inputClr} !important;
-      font-size:${inputFs}px !important;
-      font-family:'${font}','Kanit',sans-serif !important;
-    }
-    .bar-input::placeholder { color:${phCss} !important; }
-    .bar-input:focus { border-color:${cfg.barInputBorderColor||accent} !important; box-shadow:0 0 0 3px ${accent}22 !important; }
-    .bar-input.active-field { border-color:${cfg.barInputBorderColor||accent+'a0'} !important; }`;
-    })()}
-    .btn-bar-search {
-      background:linear-gradient(145deg,${accent},${c2}) !important;
-      box-shadow:0 4px 16px ${accent}66 !important;
-      font-family:'${font}','Kanit',sans-serif !important;
-    }
-    .toggle-sw input:checked + .toggle-knob { background:linear-gradient(135deg,#00e676,#00c853) !important; }
+    .qc-wait strong { font-size:${Math.round(waitFs * 1.25)}px !important; }
+    .bar-field-lbl { font-size:${lblSz}px !important; }
+    .bar-input { font-size:${inputFs}px !important; }
   `;
 
   // Show / hide scanner frame
@@ -1212,7 +1337,8 @@ function doPrint(ticket) {
     issuedAt:    ticket.issuedAt,
   };
   // Barcode/QR is rendered here and sent as an image — server / Print Agent cannot draw it
-  data.codeImg = SlipRender.codeImage(printConfig, data);
+  data.codeImgs = SlipRender.codeImages(printConfig, data);
+  data.codeImg  = data.codeImgs[0] || null;   // older Print Agents read only this one
   const printMode    = localStorage.getItem('queuePrintMode')    || 'host';
   const localPrinter = localStorage.getItem('queueLocalPrinter') || '';
   if (printMode === 'local') {
@@ -1284,6 +1410,8 @@ function getQueue(typeId) {
     const t = d.ticket;
     doPrint(t);
     backToScanner();
+    setStatus(`✓ ออกคิว ${t.display} — ${t.typeName}`, '#15803d');
+    setTimeout(() => setStatus(chkIpd.checked ? 'พร้อมรับบัตรคิว — ยิงบาร์โค้ด AN หรือกรอกข้อมูลด้านล่าง' : 'พร้อมรับบัตรคิว — ยิงบาร์โค้ด HN หรือกรอกข้อมูลด้านล่าง'), 4000);
   }).catch(() => {
     setStatus('✗ เกิดข้อผิดพลาดในการออกคิว', '#c62828');
     setTimeout(() => setStatus('กดปุ่มด้านล่างเพื่อเริ่มสแกน'), 3000);

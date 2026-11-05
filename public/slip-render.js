@@ -44,10 +44,22 @@
   const textCss  = (st, fs, extra = '') =>
     `text-align:${st.align};font-size:${fs}pt;font-weight:${st.bold ? 800 : 400};color:${colorCss(st.color)};${extra}`;
 
+  // Which numbers get a barcode — ['qn'], ['hn'] or both (older configs only have barcodeSource)
+  function codeSources(cfg) {
+    const src = Array.isArray(cfg.barcodeSources) ? cfg.barcodeSources.filter(s => s === 'qn' || s === 'hn')
+                                                  : [cfg.barcodeSource === 'hn' ? 'hn' : 'qn'];
+    return ['qn', 'hn'].filter(s => src.includes(s));
+  }
+
+  // Every barcode of the slip, in order QN → HN
+  function codeImages(cfg, d) {
+    if (!cfg.showBarcode) return [];
+    return codeSources(cfg).map(s => makeCode(cfg, s === 'hn' ? d.hn : (d.qn || d.display))).filter(Boolean);
+  }
+  const codeImage = (cfg, d) => codeImages(cfg, d)[0] || null;
+
   // Barcode / QR as PNG — the same image is shown in preview and sent to the printer
-  function codeImage(cfg, d) {
-    if (!cfg.showBarcode) return null;
-    const value = cfg.barcodeSource === 'hn' ? d.hn : (d.qn || d.display);
+  function makeCode(cfg, value) {
     if (!value) return null;
     const showText = cfg.barcodeShowText !== false;
     const canvas = document.createElement('canvas');
@@ -150,8 +162,8 @@
         return `<div style="${textCss(style(cfg, 'dateTime'), cfg.dateFontSize || 9, 'margin:2px 0')}">${esc(d.date)} · ${esc(d.issuedAt)}</div>`;
       },
       barcode: () => {
-        const img = codeImage(cfg, d);
-        return img ? imgHtml(img.dataUrl, img.wmm, style(cfg, 'barcode').align) : '';
+        const align = style(cfg, 'barcode').align;
+        return codeImages(cfg, d).map(img => imgHtml(img.dataUrl, img.wmm, align)).join('');
       },
       footer: () => {
         if (!cfg.showFooter || !cfg.footerText) return '';
@@ -234,6 +246,6 @@
       `html,body{margin:0!important;padding:0!important;min-height:0!important;height:auto!important;background:#fff!important}` };
   }
 
-  window.SlipRender = { DEFAULT_ORDER, STYLE_DEFAULTS, style, fill, html, codeImage, whenImagesReady,
+  window.SlipRender = { DEFAULT_ORDER, STYLE_DEFAULTS, style, fill, html, codeSources, codeImage, codeImages, whenImagesReady,
                         paperSize, applyPaperBox, measureHeightMm, preparePrint };
 })();

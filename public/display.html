@@ -79,7 +79,7 @@
     .cc-num{font-weight:900;line-height:1;letter-spacing:4px;
       color:var(--num-color,inherit)}
     .cc-num.blink{animation-name:numBlink;animation-duration:.5s;animation-iteration-count:3;animation-fill-mode:forwards}
-    @keyframes numBlink{0%,45%{opacity:1}50%,95%{opacity:.12;color:var(--blink-color,#ffd54f)}100%{opacity:1}}
+    @keyframes numBlink{0%,49.9%{color:var(--blink-color,#ffd54f)}50%,100%{opacity:1}}
     .cc-time{font-size:.75rem;color:var(--cc-time-clr,#aaa);margin-top:4px}
 
     /* ── SPLIT TABLE (แนวนอน) ── */
@@ -105,36 +105,21 @@
       font-weight:900;color:#000;flex-shrink:0}
     .split-typename{font-size:.8rem;color:var(--dim)}
     .split-q-idle{color:#1e3a5f;font-size:.9rem;letter-spacing:2px}
-    /* ── SPLIT CARDS (แนวตั้ง) ── */
-    .counter-area.split-cards{display:flex;flex-direction:column;gap:10px;padding:12px;
-      overflow-y:auto;grid-template-columns:unset!important}
-    .split-card{border-radius:14px;overflow:hidden;border:2px solid var(--split-div-clr,rgba(255,255,255,.07));
-      background:var(--split-row-bg,var(--cell));flex-shrink:0;
-      display:grid;grid-template-rows:1fr 1fr}
-    .split-seg{display:flex;flex-direction:column;min-height:0}
-    .split-seg+.split-seg{border-top:2px solid var(--split-div-clr,rgba(255,255,255,.07))}
-    .split-hdr{background:var(--split-hdr-bg,#2e7d32);color:var(--split-hdr-clr,#fff);
-      text-align:center;padding:7px 14px;font-size:var(--split-hdr-fs,.9rem);
-      font-weight:700;letter-spacing:1px;flex-shrink:0}
-    .split-val{display:flex;flex-direction:column;align-items:center;justify-content:center;
-      flex:1;padding:8px;gap:4px}
-    .split-blink{animation:numBlink .5s 3 forwards}
-
     /* ── NO-SHOW PANEL ── */
-    .noshow-panel{background:var(--bg2);border-left:2px solid #2a1010;
+    .noshow-panel{background:var(--ns-bg,var(--bg2));border-left:2px solid #2a1010;
       display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
-    .ns-hdr{background:#1a0a0a;padding:10px 14px;font-size:var(--ns-hdr-fs,.82rem);
-      color:#ef9a9a;font-weight:700;letter-spacing:2px;border-bottom:1px solid #2a1010;flex-shrink:0}
+    .ns-hdr{background:var(--ns-hdr-bg,#1a0a0a);padding:10px 14px;font-size:var(--ns-hdr-fs,.82rem);
+      color:var(--ns-hdr-clr,#ef9a9a);font-weight:700;letter-spacing:2px;border-bottom:1px solid #2a1010;flex-shrink:0}
     .ns-list{overflow-y:auto;padding:8px}
-    .ns-item{background:#1a0808;border:1px solid rgba(239,83,80,.2);border-radius:9px;
+    .ns-item{background:var(--ns-item-bg,#1a0808);border:1px solid rgba(239,83,80,.2);border-radius:9px;
       padding:8px 10px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
     .ns-badge{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;
       justify-content:center;font-size:.75rem;font-weight:900;color:#000;flex-shrink:0}
-    .ns-num{font-size:var(--ns-num-fs,1.1rem);font-weight:800;color:#ef5350;flex:1}
-    .ns-meta{font-size:var(--ns-meta-fs,.68rem);color:#555;margin-top:1px}
+    .ns-num{font-size:var(--ns-num-fs,1.1rem);font-weight:800;color:var(--ns-num-clr,#ef5350);flex:1}
+    .ns-meta{font-size:var(--ns-meta-fs,.68rem);color:var(--ns-meta-clr,#555);margin-top:1px}
     .ns-times{text-align:right;font-size:var(--ns-times-fs,.65rem);flex-shrink:0}
-    .ns-called{color:#555}.ns-at{color:#ef5350;margin-top:1px}
-    .ns-empty{color:#2a1010;text-align:center;padding:30px 10px;font-size:.85rem}
+    .ns-called{color:var(--ns-meta-clr,#555)}.ns-at{color:var(--ns-num-clr,#ef5350);margin-top:1px}
+    .ns-empty{color:var(--ns-empty-clr,#ef9a9a);opacity:.85;text-align:center;padding:30px 10px;font-size:.95rem}
 
     /* ── TICKER ── */
     .ticker-bar{background:var(--tkbg);padding:10px 0;overflow:hidden;
@@ -153,7 +138,12 @@
       transform:translateX(100%);transition:transform .3s ease}
     .drawer.open{transform:translateX(0)}
     .drawer-hdr{display:flex;align-items:center;justify-content:space-between;
-      padding:16px 18px;border-bottom:1px solid #1e3a5f;flex-shrink:0}
+      padding:16px 18px;border-bottom:1px solid #1e3a5f;flex-shrink:0;cursor:move;user-select:none;touch-action:none}
+    .drawer-hdr .drag-hint{font-size:.66rem;color:#5a7a9a;font-weight:400;margin-left:6px}
+    /* moved by dragging its header: a floating window instead of a docked side panel */
+    .drawer.floating{border:2px solid #42a5f5;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.6);overflow:hidden}
+    .drawer.dragging{transition:none}
+    .drawer-overlay.light{background:rgba(0,0,0,.12)}
     .drawer-hdr h3{font-size:1rem;color:#64b5f6;font-weight:700}
     .btn-close{background:none;border:1px solid #1e3a5f;color:#aaa;border-radius:6px;
       width:28px;height:28px;cursor:pointer;font-size:1rem;
@@ -264,7 +254,7 @@
     .mode-badge.all{background:rgba(255,193,7,.18);border:1px solid rgba(255,193,7,.45);color:#ffe082}
     .mode-seg{display:flex;align-items:center}
     .mode-seg .btn-mode-toggle{margin-left:4px}
-    .mode-tag{display:inline-block;padding:1px 7px;border-radius:6px;font-size:.7em;font-weight:800;
+    .mode-tag{display:inline-block;padding:1px 7px;border-radius:6px;font-size:var(--mode-tag-fs,.7em);font-weight:800;
       letter-spacing:1px;vertical-align:middle;margin-left:6px;line-height:1.5}
     .mode-tag.opd{background:#1565c0;color:#fff}
     .mode-tag.ipd{background:#00897b;color:#fff}
@@ -276,6 +266,126 @@
     .btn-mode-toggle.active{background:linear-gradient(135deg,#00c853,#00897b);
       border-color:#69f0ae;color:#fff;font-weight:700;
       box-shadow:0 0 10px rgba(0,200,83,.45),0 0 0 2px rgba(0,200,83,.2)}
+
+    /* ── BOARD (บอร์ดเรียกคิว): latest call big on the left, counters on the right ── */
+    .counter-area.board-mode{display:flex;gap:0;padding:10px;grid-template-columns:unset!important}
+    .board-left{display:flex;flex-direction:column;gap:10px;min-width:0;flex-shrink:0}
+    .board-hdr{background:var(--hb);color:var(--board-hdr-clr,var(--htxt));text-align:center;font-weight:800;
+      padding:0 14px;border-radius:12px;font-size:var(--board-hdr-fs,1.3rem);letter-spacing:1px;flex-shrink:0;
+      height:var(--board-hdr-h,48px);display:flex;align-items:center;justify-content:center}
+    .board-big{flex:1;min-height:0;background:var(--board-big-bg,var(--cell));border:2px solid var(--cborder);border-radius:16px;
+      display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+    /* hero = the now-calling card: thick accent frame, slow glowing pulse, soft light from the top */
+    .board-big.hero{border:4px solid var(--board-hero-clr,var(--accent));
+      background-image:radial-gradient(ellipse 85% 55% at 50% 22%,rgba(255,255,255,.55),rgba(255,255,255,0) 70%);
+      box-shadow:0 0 0 5px rgba(255,255,255,.12),0 16px 40px rgba(0,0,0,.4);
+      box-shadow:0 0 0 5px color-mix(in srgb,var(--board-hero-clr,var(--accent)) 30%,transparent),0 16px 40px rgba(0,0,0,.4);
+      animation:heroPulse 2.8s ease-in-out infinite}
+    @keyframes heroPulse{
+      0%,100%{box-shadow:0 0 0 5px color-mix(in srgb,var(--board-hero-clr,var(--accent)) 30%,transparent),0 16px 40px rgba(0,0,0,.4)}
+      50%{box-shadow:0 0 0 14px color-mix(in srgb,var(--board-hero-clr,var(--accent)) 12%,transparent),0 16px 40px rgba(0,0,0,.4)}}
+    .board-left.hero .board-hdr{background:var(--board-hero-clr,var(--hb));box-shadow:0 6px 16px rgba(0,0,0,.3)}
+    .live-dot{display:inline-block;width:.55em;height:.55em;border-radius:50%;background:#ff3b30;margin-right:.55em;
+      box-shadow:0 0 0 0 rgba(255,59,48,.7);animation:liveDot 1.4s ease-out infinite;flex-shrink:0}
+    @keyframes liveDot{0%{box-shadow:0 0 0 0 rgba(255,59,48,.7)}80%,100%{box-shadow:0 0 0 .55em rgba(255,59,48,0)}}
+    /* the counter table: one grouped panel, flatter rows */
+    .board-right.grouped{background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:8px}
+    .board-right.grouped .board-row-ctr,.board-right.grouped .board-row-q{border-width:1px;border-radius:10px;box-shadow:none}
+    .board-big-in{display:flex;flex-direction:column;align-items:center;gap:1.2vh;padding:10px}
+    .board-num{font-weight:900;line-height:1;letter-spacing:.06em;white-space:nowrap}
+    .board-ctr{background:var(--hb);color:var(--htxt);border-radius:999px;padding:.35em 1.2em;
+      font-weight:800;font-size:var(--board-ctr-label-fs,1.6vw);white-space:nowrap}
+    .board-idle{color:var(--dim);opacity:.45;font-size:3.2vw;font-weight:800;letter-spacing:4px}
+    .board-next{background:var(--cell);border:2px solid var(--cborder);border-radius:14px;overflow:hidden;flex-shrink:0}
+    .board-next-hdr{background:var(--hb);color:var(--htxt);font-weight:800;padding:7px 14px;font-size:1.05rem;letter-spacing:1px}
+    .board-next-list{display:flex;flex-wrap:wrap;gap:8px;padding:10px}
+    .board-next-item{display:flex;align-items:center;gap:6px;border:1.5px solid var(--cborder);border-radius:10px;
+      padding:4px 10px;font-weight:900;font-size:var(--board-next-fs,1.6vw);color:var(--text)}
+    .board-next-empty{color:var(--dim);opacity:.6;padding:4px 2px;font-size:.95rem}
+    .board-resizer{flex:0 0 12px;cursor:col-resize;display:flex;align-items:center;justify-content:center}
+    .board-resizer::after{content:'';width:4px;height:60px;border-radius:2px;background:var(--cborder);transition:background .2s}
+    .board-resizer:hover::after,.board-resizer.dragging::after{background:var(--accent)}
+    .board-right{flex:1;display:flex;gap:10px;min-width:0}
+    .board-col{flex:1;display:flex;flex-direction:column;gap:8px;min-width:0}
+    .board-col-hdr,.board-row{display:grid;gap:8px}
+    .board-col-hdr div{background:var(--hb);color:var(--board-hdr-clr,var(--htxt));font-weight:800;text-align:center;
+      border-radius:10px;padding:0 6px;font-size:var(--board-hdr-fs,1.3rem);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+      height:var(--board-hdr-h,48px);display:flex;align-items:center;justify-content:center}
+    .board-rows{flex:1;display:flex;flex-direction:column;gap:8px;min-height:0}
+    .board-row{flex:1 1 0;min-height:0}
+    .board-row-ctr,.board-row-q{background:var(--cell);border:2px solid var(--cborder);border-radius:12px;
+      display:flex;align-items:center;justify-content:center;overflow:hidden;min-width:0;position:relative}
+    .board-row-ctr{font-weight:800;color:var(--accent);text-align:center;padding:4px;line-height:1.15;background:var(--board-ctr-bg,var(--cell))}
+    .board-row-q{background:var(--board-q-bg,var(--cell))}
+    .clr-pair{display:flex;gap:6px;align-items:center}
+    .clr-pair input[type=color]{flex:1;height:32px;border:1px solid #1e3a5f;border-radius:7px;background:#0f1923;cursor:pointer;padding:2px}
+    .clr-pair button{background:none;border:1px solid #1e3a5f;color:#90caf9;border-radius:7px;padding:6px 8px;font-size:.7rem;cursor:pointer;white-space:nowrap;font-family:inherit}
+    .clr-pair button:hover{background:#1e3a5f}
+    .clr-pair.theme input[type=color]{opacity:.45}
+    .board-row-q .board-num{font-size:var(--board-row-fs,4.5vw)}
+
+    /* split-h with several columns side by side */
+    .counter-area.split-mode.split-multi{flex-direction:row;gap:10px}
+    .split-mode .split-table{position:relative}
+    .split-resizer{position:absolute;top:0;bottom:0;width:12px;margin-left:-6px;cursor:col-resize;z-index:3}
+    .split-resizer::after{content:'';position:absolute;left:4px;top:0;bottom:0;width:4px;background:transparent;transition:background .2s}
+    .split-resizer:hover::after,.split-resizer.dragging::after{background:var(--accent)}
+
+
+    /* Entrance animation for a newly called number */
+    .anim-fade{animation:aFade .6s ease both}
+    .anim-slide{animation:aSlide .6s cubic-bezier(.22,1,.36,1) both}
+    .anim-scale{animation:aScale .55s cubic-bezier(.22,1,.36,1) both}
+    .anim-bounce{animation:aBounce .8s ease both}
+    @keyframes aFade{from{opacity:0}to{opacity:1}}
+    @keyframes aSlide{from{opacity:0;transform:translateY(40%)}to{opacity:1;transform:none}}
+    @keyframes aScale{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+    @keyframes aBounce{0%{opacity:0;transform:scale(.3)}50%{opacity:1;transform:scale(1.12)}70%{transform:scale(.94)}100%{transform:none}}
+
+    /* Patient name under the number (optional, password-gated) */
+    .pt-name{font-size:var(--pt-name-fs,1.6rem);font-weight:700;color:var(--text);opacity:.92;
+      margin-top:.25em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;letter-spacing:.5px}
+
+    /* No-show: count badge + seamless auto-scroll */
+    .ns-count{display:inline-block;margin-left:8px;background:#ef5350;color:#fff;border-radius:10px;
+      padding:0 8px;font-size:.85em;letter-spacing:0}
+    .ns-viewport{overflow:hidden;position:relative}
+    .ns-track{animation:nsScroll linear infinite}
+    .ns-viewport:hover .ns-track{animation-play-state:paused}
+    @keyframes nsScroll{from{transform:translateY(0)}to{transform:translateY(-50%)}}
+
+    /* Tap-to-enable-sound overlay (browsers block audio until the screen is touched once) */
+    .audio-unlock{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.55);display:none;
+      align-items:center;justify-content:center;cursor:pointer}
+    .audio-unlock.show{display:flex}
+    .audio-unlock-box{background:#0d1f33;border:2px solid #42a5f5;border-radius:18px;padding:30px 44px;text-align:center;
+      color:#fff;box-shadow:0 10px 40px rgba(0,0,0,.6);animation:aScale .4s cubic-bezier(.22,1,.36,1) both}
+    .audio-unlock-box .au-icon{font-size:3.2rem;line-height:1;margin-bottom:12px}
+    .audio-unlock-box .au-th{font-size:1.6rem;font-weight:800}
+    .audio-unlock-box .au-en{font-size:.95rem;color:#90caf9;margin-top:6px}
+
+    /* Drawer additions */
+    .opt-seg{display:flex;gap:6px;flex-wrap:wrap}
+    .opt-seg button{flex:1;min-width:44px;background:#0f1923;border:1.5px solid #1e3a5f;color:#90caf9;border-radius:8px;
+      padding:7px 6px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit}
+    .opt-seg button.on{background:#1565c0;border-color:#42a5f5;color:#fff}
+    .ctr-place{display:flex;align-items:center;gap:4px;flex-shrink:0}
+    .ctr-place select{background:#0f1923;border:1px solid #1e3a5f;color:#ffd54f;border-radius:6px;padding:2px 4px;font-size:.72rem;font-family:inherit}
+    .btn-ord{background:none;border:1px solid #1e3a5f;color:#90caf9;border-radius:6px;width:22px;height:22px;
+      cursor:pointer;font-size:.7rem;line-height:1;padding:0}
+    .btn-ord:hover{background:#1e3a5f}
+    .btn-default{width:100%;background:rgba(255,213,79,.1);border:1px solid rgba(255,213,79,.35);color:#ffd54f;
+      border-radius:10px;padding:9px;font-size:.84rem;font-weight:700;cursor:pointer;margin-top:8px;font-family:inherit}
+    .btn-default:hover{background:rgba(255,213,79,.2)}
+    .sf-hint{font-size:.7rem;color:#3a5a78;margin-top:5px;line-height:1.5}
+    .sec-box{border:1px solid #1e3a5f;border-radius:10px;padding:12px;margin-bottom:10px;background:#0a1421}
+    .sec-box-title{font-size:.75rem;font-weight:700;letter-spacing:1px;margin-bottom:10px}
+    .pwd-overlay{position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center}
+    .pwd-overlay.show{display:flex}
+    .pwd-box{background:#0d1f33;border:1px solid #1e3a5f;border-radius:14px;padding:22px;width:320px;max-width:92vw}
+    .pwd-box h4{color:#64b5f6;font-size:1rem;margin-bottom:6px}
+    .pwd-box p{color:#90caf9;font-size:.78rem;line-height:1.5;margin-bottom:12px}
+    .pwd-err{color:#ef9a9a;font-size:.78rem;min-height:18px;margin-top:6px}
   </style>
 </head>
 <body>
@@ -305,7 +415,7 @@
 <div class="display-wrap">
   <div class="counter-area" id="counterArea"></div>
   <div class="noshow-panel" id="noShowPanel" style="display:none">
-    <div class="ns-hdr">🚫 เรียกแล้วไม่มา</div>
+    <div class="ns-hdr">🚫 <span id="nsLabel">เรียกแล้วไม่มา</span><span class="ns-count" id="nsCount" style="display:none"></span></div>
     <div class="ns-list" id="nsList"></div>
   </div>
 </div>
@@ -314,16 +424,40 @@
   <div class="ticker-track" id="tickerTrack">กำลังโหลด...</div>
 </div>
 
+<!-- Browsers keep audio muted until the screen has been touched once -->
+<div class="audio-unlock" id="audioUnlock" onclick="unlockAudio()">
+  <div class="audio-unlock-box">
+    <div class="au-icon">🔊</div>
+    <div class="au-th">แตะหน้าจอเพื่อเปิดเสียง</div>
+    <div class="au-en">Tap to enable sound</div>
+  </div>
+</div>
+
+<!-- Admin password before patient names may appear on a public screen -->
+<div class="pwd-overlay" id="pwdOverlay">
+  <div class="pwd-box">
+    <h4>🔒 ยืนยันการแสดงชื่อผู้ป่วย</h4>
+    <p>หน้าจอนี้เปิดให้คนทั่วไปเห็น — กรอกรหัสผ่านผู้ดูแลระบบ (admin) เพื่อเปิดแสดงชื่อผู้ป่วย</p>
+    <input class="sf-input" type="password" id="pwdInput" placeholder="รหัสผ่าน admin" onkeydown="if(event.key==='Enter')confirmShowName()"/>
+    <div class="pwd-err" id="pwdErr"></div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn-reset-custom" style="margin:0;flex:1" onclick="cancelShowName()">ยกเลิก</button>
+      <button class="btn-apply" style="margin:0;flex:1" onclick="confirmShowName()">ยืนยัน</button>
+    </div>
+  </div>
+</div>
+
 <!-- Settings drawer -->
 <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
 <div class="drawer" id="drawer">
-  <div class="drawer-hdr">
-    <h3>⚙ ตั้งค่าหน้าจอแสดงคิว</h3>
+  <div class="drawer-hdr" id="drawerHdr" title="ลากเพื่อย้ายหน้าต่าง · ดับเบิลคลิกเพื่อกลับไปชิดขวา">
+    <h3>⚙ ตั้งค่าหน้าจอแสดงคิว<span class="drag-hint">✥ ลากย้ายได้</span></h3>
     <button class="btn-close" onclick="closeDrawer()">✕</button>
   </div>
   <div class="drawer-tabs">
     <div class="dtab active" onclick="switchDTab('counters',this)">ช่องบริการ</div>
     <div class="dtab"        onclick="switchDTab('noshow',this)">ไม่มา</div>
+    <div class="dtab"        onclick="switchDTab('blink',this)">⚡ กระพริบ</div>
     <div class="dtab"        onclick="switchDTab('types',this)">ประเภทคิว</div>
     <div class="dtab"        onclick="switchDTab('ticker',this)">ข้อความวิ่ง</div>
     <div class="dtab"        onclick="switchDTab('theme',this)">🎨 ธีมสี</div>
@@ -345,10 +479,111 @@
             <span style="font-size:.88rem;color:#ccc">↔ แนวนอน — ช่องบริการ | หมายเลขคิว</span>
           </label>
           <label style="display:flex;align-items:center;gap:9px;cursor:pointer;padding:9px 12px;background:#0f1923;border-radius:9px;border:1px solid #1e3a5f">
-            <input type="radio" name="layoutMode" value="split-v" style="accent-color:#42a5f5;width:15px;height:15px" onchange="onLayoutModeChange('split-v')"/>
-            <span style="font-size:.88rem;color:#ccc">↕ แนวตั้ง — ช่องบริการบน / หมายเลขคิวล่าง</span>
+            <input type="radio" name="layoutMode" value="board" style="accent-color:#42a5f5;width:15px;height:15px" onchange="onLayoutModeChange('board')"/>
+            <span style="font-size:.88rem;color:#ccc">🎯 บอร์ดเรียกคิว — คิวล่าสุดตัวใหญ่ + รายการช่อง</span>
           </label>
         </div>
+      </div>
+      <!-- ═══ บอร์ดเรียกคิว (board) options ═══ -->
+      <div id="boardOpts" class="sec-box" style="display:none;border-color:#3a2a5f;background:#0c0a1a">
+        <div class="sec-box-title" style="color:#b39ddb">🎯 ตั้งค่าบอร์ดเรียกคิว</div>
+        <div class="sf-row">
+          <label class="sf-label">หัวข้อส่วนคิวล่าสุด</label>
+          <input class="sf-input" type="text" id="cfgBoardHdr" value="คิวที่กำลังเรียก" oninput="onBoardOptChange()"/>
+        </div>
+        <div class="sec-box" style="background:#100c22;border-color:#2a2350">
+          <div class="sec-box-title" style="color:#b39ddb">① หัวคอลัมน์</div>
+          <div class="sf-row"><label class="sf-label">ความสูงหัวคอลัมน์ (px)</label>
+            <div class="sf-slider-row">
+              <input type="range" id="cfgBoardHdrHR" min="28" max="160" step="2" value="48" oninput="syncNum('cfgBoardHdrH',this.value,0);onBoardOptChange()"/>
+              <input class="sf-numval" type="number" id="cfgBoardHdrH" min="20" max="300" value="48" oninput="syncRange('cfgBoardHdrHR',this.value,28,160);onBoardOptChange()"/>
+            </div></div>
+          <div class="sf-row"><label class="sf-label">ขนาดตัวอักษรหัวคอลัมน์ (rem)</label>
+            <div class="sf-slider-row">
+              <input type="range" id="cfgBoardHdrFsR" min="0.8" max="4" step="0.1" value="1.3" oninput="syncNum('cfgBoardHdrFs',this.value,1);onBoardOptChange()"/>
+              <input class="sf-numval" type="number" id="cfgBoardHdrFs" min="0.5" max="8" step="0.1" value="1.3" oninput="syncRange('cfgBoardHdrFsR',this.value,0.8,4);onBoardOptChange()"/>
+            </div></div>
+          <div class="sf-row" style="margin-bottom:0"><label class="sf-label">สีตัวอักษรหัวคอลัมน์</label>
+            <div class="clr-pair" id="pairBoardHdrClr"><input type="color" id="cfgBoardHdrClr" oninput="setBoardClr('boardHdrClr',this.value)"/>
+              <button onclick="setBoardClr('boardHdrClr','')">ใช้สีธีม</button></div></div>
+        </div>
+        <div class="sec-box" style="background:#100c22;border-color:#2a2350">
+          <div class="sec-box-title" style="color:#b39ddb">✨ เน้นส่วนคิวที่กำลังเรียก</div>
+          <div class="sf-row-inline">
+            <label class="sf-toggle"><input type="checkbox" id="cfgBoardHero" onchange="onBoardOptChange()"/><span class="sf-toggle-slider"></span></label>
+            <span class="sf-toggle-label">กรอบเรืองแสง + แยกตารางช่องบริการเป็นแผง</span>
+          </div>
+          <div class="sf-row" id="boardHeroClrRow" style="margin:10px 0 0"><label class="sf-label">สีกรอบเน้น / หัวข้อคิวที่กำลังเรียก</label>
+            <div class="clr-pair" id="pairBoardHeroClr"><input type="color" id="cfgBoardHeroClr" oninput="setBoardClr('boardHeroClr',this.value)"/>
+              <button onclick="setBoardClr('boardHeroClr','')">ใช้สีธีม</button></div></div>
+        </div>
+        <div class="sec-box" style="background:#100c22;border-color:#2a2350">
+          <div class="sec-box-title" style="color:#b39ddb">สีพื้นหลัง</div>
+          <div class="sf-row"><label class="sf-label">② ส่วนคิวที่กำลังเรียก</label>
+            <div class="clr-pair" id="pairBoardBigBg"><input type="color" id="cfgBoardBigBg" oninput="setBoardClr('boardBigBg',this.value)"/>
+              <button onclick="setBoardClr('boardBigBg','')">ใช้สีธีม</button></div></div>
+          <div class="sf-row"><label class="sf-label">③ ช่องบริการ</label>
+            <div class="clr-pair" id="pairBoardCtrBg"><input type="color" id="cfgBoardCtrBg" oninput="setBoardClr('boardCtrBg',this.value)"/>
+              <button onclick="setBoardClr('boardCtrBg','')">ใช้สีธีม</button></div></div>
+          <div class="sf-row" style="margin-bottom:0"><label class="sf-label">④ หมายเลขคิว</label>
+            <div class="clr-pair" id="pairBoardQBg"><input type="color" id="cfgBoardQBg" oninput="setBoardClr('boardQBg',this.value)"/>
+              <button onclick="setBoardClr('boardQBg','')">ใช้สีธีม</button></div></div>
+        </div>
+        <div class="sf-row"><label class="sf-label">ความกว้างส่วนคิวล่าสุด (%) — ลากเส้นแบ่งบนจอได้</label>
+          <div class="sf-slider-row">
+            <input type="range" id="cfgBoardLeftR" min="20" max="80" step="1" value="50" oninput="syncNum('cfgBoardLeft',this.value,0);onBoardOptChange()"/>
+            <input class="sf-numval" type="number" id="cfgBoardLeft" min="20" max="80" value="50" oninput="syncRange('cfgBoardLeftR',this.value,20,80);onBoardOptChange()"/>
+          </div></div>
+        <div class="sf-row"><label class="sf-label">ขนาดเลขคิวล่าสุด (vw)</label>
+          <div class="sf-slider-row">
+            <input type="range" id="cfgBoardNumFsR" min="4" max="22" step="0.5" value="11" oninput="syncNum('cfgBoardNumFs',this.value,1);onBoardOptChange()"/>
+            <input class="sf-numval" type="number" id="cfgBoardNumFs" min="4" max="30" step="0.5" value="11" oninput="syncRange('cfgBoardNumFsR',this.value,4,22);onBoardOptChange()"/>
+          </div></div>
+        <div class="sf-row"><label class="sf-label">ขนาดเลขคิวในรายการช่อง (vw)</label>
+          <div class="sf-slider-row">
+            <input type="range" id="cfgBoardRowFsR" min="1.5" max="12" step="0.5" value="4.5" oninput="syncNum('cfgBoardRowFs',this.value,1);onBoardOptChange()"/>
+            <input class="sf-numval" type="number" id="cfgBoardRowFs" min="1" max="20" step="0.5" value="4.5" oninput="syncRange('cfgBoardRowFsR',this.value,1.5,12);onBoardOptChange()"/>
+          </div></div>
+        <div class="sf-row"><label class="sf-label">ขนาดชื่อช่องในรายการ (vw)</label>
+          <div class="sf-slider-row">
+            <input type="range" id="cfgBoardCtrFsR" min="0.6" max="6" step="0.1" value="1.8" oninput="syncNum('cfgBoardCtrFs',this.value,1);onBoardOptChange()"/>
+            <input class="sf-numval" type="number" id="cfgBoardCtrFs" min="0.5" max="10" step="0.1" value="1.8" oninput="syncRange('cfgBoardCtrFsR',this.value,0.6,6);onBoardOptChange()"/>
+          </div></div>
+        <div class="sf-row">
+          <div class="sf-row-inline">
+            <label class="sf-toggle"><input type="checkbox" id="cfgBoardRowFit" onchange="onBoardOptChange()"/><span class="sf-toggle-slider"></span></label>
+            <span class="sf-toggle-label">ยืดแถวช่องบริการให้พอดีความสูงจอ</span>
+          </div>
+          <div id="boardRowHRow" style="margin-top:8px"><label class="sf-label">ความสูงต่อแถว (% ของความสูงจอ)</label>
+            <div class="sf-slider-row">
+              <input type="range" id="cfgBoardRowHR" min="8" max="60" step="1" value="24" oninput="syncNum('cfgBoardRowH',this.value,0);onBoardOptChange()"/>
+              <input class="sf-numval" type="number" id="cfgBoardRowH" min="5" max="90" value="24" oninput="syncRange('cfgBoardRowHR',this.value,8,60);onBoardOptChange()"/>
+            </div></div>
+          <div class="sf-hint">เปิด = แถวแบ่งความสูงที่เหลือเท่ากันทุกแถว (ช่องน้อยก็เต็มจอ) · ปิด = กำหนดความสูงต่อแถวเอง ถ้าแถวเกินจอจะเลื่อนดูได้</div>
+        </div>
+        <div class="sf-row">
+          <div class="sf-row-inline">
+            <label class="sf-toggle"><input type="checkbox" id="cfgShowUpcoming" onchange="onBoardOptChange()"/><span class="sf-toggle-slider"></span></label>
+            <span class="sf-toggle-label">แสดง "คิวถัดไป" ใต้คิวล่าสุด</span>
+          </div>
+        </div>
+        <div class="sf-row" style="margin-bottom:0"><label class="sf-label">จำนวนคิวถัดไปที่แสดง</label>
+          <div class="sf-slider-row">
+            <input type="range" id="cfgUpcomingR" min="1" max="12" step="1" value="5" oninput="syncNum('cfgUpcoming',this.value,0);onBoardOptChange()"/>
+            <input class="sf-numval" type="number" id="cfgUpcoming" min="1" max="20" value="5" oninput="syncRange('cfgUpcomingR',this.value,1,12);onBoardOptChange()"/>
+          </div></div>
+      </div>
+      <!-- ═══ แบ่งคอลัมน์ช่องบริการ (split-h / board) ═══ -->
+      <div id="colsOpts" class="sec-box" style="display:none">
+        <div class="sec-box-title" style="color:#80deea">📑 แบ่งคอลัมน์ช่องบริการ</div>
+        <div class="opt-seg" id="cfgSplitColsSeg">
+          <button data-v="1" onclick="setSplitCols(1)">1</button>
+          <button data-v="2" onclick="setSplitCols(2)">2</button>
+          <button data-v="3" onclick="setSplitCols(3)">3</button>
+          <button data-v="4" onclick="setSplitCols(4)">4</button>
+        </div>
+        <div id="colHdrInputs" style="margin-top:10px"></div>
+        <div class="sf-hint">เลือกคอลัมน์ของแต่ละช่อง และเรียงลำดับด้วย ▲▼ ที่รายการ "แสดงช่องบริการ" ด้านล่าง</div>
       </div>
       <!-- ═══ แนวนอน (split-h) options ═══ -->
       <div id="splitOptsH" style="display:none;border:1px solid #1a3a2a;border-radius:10px;padding:12px;margin-bottom:8px;background:#071510">
@@ -425,55 +660,6 @@
             </div></div>
         </div>
       </div>
-      <!-- ═══ แนวตั้ง (split-v) options ═══ -->
-      <div id="splitOptsV" style="display:none;border:1px solid #1a2a3a;border-radius:10px;padding:12px;margin-bottom:8px;background:#050d14">
-        <div style="font-size:.75rem;color:#42a5f5;font-weight:700;letter-spacing:1px;margin-bottom:10px">↕ ตั้งค่าแนวตั้ง</div>
-        <div class="sf-row">
-          <label class="sf-label">ข้อความหัว — ส่วนช่องบริการ</label>
-          <input class="sf-input" type="text" id="cfgSvLblCtr" value="ช่องบริการ" oninput="onSplitVOptChange()"/>
-        </div>
-        <div class="sf-row">
-          <label class="sf-label">ข้อความหัว — ส่วนหมายเลขคิว</label>
-          <input class="sf-input" type="text" id="cfgSvLblQ" value="หมายเลขที่เรียกเข้าบริการ" oninput="onSplitVOptChange()"/>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-          <div class="sf-row" style="margin-bottom:0"><label class="sf-label">สีแถบหัว (bg)</label>
-            <input type="color" id="cfgSvHdrBg" value="#1565c0" style="width:100%;height:32px;border-radius:7px;border:1px solid #1e3a5f;background:#0f1923;cursor:pointer;padding:2px" oninput="onSplitVOptChange()"/></div>
-          <div class="sf-row" style="margin-bottom:0"><label class="sf-label">สีข้อความหัว</label>
-            <input type="color" id="cfgSvHdrClr" value="#ffffff" style="width:100%;height:32px;border-radius:7px;border:1px solid #1e3a5f;background:#0f1923;cursor:pointer;padding:2px" oninput="onSplitVOptChange()"/></div>
-          <div class="sf-row" style="margin-bottom:0"><label class="sf-label">สีพื้นหลัง card</label>
-            <input type="color" id="cfgSvRowBg" value="#0d1f33" style="width:100%;height:32px;border-radius:7px;border:1px solid #1e3a5f;background:#0f1923;cursor:pointer;padding:2px" oninput="onSplitVOptChange()"/></div>
-          <div class="sf-row" style="margin-bottom:0"><label class="sf-label">สีชื่อช่องบริการ</label>
-            <input type="color" id="cfgSvCtrClr" value="#ffd54f" style="width:100%;height:32px;border-radius:7px;border:1px solid #1e3a5f;background:#0f1923;cursor:pointer;padding:2px" oninput="onSplitVOptChange()"/></div>
-          <div class="sf-row" style="margin-bottom:0;grid-column:1/-1"><label class="sf-label">สีเส้นแบ่ง</label>
-            <input type="color" id="cfgSvDivClr" value="#1e3a5f" style="width:100%;height:32px;border-radius:7px;border:1px solid #1e3a5f;background:#0f1923;cursor:pointer;padding:2px" oninput="onSplitVOptChange()"/></div>
-        </div>
-        <div class="sf-row"><label class="sf-label">ขนาดตัวอักษรหัว (rem)</label>
-          <div style="display:flex;gap:8px;align-items:center;margin-top:5px">
-            <input type="range" id="cfgSvHdrFs" min="0.5" max="20" step="0.5" value="1.0" style="flex:1;accent-color:#80deea;cursor:pointer" oninput="syncNum('cfgSvHdrFsN',this.value,1);onSplitVOptChange()"/>
-            <input type="number" id="cfgSvHdrFsN" min="0.5" max="99" step="0.5" value="1.0" style="width:62px;background:#0f1923;border:1px solid #1e3a5f;border-radius:7px;padding:5px 6px;color:#ffd54f;font-size:.88rem;font-weight:700;font-family:inherit;text-align:center" oninput="syncRange('cfgSvHdrFs',this.value,0.5,20);onSplitVOptChange()"/>
-          </div></div>
-        <div class="sf-row"><label class="sf-label">ความสูงแถบหัว (padding px)</label>
-          <div style="display:flex;gap:8px;align-items:center;margin-top:5px">
-            <input type="range" id="cfgSvHdrPad" min="4" max="200" step="2" value="12" style="flex:1;accent-color:#80deea;cursor:pointer" oninput="syncNum('cfgSvHdrPadN',this.value,0);onSplitVOptChange()"/>
-            <input type="number" id="cfgSvHdrPadN" min="0" max="999" step="1" value="12" style="width:62px;background:#0f1923;border:1px solid #1e3a5f;border-radius:7px;padding:5px 6px;color:#ffd54f;font-size:.88rem;font-weight:700;font-family:inherit;text-align:center" oninput="syncRange('cfgSvHdrPad',this.value,4,200);onSplitVOptChange()"/>
-          </div></div>
-        <div class="sf-row"><label class="sf-label">ขนาดหมายเลขคิว (rem)</label>
-          <div style="display:flex;gap:8px;align-items:center;margin-top:5px">
-            <input type="range" id="cfgSvNumFs" min="1" max="30" step="0.5" value="4.5" style="flex:1;accent-color:#42a5f5;cursor:pointer" oninput="syncNum('cfgSvNumFsN',this.value,1);onSplitVOptChange()"/>
-            <input type="number" id="cfgSvNumFsN" min="1" max="99" step="0.5" value="4.5" style="width:62px;background:#0f1923;border:1px solid #1e3a5f;border-radius:7px;padding:5px 6px;color:#ffd54f;font-size:.88rem;font-weight:700;font-family:inherit;text-align:center" oninput="syncRange('cfgSvNumFs',this.value,1,30);onSplitVOptChange()"/>
-          </div></div>
-        <div class="sf-row"><label class="sf-label">ขนาดชื่อช่องบริการ (rem)</label>
-          <div style="display:flex;gap:8px;align-items:center;margin-top:5px">
-            <input type="range" id="cfgSvCtrFs" min="0.5" max="20" step="0.5" value="2.8" style="flex:1;accent-color:#ffd54f;cursor:pointer" oninput="syncNum('cfgSvCtrFsN',this.value,1);onSplitVOptChange()"/>
-            <input type="number" id="cfgSvCtrFsN" min="0.5" max="99" step="0.5" value="2.8" style="width:62px;background:#0f1923;border:1px solid #1e3a5f;border-radius:7px;padding:5px 6px;color:#ffd54f;font-size:.88rem;font-weight:700;font-family:inherit;text-align:center" oninput="syncRange('cfgSvCtrFs',this.value,0.5,20);onSplitVOptChange()"/>
-          </div></div>
-        <div class="sf-row"><label class="sf-label">ความสูง card (px)</label>
-          <div style="display:flex;gap:8px;align-items:center;margin-top:5px">
-            <input type="range" id="cfgSvCardH" min="80" max="600" step="5" value="200" style="flex:1;accent-color:#90caf9;cursor:pointer" oninput="syncNum('cfgSvCardHN',this.value,0);onSplitVOptChange()"/>
-            <input type="number" id="cfgSvCardHN" min="80" max="9999" step="5" value="200" style="width:62px;background:#0f1923;border:1px solid #1e3a5f;border-radius:7px;padding:5px 6px;color:#ffd54f;font-size:.88rem;font-weight:700;font-family:inherit;text-align:center" oninput="syncRange('cfgSvCardH',this.value,80,600);onSplitVOptChange()"/>
-          </div></div>
-      </div>
       <div class="sf-row">
         <label class="sf-label">จำนวนคอลัมน์</label>
         <input class="sf-input" type="number" id="cfgColumns" min="1" max="8" value="2"/>
@@ -518,7 +704,36 @@
           <span>เล็ก</span><span>ปกติ</span><span>ใหญ่มาก</span>
         </div>
       </div>
+      <div class="sf-row" style="border-top:1px solid #1e3a5f;margin-top:10px;padding-top:12px">
+        <label class="sf-label">✨ แอนิเมชันเมื่อเรียกคิวใหม่</label>
+        <div class="opt-seg" id="cfgAnimSeg">
+          <button data-v="none"   onclick="setAnim('none')">ไม่มี</button>
+          <button data-v="fade"   onclick="setAnim('fade')">จาง</button>
+          <button data-v="slide"  onclick="setAnim('slide')">เลื่อน</button>
+          <button data-v="scale"  onclick="setAnim('scale')">ขยาย</button>
+          <button data-v="bounce" onclick="setAnim('bounce')">เด้ง</button>
+        </div>
+      </div>
+      <div class="sf-row" style="border-top:1px solid #1e3a5f;margin-top:10px;padding-top:12px">
+        <label class="sf-label">👤 ชื่อผู้ป่วยบนจอ</label>
+        <div class="sf-row-inline" style="margin-top:6px">
+          <label class="sf-toggle"><input type="checkbox" id="cfgShowName" onchange="onShowNameToggle(this)"/><span class="sf-toggle-slider"></span></label>
+          <span class="sf-toggle-label">แสดงชื่อผู้ป่วยใต้เลขคิว 🔒</span>
+        </div>
+        <div class="sf-row-inline" style="margin-top:8px">
+          <label class="sf-toggle"><input type="checkbox" id="cfgMaskName" onchange="onNameOptChange()"/><span class="sf-toggle-slider"></span></label>
+          <span class="sf-toggle-label">ปิดท้ายนามสกุลเป็น XXXX</span>
+        </div>
+        <div style="margin-top:8px"><label class="sf-label">ขนาดชื่อ (rem)</label>
+          <div class="sf-slider-row">
+            <input type="range" id="cfgNameFsR" min="0.8" max="5" step="0.1" value="1.6" oninput="syncNum('cfgNameFs',this.value,1);onNameOptChange()"/>
+            <input class="sf-numval" type="number" id="cfgNameFs" min="0.6" max="8" step="0.1" value="1.6" oninput="syncRange('cfgNameFsR',this.value,0.8,5);onNameOptChange()"/>
+          </div></div>
+        <div class="sf-hint">การเปิดแสดงชื่อต้องใส่รหัสผ่าน admin (PDPA) — ปิดได้ทันทีไม่ต้องใส่รหัส · เสียงประกาศไม่อ่านชื่อ</div>
+      </div>
       <button class="btn-apply" onclick="applyCounterSettings()">✓ นำไปใช้</button>
+      <button class="btn-default" onclick="saveAsDefault()">📌 ตั้งเป็นค่าเริ่มต้นของจอใหม่</button>
+      <div class="sf-hint" style="text-align:center">จอแสดงคิวของระบบอื่นที่ยังไม่เคยตั้งค่า จะเริ่มจากรูปแบบนี้ (ไม่รวมการเลือกช่องบริการ)</div>
     </div>
 
     <!-- No-show settings -->
@@ -531,6 +746,39 @@
           </label>
           <span class="sf-toggle-label">แสดงรายการเรียกแล้วไม่มา</span>
         </div>
+      </div>
+      <div class="sf-row">
+        <label class="sf-label">ป้ายกำกับหัวแผง</label>
+        <input class="sf-input" type="text" id="cfgNsLabel" placeholder="เรียกแล้วไม่มา" oninput="applyNoShowSettings()"/>
+      </div>
+      <div class="sf-row">
+        <label class="sf-label">ข้อความเมื่อไม่มีรายการ</label>
+        <input class="sf-input" type="text" id="cfgNsEmptyText" placeholder="ยังไม่มีรายการ" oninput="applyNoShowSettings()"/>
+      </div>
+      <div class="sec-box" style="background:#140808;border-color:#3a1515">
+        <div class="sec-box-title" style="color:#ef9a9a">🎨 สีพื้นหลัง</div>
+        <div class="sf-row"><label class="sf-label">พื้นหลังแผง</label>
+          <div class="clr-pair" id="pairNsBg"><input type="color" id="cfgNsBg" oninput="setNsClr('nsBg',this.value)"/>
+            <button onclick="setNsClr('nsBg','')">ใช้สีเดิม</button></div></div>
+        <div class="sf-row"><label class="sf-label">พื้นหลังหัวแผง</label>
+          <div class="clr-pair" id="pairNsHdrBg"><input type="color" id="cfgNsHdrBg" oninput="setNsClr('nsHdrBg',this.value)"/>
+            <button onclick="setNsClr('nsHdrBg','')">ใช้สีเดิม</button></div></div>
+        <div class="sf-row" style="margin-bottom:14px"><label class="sf-label">พื้นหลังแต่ละรายการ</label>
+          <div class="clr-pair" id="pairNsItemBg"><input type="color" id="cfgNsItemBg" oninput="setNsClr('nsItemBg',this.value)"/>
+            <button onclick="setNsClr('nsItemBg','')">ใช้สีเดิม</button></div></div>
+        <div class="sec-box-title" style="color:#ef9a9a">🎨 สีตัวอักษร</div>
+        <div class="sf-row"><label class="sf-label">หัวแผง "เรียกแล้วไม่มา"</label>
+          <div class="clr-pair" id="pairNsHdrClr"><input type="color" id="cfgNsHdrClr" oninput="setNsClr('nsHdrClr',this.value)"/>
+            <button onclick="setNsClr('nsHdrClr','')">ใช้สีเดิม</button></div></div>
+        <div class="sf-row"><label class="sf-label">หมายเลขคิว / เวลาที่ไม่มา</label>
+          <div class="clr-pair" id="pairNsNumClr"><input type="color" id="cfgNsNumClr" oninput="setNsClr('nsNumClr',this.value)"/>
+            <button onclick="setNsClr('nsNumClr','')">ใช้สีเดิม</button></div></div>
+        <div class="sf-row"><label class="sf-label">ข้อความรายละเอียด (ประเภท / ช่อง / เวลาเรียก)</label>
+          <div class="clr-pair" id="pairNsMetaClr"><input type="color" id="cfgNsMetaClr" oninput="setNsClr('nsMetaClr',this.value)"/>
+            <button onclick="setNsClr('nsMetaClr','')">ใช้สีเดิม</button></div></div>
+        <div class="sf-row" style="margin-bottom:0"><label class="sf-label">ข้อความเมื่อไม่มีรายการ</label>
+          <div class="clr-pair" id="pairNsEmptyClr"><input type="color" id="cfgNsEmptyClr" oninput="setNsClr('nsEmptyClr',this.value)"/>
+            <button onclick="setNsClr('nsEmptyClr','')">ใช้สีเดิม</button></div></div>
       </div>
 
       <div style="border-top:1px solid #1e3a5f;margin-top:8px;padding-top:12px">
@@ -545,6 +793,22 @@
             <input class="sf-numval" type="number" id="cfgNsRows" min="1" max="30" value="5"
               oninput="syncRange('cfgNsRowsR',this.value,1,20);applyNoShowSettings()"/>
           </div>
+          <div class="sf-hint">จำนวนแสดงสูงสุด — ถ้าเปิดเลื่อนวน รายการที่เกินนี้จะเลื่อนขึ้นมาแสดงต่อ</div>
+        </div>
+
+        <div class="sf-row">
+          <div class="sf-row-inline">
+            <label class="sf-toggle"><input type="checkbox" id="cfgNsAutoScroll" onchange="applyNoShowSettings()"/><span class="sf-toggle-slider"></span></label>
+            <span class="sf-toggle-label">เลื่อนวนอัตโนมัติเมื่อรายการล้นแผง</span>
+          </div>
+          <div id="nsSpeedRow" style="margin-top:8px"><label class="sf-label">ความเร็วเลื่อน: <span id="lblNsSpeed" style="color:#ffd54f">20</span> วินาที/รอบ</label>
+            <div class="sf-slider-row">
+              <input type="range" id="cfgNsSpeedR" min="5" max="120" step="5" value="20" style="accent-color:#ef5350"
+                oninput="document.getElementById('cfgNsSpeed').value=this.value;applyNoShowSettings()"/>
+              <input class="sf-numval" type="number" id="cfgNsSpeed" min="3" max="300" value="20"
+                oninput="syncRange('cfgNsSpeedR',this.value,5,120);applyNoShowSettings()"/>
+            </div></div>
+          <div class="sf-hint">แสดงเฉพาะคิวไม่มาของช่องบริการที่จอนี้แสดงอยู่ · ถ้ารายการไม่ล้นแผง จะไม่เลื่อน</div>
         </div>
 
         <div class="sf-row">
@@ -631,6 +895,49 @@
       <button class="btn-apply" onclick="applyNoShowSettings()">✓ นำไปใช้</button>
     </div>
 
+    <!-- Blink while calling (layout follows Queue-OPD: on/off, colour, target, count, speed, test) -->
+    <div class="dpane" id="dpane-blink">
+      <div class="sf-row">
+        <div class="sf-row-inline">
+          <label class="sf-toggle"><input type="checkbox" id="ccBlinkOn" onchange="applyCustom()"/><span class="sf-toggle-slider"></span></label>
+          <span class="sf-toggle-label">เปิดใช้กระพริบขณะเรียกคิว</span>
+        </div>
+      </div>
+      <div id="blinkOpts">
+        <div class="sf-row" style="border-top:1px solid #1e3a5f;padding-top:12px">
+          <label class="sf-label">สีกระพริบ</label>
+          <input type="color" id="ccBlinkColor" value="#ffd54f" oninput="applyCustom()"
+            style="width:100%;height:36px;border:1px solid #1e3a5f;border-radius:8px;background:#0f1923;cursor:pointer;padding:2px"/>
+        </div>
+        <div class="sf-row">
+          <label class="sf-label">กระพริบที่</label>
+          <div class="opt-seg" id="blinkTargetSeg">
+            <button data-v="bg"   onclick="setBlinkTarget('bg')">🟨 พื้นหลังช่อง</button>
+            <button data-v="text" onclick="setBlinkTarget('text')">🔢 ตัวเลขคิว</button>
+          </div>
+          <input type="hidden" id="ccBlinkTarget" value="text"/>
+        </div>
+        <div class="sf-row">
+          <label class="sf-label">จำนวนครั้ง: <span id="lblBlinkCount" style="color:#ffd54f;font-weight:700">3</span> ครั้ง</label>
+          <input type="range" id="ccBlinkCount" min="1" max="20" step="1" value="3"
+            style="width:100%;accent-color:#ffd54f;cursor:pointer;margin-top:5px"
+            oninput="document.getElementById('lblBlinkCount').textContent=this.value;applyCustom()"/>
+        </div>
+        <div class="sf-row">
+          <label class="sf-label">ความเร็ว: <span id="lblBlinkDur" style="color:#ffd54f;font-weight:700">1.0</span> วินาที/ครั้ง</label>
+          <input type="range" id="ccBlinkDur" min="0.5" max="5.0" step="0.1" value="1.0"
+            style="width:100%;accent-color:#ffd54f;cursor:pointer;margin-top:5px"
+            oninput="document.getElementById('lblBlinkDur').textContent=parseFloat(this.value).toFixed(1);applyCustom()"/>
+          <div style="display:flex;justify-content:space-between;font-size:.68rem;color:#90caf9;margin-top:3px">
+            <span>⚡ เร็ว</span><span>ช้า 🐢 →</span>
+          </div>
+          <div class="sf-hint">ค่าน้อย = เร็ว · ค่ามาก = ช้า — 1 ครั้ง = แสดงสีกระพริบครึ่งหนึ่ง สีปกติอีกครึ่งหนึ่ง</div>
+        </div>
+        <div id="blinkTotal" style="font-size:.8rem;color:#ffd54f;background:rgba(255,213,79,.08);border:1px solid rgba(255,213,79,.25);border-radius:8px;padding:8px 10px;margin-bottom:10px"></div>
+        <button class="btn-apply" style="background:linear-gradient(135deg,#ffb300,#f57c00)" onclick="testBlink()">▶ ทดสอบกระพริบ (คิวล่าสุดบนจอ)</button>
+      </div>
+    </div>
+
     <!-- Theme settings -->
     <div class="dpane" id="dpane-theme">
       <div class="sf-label" style="margin-bottom:10px">เลือกธีมสีหน้าจอ</div>
@@ -710,23 +1017,6 @@
               <input type="color" id="ccNumColor" value="#ffffff" oninput="applyCustom()" style="flex:1;height:28px;border:1px solid #1e3a5f;border-radius:6px;background:#0f1923;cursor:pointer;padding:2px"/>
             </div>
           </div>
-          <div class="color-field"><label>สีกระพริบตอนเรียก</label>
-            <input type="color" id="ccBlinkColor" value="#ffd54f" oninput="applyCustom()"/>
-          </div>
-        </div>
-        <div class="color-row-2" style="margin-top:10px">
-          <div class="color-field">
-            <label>กระพริบ <span id="lblBlinkCount" style="color:#ffd54f;font-weight:700">3</span> ครั้ง</label>
-            <input type="range" id="ccBlinkCount" min="1" max="10" step="1" value="3"
-              style="width:100%;accent-color:#ffd54f;cursor:pointer;margin-top:5px"
-              oninput="document.getElementById('lblBlinkCount').textContent=this.value;applyCustom()"/>
-          </div>
-          <div class="color-field">
-            <label>ช้า/เร็ว <span id="lblBlinkDur" style="color:#ffd54f;font-weight:700">0.5</span>s/ครั้ง</label>
-            <input type="range" id="ccBlinkDur" min="0.1" max="2.0" step="0.1" value="0.5"
-              style="width:100%;accent-color:#ffd54f;cursor:pointer;margin-top:5px"
-              oninput="document.getElementById('lblBlinkDur').textContent=parseFloat(this.value).toFixed(1);applyCustom()"/>
-          </div>
         </div>
       </div>
 
@@ -779,6 +1069,19 @@
     <!-- Ticker messages -->
     <!-- Queue type visibility -->
     <div class="dpane" id="dpane-types">
+      <div class="sec-box" style="margin-bottom:14px">
+        <div class="sec-box-title" style="color:#ffe082">🏥 ป้าย OPD / IPD (หน้าจอรวม)</div>
+        <div class="sf-row-inline">
+          <label class="sf-toggle"><input type="checkbox" id="cfgShowModeTag" onchange="onModeTagChange()"/><span class="sf-toggle-slider"></span></label>
+          <span class="sf-toggle-label">แสดงป้าย OPD / IPD ต่อท้ายคิว</span>
+        </div>
+        <div id="modeTagFsRow" style="margin-top:10px"><label class="sf-label">ขนาดตัวอักษรป้าย (rem)</label>
+          <div class="sf-slider-row">
+            <input type="range" id="cfgModeTagFsR" min="0.5" max="4" step="0.1" value="1" oninput="syncNum('cfgModeTagFs',this.value,1);onModeTagChange()"/>
+            <input class="sf-numval" type="number" id="cfgModeTagFs" min="0.4" max="8" step="0.1" value="1" oninput="syncRange('cfgModeTagFsR',this.value,0.5,4);onModeTagChange()"/>
+          </div></div>
+        <div class="sf-hint">มีผลเฉพาะหน้าจอโหมด "🏥+🛏 รวม" — ใช้ขนาดเดียวกันทุกที่ (บอร์ด / ช่อง / แผงไม่มา)</div>
+      </div>
       <div class="sf-label" style="margin-bottom:8px">แสดง/ซ่อน ป้ายชื่อประเภทคิว</div>
       <div class="counter-check-list" id="cfgTypeList"></div>
       <div style="font-size:.72rem;color:#3a5a78;margin-top:10px">ปิดติ๊ก = ซ่อนกรอบ "A ทั่วไป" / "B ด่วน" บนหน้าจอ (ตัวเลขคิวยังแสดงตามปกติ)</div>
@@ -844,6 +1147,7 @@ function refreshStatus() {
     noShows       = d.noShows       || [];
     lastByCounter = d.lastCalledByCounter || {};
     recentByCtr   = d.recentByCounter     || {};
+    waitingList   = d.allWaiting          || [];
     tickerMsgs    = (d.displayConfig||{}).tickerMessages || [];
     if (d.sysInfo) {
       const customTitle = (d.displayConfig||{}).custom?.headerTitle;
@@ -878,14 +1182,18 @@ let noShows       = [];
 let lastByCounter = {};
 let recentByCtr   = {};
 let tickerMsgs    = [];
+let waitingList   = [];   // for the board's "คิวถัดไป"
 
 // ── Settings ─────────────────────────────────────────────────────────────
 let LS_KEY = 'qf_display_' + sysId + '_' + dispMode;
 const DEF = { columns:2, maxPerCounter:1, selectedCounters:[], hiddenTypes:[], layoutMode:'grid', splitLblCtr:'ช่องบริการ', splitLblQ:'หมายเลขที่เรียกเข้าบริการ', splitHdrBg:'#2e7d32', splitHdrClr:'#ffffff', splitRowBg:'', splitCtrClr:'', splitDivClr:'', splitHdrFs:1.0, splitHdrPad:12, splitNumFs:4.5, splitCtrFs:2.8, splitCardH:140, splitCtrRatio:1, splitQRatio:2, splitTypeFs:0.8, splitTypePos:'above',
-  svLblCtr:'ช่องบริการ', svLblQ:'หมายเลขที่เรียกเข้าบริการ',
-  svHdrBg:'#1565c0', svHdrClr:'#ffffff', svRowBg:'', svCtrClr:'', svDivClr:'',
-  svHdrFs:1.0, svHdrPad:12, svNumFs:4.5, svCtrFs:2.8, svCardH:200,
-  showNoShow:false, nsRows:5, nsWidth:280, nsRowH:70, nsHdrFs:0.82, nsNumFs:1.1, nsMetaFs:0.68, nsBadgeSize:28, showNsDetail:true, speechRate:0.65, custom:{} };
+  showNoShow:false, nsRows:5, nsWidth:280, nsRowH:70, nsHdrFs:0.82, nsNumFs:1.1, nsMetaFs:0.68, nsBadgeSize:28, showNsDetail:true, speechRate:0.65, custom:{},
+  // counter placement (split-h / board): 1–4 columns, column per counter, order, per-column header text
+  splitCols:1, ctrCols:{}, ctrOrder:[], colHeaders:{},
+  // board layout
+  boardHdr:'คิวที่กำลังเรียก', boardLeft:50, boardNumFs:11, boardRowFs:4.5, boardCtrFs:1.8, showUpcoming:true, upcomingCount:5, boardRowFit:true, boardRowH:24,
+  boardHdrH:48, boardHdrFs:1.3, boardHdrClr:'', boardHero:true, boardHeroClr:'', boardBigBg:'', boardCtrBg:'', boardQBg:'',
+  anim:'scale', showName:false, maskName:true, nameFs:1.6, nsAutoScroll:false, nsSpeed:20 };
 let cfg = { ...DEF, ...(JSON.parse(localStorage.getItem(LS_KEY) || '{}')) };
 function getModeSettings(ds) {
   return (ds && ds.modes && ds.modes[dispMode]) ? ds.modes[dispMode] : (ds || {});
@@ -897,6 +1205,7 @@ function modeMatches(t) {
 // On the combined screen, tag each ticket so staff can tell OPD from IPD
 function modeTag(t) {
   if (dispMode !== 'all' || !t) return '';
+  if (getDisplayCfg().showModeTag === false) return '';
   return t.mode === 'ipd' ? '<span class="mode-tag ipd">IPD</span>' : '<span class="mode-tag opd">OPD</span>';
 }
 function updateModeBadge() {
@@ -958,6 +1267,7 @@ function getDisplayCfg() {
     // Merge custom separately so root custom doesn't get wiped by empty orientation custom
     custom: { ...(DEF.custom || {}), ...(rootFlat.custom || {}), ...(sub.custom || {}) }
   };
+  if (merged.layoutMode === 'split-v') merged.layoutMode = 'split-h';   // the vertical layout was removed
   return merged;
 }
 
@@ -996,15 +1306,13 @@ document.getElementById('clock').textContent = new Date().toLocaleTimeString('th
 
 // ── Socket ────────────────────────────────────────────────────────────────
 socket.on('queue_called', (data) => {
-  const { calledQueue, noShows: ns, lastCalledByCounter: lbc, recentByCounter: rbc } = data || {};
+  const { calledQueue, noShows: ns, lastCalledByCounter: lbc, recentByCounter: rbc, allWaiting: aw } = data || {};
   if (lbc) lastByCounter = lbc;
   if (rbc) recentByCtr   = rbc;
   if (ns) noShows = ns;
+  if (aw) waitingList = aw;
   try {
-    const mode = getDisplayCfg().layoutMode || 'grid';
-    const hasGrid = allCounters.length && document.getElementById('cell-' + allCounters[0]?.id);
-    const hasCard = allCounters.length && document.getElementById('card-' + allCounters[0]?.id);
-    if (allCounters.length && !hasGrid && !hasCard) buildCounterGrid();
+    if (allCounters.length && !gridIsBuilt()) buildCounterGrid();
     const modeMatch = modeMatches(calledQueue);
     renderCounters(modeMatch, modeMatch ? calledQueue : null);
     renderNoShow();
@@ -1012,15 +1320,17 @@ socket.on('queue_called', (data) => {
   // Sound only if called queue matches this display's mode
   const _match = modeMatches(calledQueue);
   if (_match) {
-    try { playBell(); } catch(e) {}
-    try { announceQueue(calledQueue); } catch(e) { console.error('[queue_called] sound error:', e); }
+    try { enqueueAnnounce(calledQueue); } catch(e) { console.error('[queue_called] sound error:', e); }
   }
 });
-socket.on('queue_uncalled', ({ lastCalledByCounter: lbc, recentByCounter: rbc }) => {
+socket.on('queue_uncalled', ({ lastCalledByCounter: lbc, recentByCounter: rbc, allWaiting: aw }) => {
   if (lbc) lastByCounter = lbc;
   if (rbc) recentByCtr   = rbc;
+  if (aw) waitingList = aw;
   renderCounters(false, null);
 });
+socket.on('queue_issued',          ({ allWaiting: aw }) => { if (aw) { waitingList = aw; renderBoardNext(); } });
+socket.on('queue_deleted_waiting', ({ allWaiting: aw }) => { if (aw) { waitingList = aw; renderBoardNext(); } });
 socket.on('queue_noshow',           ({ noShows: ns })  => { noShows = ns; renderNoShow(); });
 socket.on('noshow_recalled',        ({ noShows: ns })  => { noShows = ns; renderNoShow(); });
 socket.on('noshow_display_cleared', ({ noShows: ns })  => { noShows = ns; renderNoShow(); });
@@ -1049,7 +1359,7 @@ socket.on('display_settings_updated', rawDs => {
   if (ds.soundEnabled !== undefined) { soundEnabled = !!ds.soundEnabled; localStorage.setItem('qf_sound_' + sysId + '_' + dispMode, ds.soundEnabled); updateSoundBtn(); }
   if (ch) { applyTheme(activeTheme); restoreCustom(); applyLayout(); }
 });
-socket.on('queue_reset', () => { lastByCounter={}; recentByCtr={}; noShows=[]; renderCounters(false,null); renderNoShow(); });
+socket.on('queue_reset', () => { lastByCounter={}; recentByCtr={}; noShows=[]; waitingList=[]; renderCounters(false,null); renderNoShow(); });
 socket.on('counter_cleared', ({ recentByCounter: rbc, lastCalledByCounter: lbc }) => {
   if (rbc) recentByCtr   = rbc;
   if (lbc) lastByCounter = lbc;
@@ -1058,11 +1368,13 @@ socket.on('counter_cleared', ({ recentByCounter: rbc, lastCalledByCounter: lbc }
 
 socket.on('sys_state', d => {
   if (!d) return;
+  sysRepeatAnnounce = !!(d.cashierSettings && d.cashierSettings.repeatAnnounce);
   if (d.counters)            allCounters   = d.counters;
   if (d.queueTypes)          queueTypes    = d.queueTypes;
   if (d.noShows)             noShows       = d.noShows;
   if (d.lastCalledByCounter) lastByCounter = d.lastCalledByCounter;
   if (d.recentByCounter)     recentByCtr   = d.recentByCounter;
+  if (d.allWaiting)          waitingList   = d.allWaiting;
   if (d.sysInfo) {
     const customTitle = (d.displayConfig||{}).custom?.headerTitle;
     document.getElementById('hdrTitle').textContent = customTitle || d.sysInfo.name;
@@ -1096,6 +1408,7 @@ fetch(`/api/sys/${sysId}/status`).then(r=>r.json()).then(d => {
   noShows       = d.noShows       || [];
   lastByCounter = d.lastCalledByCounter || {};
   recentByCtr   = d.recentByCounter     || {};
+  waitingList   = d.allWaiting          || [];
   tickerMsgs    = (d.displayConfig||{}).tickerMessages || [];
   if (d.sysInfo) {
     window._sysOrigName = d.sysInfo.name;
@@ -1135,6 +1448,9 @@ fetch(`/api/sys/${sysId}/status`).then(r=>r.json()).then(d => {
       // Server has no settings but this machine has local settings →
       // push them to server so other machines (clients) can inherit them
       saveCfg();
+    } else {
+      // Brand-new screen: start from the shared default ("ตั้งเป็นค่าเริ่มต้น"), if one was saved
+      loadDisplayDefault();
     }
     if (ds.theme && THEMES[ds.theme]) { activeTheme = ds.theme; localStorage.setItem('qf_theme_' + sysId + '_' + dispMode, ds.theme); ch = true; }
     if (ds.soundEnabled !== undefined) { soundEnabled = !!ds.soundEnabled; localStorage.setItem('qf_sound_' + sysId + '_' + dispMode, ds.soundEnabled); updateSoundBtn(); }
@@ -1145,9 +1461,47 @@ fetch(`/api/sys/${sysId}/status`).then(r=>r.json()).then(d => {
 // ── Layout ────────────────────────────────────────────────────────────────
 function getVisibleCounters() {
   const displayCfg = getDisplayCfg();
-  if (!displayCfg.selectedCounters.length) return allCounters;
-  const filtered = allCounters.filter(c => displayCfg.selectedCounters.includes(c.id));
-  return filtered.length ? filtered : allCounters;
+  let list = allCounters;
+  if (displayCfg.selectedCounters.length) {
+    const filtered = allCounters.filter(c => displayCfg.selectedCounters.includes(c.id));
+    if (filtered.length) list = filtered;
+  }
+  return sortByOrder(list, displayCfg.ctrOrder);
+}
+// ctrOrder = counter ids in display order (set with ▲▼); counters not listed keep their natural order at the end
+function sortByOrder(list, order) {
+  if (!Array.isArray(order) || !order.length) return list;
+  const pos = id => { const i = order.indexOf(id); return i === -1 ? 1e6 + id : i; };
+  return [...list].sort((a, b) => pos(a.id) - pos(b.id));
+}
+// counter id → column (1-based) for split-h / board. When nothing was assigned yet the counters are dealt
+// out evenly, so picking "2 คอลัมน์" shows two columns straight away.
+function effectiveCols(d, visible) {
+  const n = Math.min(4, Math.max(1, Number(d.splitCols) || 1));
+  const set = d.ctrCols || {};
+  const map = {};
+  if (n === 1) { visible.forEach(c => map[c.id] = 1); return { n, map }; }
+  const anyAssigned = visible.some(c => set[c.id]);
+  const per = Math.ceil(visible.length / n) || 1;
+  visible.forEach((c, i) => {
+    map[c.id] = anyAssigned ? Math.min(n, Math.max(1, Number(set[c.id]) || 1)) : Math.min(n, Math.floor(i / per) + 1);
+  });
+  return { n, map };
+}
+function counterColumns(d, visible) {
+  const { n, map } = effectiveCols(d, visible);
+  const cols = Array.from({ length: n }, () => []);
+  visible.forEach(c => cols[map[c.id] - 1].push(c));
+  const used = cols.map((g, i) => ({ g, k: i + 1 })).filter(x => x.g.length);
+  return used.length ? used : [{ g: [], k: 1 }];
+}
+function colHeader(d, k, fallback) { return (d.colHeaders || {})[k] || fallback; }
+// true when the DOM for the current layout already exists (polling / socket only rebuild when it doesn't)
+function gridIsBuilt() {
+  const c = allCounters[0];
+  if (!c) return true;
+  return !!(document.getElementById('cell-' + c.id) || document.getElementById('card-' + c.id) ||
+            document.getElementById('brow-' + c.id) || (getVisibleCounters().length && document.getElementById('boardBig')));
 }
 function buildCounterGrid() {
   const displayCfg = getDisplayCfg();
@@ -1155,42 +1509,36 @@ function buildCounterGrid() {
   const area    = document.getElementById('counterArea');
   const mode    = displayCfg.layoutMode || 'grid';
   if (mode === 'split-h') {
-    area.className = 'counter-area split-mode';
+    const groups = counterColumns(displayCfg, visible);
+    area.className = 'counter-area split-mode' + (groups.length > 1 ? ' split-multi' : '');
     area.style.gridTemplateColumns = '';
     area.innerHTML = '';
     applySplitCssVars();
     const ratio = `${displayCfg.splitCtrRatio||1}fr ${displayCfg.splitQRatio||2}fr`;
-    const table = document.createElement('div');
-    table.className = 'split-table';
-    table.innerHTML = `
-      <div class="split-thead" style="grid-template-columns:${ratio}">
-        <div class="split-th">${displayCfg.splitLblCtr||'ช่องบริการ'}</div>
-        <div class="split-th">${displayCfg.splitLblQ||'หมายเลขที่เรียกเข้าบริการ'}</div>
-      </div>
-      <div class="split-tbody" id="split-tbody"></div>`;
-    area.appendChild(table);
-    const tbody = document.getElementById('split-tbody');
-    visible.forEach(c => {
-      const row = document.createElement('div');
-      row.className = 'split-trow';
-      row.id = `card-${c.id}`;
-      row.style.cssText = `height:${displayCfg.splitCardH||120}px;grid-template-columns:${ratio}`;
-      tbody.appendChild(row);
-      renderSplitCard(c, false, null);
+    groups.forEach(({ g, k }) => {
+      const table = document.createElement('div');
+      table.className = 'split-table';
+      table.innerHTML = `
+        <div class="split-thead" style="grid-template-columns:${ratio}">
+          <div class="split-th">${escHtml(colHeader(displayCfg, k, displayCfg.splitLblCtr || 'ช่องบริการ'))}</div>
+          <div class="split-th">${escHtml(displayCfg.splitLblQ || 'หมายเลขที่เรียกเข้าบริการ')}</div>
+        </div>
+        <div class="split-tbody"></div>
+        <div class="split-resizer" title="ลากเพื่อปรับความกว้างคอลัมน์ช่องบริการ"></div>`;
+      area.appendChild(table);
+      const tbody = table.querySelector('.split-tbody');
+      g.forEach(c => {
+        const row = document.createElement('div');
+        row.className = 'split-trow';
+        row.id = `card-${c.id}`;
+        row.style.cssText = `height:${displayCfg.splitCardH||120}px;grid-template-columns:${ratio}`;
+        tbody.appendChild(row);
+        renderSplitCard(c, false, null);
+      });
     });
-  } else if (mode === 'split-v') {
-    area.className = 'counter-area split-cards';
-    area.style.gridTemplateColumns = '';
-    area.innerHTML = '';
-    applySplitCssVars();
-    visible.forEach(c => {
-      const card = document.createElement('div');
-      card.className = 'split-card';
-      card.id = `card-${c.id}`;
-      card.style.height = (displayCfg.svCardH || 200) + 'px';
-      area.appendChild(card);
-      renderSplitCard(c, false, null);
-    });
+    placeSplitResizers();
+  } else if (mode === 'board') {
+    buildBoard(displayCfg, visible, area);
   } else {
     area.className = 'counter-area';
     const cols = Math.min(displayCfg.columns, visible.length || 1);
@@ -1210,8 +1558,239 @@ function applyLayout() {
   const ns = document.getElementById('noShowPanel');
   ns.style.display = displayCfg.showNoShow ? 'flex' : 'none';
   if (displayCfg.showNoShow) ns.style.width = displayCfg.nsWidth + 'px';
+  document.documentElement.style.setProperty('--pt-name-fs', (displayCfg.nameFs || 1.6) + 'rem');
+  applyModeTagFs();
   buildCounterGrid();
 }
+
+// ── Board (บอร์ดเรียกคิว) ───────────────────────────────────────────────────
+const BOARD_ROW_COLS = '1fr 1.6fr';
+function buildBoard(d, visible, area) {
+  const groups = counterColumns(d, visible);
+  const left = Math.min(80, Math.max(20, Number(d.boardLeft) || 50));
+  const fit  = d.boardRowFit !== false;
+  const hero = d.boardHero !== false;
+  const rowStyle = fit ? '' : `flex:0 0 ${Math.min(90, Math.max(5, Number(d.boardRowH) || 24))}vh;`;
+  area.className = 'counter-area board-mode';
+  area.style.gridTemplateColumns = '';
+  applyBoardVars(d, area);
+  area.innerHTML = `
+    <div class="board-left${hero ? ' hero' : ''}" id="boardLeft" style="flex:0 0 ${left}%">
+      <div class="board-hdr">${hero ? '<span class="live-dot"></span>' : ''}${escHtml(d.boardHdr || 'คิวที่กำลังเรียก')}</div>
+      <div class="board-big${hero ? ' hero' : ''}" id="boardBig"></div>
+      <div class="board-next" id="boardNext" style="${d.showUpcoming === false ? 'display:none' : ''}">
+        <div class="board-next-hdr">⏭ คิวถัดไป</div>
+        <div class="board-next-list" id="boardNextList"></div>
+      </div>
+    </div>
+    <div class="board-resizer" id="boardResizer" title="ลากเพื่อปรับความกว้าง"></div>
+    <div class="board-right${hero ? ' grouped' : ''}">${groups.map(({ g, k }) => `
+      <div class="board-col">
+        <div class="board-col-hdr" style="grid-template-columns:${BOARD_ROW_COLS}">
+          <div>${escHtml(colHeader(d, k, d.splitLblCtr || 'ช่องบริการ'))}</div><div>หมายเลขคิว</div>
+        </div>
+        <div class="board-rows" style="${fit ? '' : 'overflow-y:auto'}">${g.map(c => `<div class="board-row" id="brow-${c.id}" style="${rowStyle}grid-template-columns:${BOARD_ROW_COLS}"></div>`).join('')}</div>
+      </div>`).join('')}
+    </div>`;
+  renderBoard(false, null);
+}
+// The most recent call among this screen's counters (what the big block shows)
+const BOARD_CLR_VARS = { boardHeroClr: '--board-hero-clr', boardHdrClr: '--board-hdr-clr', boardBigBg: '--board-big-bg', boardCtrBg: '--board-ctr-bg', boardQBg: '--board-q-bg' };
+function applyBoardVars(d, area) {
+  area.style.setProperty('--board-hdr-h', (Number(d.boardHdrH) || 48) + 'px');
+  area.style.setProperty('--board-hdr-fs', (Number(d.boardHdrFs) || 1.3) + 'rem');
+  for (const [k, v] of Object.entries(BOARD_CLR_VARS)) {
+    if (d[k]) area.style.setProperty(v, d[k]); else area.style.removeProperty(v);
+  }
+}
+// colour inputs can't be empty: when a part follows the theme, show the theme's current colour (dimmed)
+function cssColorToHex(c) {
+  const m = String(c).match(/\d+(\.\d+)?/g);
+  if (!m || m.length < 3) return '#000000';
+  return '#' + m.slice(0, 3).map(x => Math.round(+x).toString(16).padStart(2, '0')).join('');
+}
+function syncBoardClrUI(d) {
+  const theme = { boardHeroClr: '--accent', boardHdrClr: '--htxt', boardBigBg: '--cell', boardCtrBg: '--cell', boardQBg: '--cell' };
+  const ids = { boardHeroClr: 'BoardHeroClr', boardHdrClr: 'BoardHdrClr', boardBigBg: 'BoardBigBg', boardCtrBg: 'BoardCtrBg', boardQBg: 'BoardQBg' };
+  for (const [k, id] of Object.entries(ids)) {
+    const inp = document.getElementById('cfg' + id), pair = document.getElementById('pair' + id);
+    if (!inp) continue;
+    const themeVal = getComputedStyle(document.documentElement).getPropertyValue(theme[k]).trim();
+    inp.value = d[k] || cssColorToHex(themeVal.startsWith('#') ? hexToRgbStr(themeVal) : themeVal);
+    pair.classList.toggle('theme', !d[k]);
+  }
+}
+function hexToRgbStr(h) {
+  h = h.replace('#', '');
+  if (h.length === 3) h = h.split('').map(x => x + x).join('');
+  const n = parseInt(h.slice(0, 6), 16);
+  return `rgb(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255})`;
+}
+function setBoardClr(key, val) {
+  getCurrentCfg()[key] = val;
+  const d = getDisplayCfg();
+  const area = document.getElementById('counterArea');
+  if (area.classList.contains('board-mode')) applyBoardVars(d, area);
+  syncBoardClrUI(d);
+  saveCfg();
+}
+function latestBoardCall(visible) {
+  let best = null;
+  visible.forEach(c => {
+    const t = (recentByCtr[String(c.id)] || []).filter(modeMatches)[0];
+    if (t && (!best || (t._ts || 0) > (best._ts || 0))) best = t;
+  });
+  return best;
+}
+// shrink long queue codes so they stay inside their box
+function fitFs(text, baseVw) {
+  const len = String(text || '').length || 1;
+  return (len <= 4 ? baseVw : Math.max(baseVw * 4 / len, baseVw * 0.45)).toFixed(2) + 'vw';
+}
+function renderBoard(animate, flashFor) {
+  const big = document.getElementById('boardBig');
+  if (!big) return;
+  const d       = getDisplayCfg();
+  const visible = getVisibleCounters();
+  const hidden  = d.hiddenTypes || [];
+  const latest  = latestBoardCall(visible);
+  const numClr  = t => (d.custom && d.custom.numColor) || t.color || 'var(--accent)';
+  const isNew   = animate && latest && (!flashFor || latest.display === flashFor.display);
+  if (latest) {
+    big.innerHTML = `
+      <div class="board-big-in ${isNew ? animClass(d) : ''}">
+        ${hidden.includes(Number(latest.typeId)) ? '' : `<div class="cc-badge-row">
+          <div class="cc-prefix" style="background:${latest.color};width:2.6vw;height:2.6vw;min-width:34px;min-height:34px;font-size:1.3vw">${latest.prefix}</div>
+          <span class="cc-typename" style="font-size:1.5vw;color:${latest.color}">${latest.typeName}${modeTag(latest)}</span>
+        </div>`}
+        <div class="board-num" data-flash="${isNew ? 1 : ''}" style="font-size:${fitFs(latest.display, d.boardNumFs || 11)};color:${numClr(latest)}">${latest.display}</div>
+        ${patientNameHtml(latest, d, 'font-size:calc(var(--pt-name-fs,1.6rem) * 1.4)')}
+        ${latest.counterName ? `<div class="board-ctr">🪟 ${escHtml(latest.counterName)}</div>` : ''}
+      </div>`;
+    if (isNew) flashCall(big.querySelector('[data-flash="1"]'), big);
+  } else {
+    big.innerHTML = `<div class="board-idle">รอเรียกคิว</div>`;
+  }
+  visible.forEach(c => {
+    const row = document.getElementById('brow-' + c.id);
+    if (!row) return;
+    const t = (recentByCtr[String(c.id)] || []).filter(modeMatches)[0];
+    const rowNew = animate && t && flashFor && t.display === flashFor.display;
+    row.innerHTML = `
+      <div class="board-row-ctr" style="font-size:${d.boardCtrFs || 1.8}vw;color:${(d.custom && d.custom.ccNameClr) || 'var(--accent)'}">${escHtml(c.name)}</div>
+      <div class="board-row-q">${t
+        ? `<div class="${rowNew ? animClass(d) : ''}"><div class="board-num" data-flash="${rowNew ? 1 : ''}" style="font-size:${fitFs(t.display, d.boardRowFs || 4.5)};color:${numClr(t)}">${t.display}</div></div>`
+        : `<span style="color:var(--dim);opacity:.4;font-size:${(d.boardRowFs || 4.5) * 0.5}vw">—</span>`}</div>`;
+    if (rowNew) flashCall(row.querySelector('[data-flash="1"]'), row.querySelector('.board-row-q'));
+  });
+  renderBoardNext();
+}
+function renderBoardNext() {
+  const el = document.getElementById('boardNextList');
+  if (!el) return;
+  const d = getDisplayCfg();
+  const list = waitingList.filter(modeMatches).slice(0, Math.max(1, Number(d.upcomingCount) || 5));
+  el.innerHTML = list.length
+    ? list.map(t => `<div class="board-next-item" style="border-color:${t.color}"><span style="color:${t.color}">${t.display}</span></div>`).join('')
+    : '<div class="board-next-empty">— ไม่มีคิวรอ —</div>';
+}
+
+// ── Call effects: entrance animation + blink (number or cell background) ──
+// replay the call effect on the newest number on screen, so the blink settings can be tried without a real call
+function testBlink() {
+  const t = latestBoardCall(getVisibleCounters());
+  if (!t) { alert('ยังไม่มีคิวที่เรียกบนจอนี้ — เรียกคิวสักหนึ่งคิวก่อน แล้วกดทดสอบอีกครั้ง'); return; }
+  closeDrawer();
+  renderCounters(true, t);
+}
+function animClass(d) { return d.anim && d.anim !== 'none' ? 'anim-' + d.anim : ''; }
+// Each blink = first half in the blink colour, second half back to normal. Keyframes are written with the
+// actual colours (not var()), which TV browsers / Android WebView don't support inside @keyframes.
+function blinkKeyframes(name, body) {
+  let st = document.getElementById('blinkKf');
+  if (!st) { st = document.createElement('style'); st.id = 'blinkKf'; document.head.appendChild(st); }
+  if (!st.textContent.includes(`@keyframes ${name}{`)) st.textContent += `@keyframes ${name}{${body}}\n`;
+  return name;
+}
+function flashCall(numEl, boxEl) {
+  // the ⚡ กระพริบ tab edits cfg.custom — read the blink settings from there so the screen matches the form
+  const c = { ...(getDisplayCfg().custom || {}), ...(cfg.custom || {}) };
+  if (c.blinkEnabled === false) return;
+  // never faster than 0.5 s per blink — older settings could be as low as 0.1–0.2 s, which strobes
+  const dur = c.blinkDur > 0 ? Math.max(0.5, c.blinkDur) : 1.0;
+  const cnt = c.blinkCount >= 1 ? c.blinkCount : 3;
+  const bc  = c.blinkColor || '#ffd54f';
+  const onBox = c.blinkTarget === 'bg' && boxEl;
+  const el = onBox ? boxEl : numEl;
+  if (!el) return;
+  el.style.animation = 'none';
+  void el.offsetWidth;   // force reflow → guarantees a fresh animation start
+  const key = (bc + (onBox ? '' : getComputedStyle(el).color)).replace(/[^a-z0-9]/gi, '');
+  const name = onBox
+    ? blinkKeyframes('bxb' + key, `0%,49.9%{box-shadow:inset 0 0 0 100vmax ${bc}}50%,100%{box-shadow:inset 0 0 0 100vmax transparent}`)
+    : blinkKeyframes('nmb' + key, `0%,49.9%{color:${bc};text-shadow:0 0 .12em ${bc}}50%,100%{color:${getComputedStyle(el).color};text-shadow:none}`);
+  el.style.animation = `${name} ${dur}s linear ${cnt}`;
+  el.addEventListener('animationend', function done(ev) {
+    if (ev.animationName !== name) return;
+    el.style.animation = '';
+    el.removeEventListener('animationend', done);
+  });
+}
+
+// ── Patient name (optional; enabling it needs the admin password) ────────
+function maskLastName(full) {
+  const s = String(full || '').trim();
+  const i = s.lastIndexOf(' ');
+  if (i === -1) return s;
+  const last = [...s.slice(i + 1)];
+  return s.slice(0, i) + ' ' + (last.length > 4 ? last.slice(0, last.length - 4).join('') : '') + 'XXXX';
+}
+function patientNameHtml(t, d, extraStyle) {
+  if (!d.showName || !t || !t.patientName) return '';
+  const name = d.maskName !== false ? maskLastName(t.patientName) : t.patientName;
+  return `<div class="pt-name" style="${extraStyle || ''}">${escHtml(name)}</div>`;
+}
+
+// ── Drag to resize: board left block / split-h counter column ────────────
+function placeSplitResizers() {
+  const d = getDisplayCfg();
+  const a = Number(d.splitCtrRatio) || 1, b = Number(d.splitQRatio) || 2;
+  document.querySelectorAll('.split-resizer').forEach(el => el.style.left = (a / (a + b) * 100) + '%');
+}
+document.addEventListener('mousedown', e => {
+  const bres = e.target.closest && e.target.closest('#boardResizer');
+  const sres = e.target.closest && e.target.closest('.split-resizer');
+  if (!bres && !sres) return;
+  e.preventDefault();
+  const c = getCurrentCfg();
+  const handle = bres || sres;
+  handle.classList.add('dragging');
+  const box = bres ? document.getElementById('counterArea').getBoundingClientRect() : sres.parentElement.getBoundingClientRect();
+  const onMove = ev => {
+    const frac = Math.min(0.8, Math.max(0.2, (ev.clientX - box.left) / box.width));
+    if (bres) {
+      c.boardLeft = Math.round(frac * 100);
+      const left = document.getElementById('boardLeft');
+      if (left) left.style.flex = `0 0 ${c.boardLeft}%`;
+    } else {
+      const q = Number(getDisplayCfg().splitQRatio) || 2;
+      c.splitCtrRatio = +(frac / (1 - frac) * q).toFixed(2);
+      c.splitQRatio = q;
+      const ratio = `${c.splitCtrRatio}fr ${q}fr`;
+      document.querySelectorAll('.split-trow,.split-thead').forEach(el => el.style.gridTemplateColumns = ratio);
+      placeSplitResizers();
+    }
+  };
+  const onUp = () => {
+    handle.classList.remove('dragging');
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    saveCfg(); loadCfgUI();
+    if (bres) renderBoard(false, null);
+  };
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+});
 
 // ── Cell rendering ────────────────────────────────────────────────────────
 function renderCell(counterId, animate, flashFor) {
@@ -1243,28 +1822,20 @@ function renderCell(counterId, animate, flashFor) {
     const numClr  = ticket.color || '';
     if (i > 0) html += `<div class="cc-divider"></div>`;
     html += `
-      <div class="cc-ticket ${!isMain ? 'cc-prev' : ''}">
+      <div class="cc-ticket ${!isMain ? 'cc-prev' : ''} ${doFlash ? animClass(displayCfg) : ''}">
         ${hiddenBadge.includes(Number(ticket.typeId)) ? '' : `<div class="cc-badge-row">
           <div class="cc-prefix" style="background:${ticket.color};${!isMain ? 'width:26px;height:26px;font-size:.75rem' : ''}">${ticket.prefix}</div>
           <span class="cc-typename" style="${!isMain ? 'font-size:.72rem' : ''}">${ticket.typeName}${modeTag(ticket)}</span>
         </div>`}
         <div class="cc-num" data-flash="${doFlash?'1':''}" style="color:${numClr};font-size:${sz}">${ticket.display}</div>
+        ${isMain ? patientNameHtml(ticket, displayCfg) : ''}
         <div class="cc-time" style="${!isMain ? 'font-size:.65rem' : ''}">${ticket.calledAt || ''}</div>
       </div>`;
   });
   html += `</div>`;
   cell.innerHTML = html;
 
-  if (animate) {
-    const blinkEl = cell.querySelector('.cc-num[data-flash="1"]');
-    if (blinkEl) {
-      const dur   = displayCfg.custom.blinkDur   > 0  ? displayCfg.custom.blinkDur   : 0.5;
-      const count = displayCfg.custom.blinkCount >= 1  ? displayCfg.custom.blinkCount : 3;
-      blinkEl.style.animation = 'none';
-      void blinkEl.offsetWidth;   // force reflow → guarantees fresh animation start
-      blinkEl.style.animation = `numBlink ${dur}s ${count} forwards`;
-    }
-  }
+  if (animate) flashCall(cell.querySelector('.cc-num[data-flash="1"]'), cell);
 }
 
 function applySplitCssVars() {
@@ -1283,14 +1854,13 @@ function renderSplitCard(counter, animate, flashFor) {
   const card = document.getElementById(`card-${counter.id}`);
   if (!card) return;
   const d       = getDisplayCfg();
-  const mode    = d.layoutMode || 'grid';
   const hidden  = d.hiddenTypes || [];
   const recent  = (recentByCtr[String(counter.id)] || []).filter(modeMatches);
   const ticket  = recent[0] || null;
   const showBadge = ticket && !hidden.includes(Number(ticket.typeId));
   const doFlash = animate && ticket && (!flashFor || ticket.display === flashFor?.display);
-  const dur     = d.custom?.blinkDur   > 0  ? d.custom.blinkDur   : 0.5;
-  const cnt     = d.custom?.blinkCount >= 1  ? d.custom.blinkCount : 3;
+  const anim    = doFlash ? animClass(d) : '';
+  const nameH   = patientNameHtml(ticket, d);
   const bsz     = 32;
   const typePos = d.splitTypePos || 'above';
   const typeFs  = (d.splitTypeFs || 0.8) + 'rem';
@@ -1300,7 +1870,7 @@ function renderSplitCard(counter, animate, flashFor) {
       <span class="split-typename" style="font-size:${typeFs};color:${ticket.color}">${ticket.typeName}${modeTag(ticket)}</span>
     </div>` : '';
 
-  if (mode === 'split-h') {
+  {
     const qFs = (d.splitNumFs || 4.5) + 'rem';
     const cFs = (d.splitCtrFs || 2.8) + 'rem';
     let qCell = '';
@@ -1311,10 +1881,13 @@ function renderSplitCard(counter, animate, flashFor) {
             <div class="split-pfx" style="background:${ticket.color};width:${bsz}px;height:${bsz}px;font-size:${(bsz*0.032).toFixed(2)}rem">${ticket.prefix}</div>
             <span class="split-typename" style="font-size:${typeFs};color:${ticket.color};text-align:center;word-break:break-word">${ticket.typeName}${modeTag(ticket)}</span>
           </div>
-          <div class="split-q-val" data-flash="${doFlash?'1':''}" style="font-size:${qFs};color:${ticket.color};flex:1;text-align:center">${ticket.display}</div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;min-width:0">
+            <div class="split-q-val" data-flash="${doFlash?'1':''}" style="font-size:${qFs};color:${ticket.color};text-align:center">${ticket.display}</div>${nameH}
+          </div>
         </div>`;
+        if (anim) qCell = `<div class="${anim}" style="width:100%">${qCell}</div>`;
       } else {
-        qCell = `${badgeRow}<div class="split-q-val" data-flash="${doFlash?'1':''}" style="font-size:${qFs};color:${ticket.color}">${ticket.display}</div>`;
+        qCell = `<div class="${anim}" style="display:flex;flex-direction:column;align-items:center;max-width:100%">${badgeRow}<div class="split-q-val" data-flash="${doFlash?'1':''}" style="font-size:${qFs};color:${ticket.color}">${ticket.display}</div>${nameH}</div>`;
       }
     } else {
       qCell = `<div class="split-q-idle">รอเรียกคิว...</div>`;
@@ -1324,45 +1897,12 @@ function renderSplitCard(counter, animate, flashFor) {
         <div class="split-ctr-val" style="font-size:${cFs}">${counter.name}</div>
       </div>
       <div class="split-td">${qCell}</div>`;
-  } else {
-    // split-v — ใช้ sv* keys แยกต่างหาก
-    const qFs    = (d.svNumFs  || 4.5) + 'rem';
-    const cFs    = (d.svCtrFs  || 2.8) + 'rem';
-    const hdrBg  = d.svHdrBg  || '#1565c0';
-    const hdrClr = d.svHdrClr || '#ffffff';
-    const ctrClr = d.svCtrClr || 'var(--accent)';
-    const hdrPad = (d.svHdrPad || 12) + 'px';
-    const hdrFs  = (d.svHdrFs  || 1.0) + 'rem';
-    const rowBg  = d.svRowBg  || 'var(--cell)';
-    const divClr = d.svDivClr || 'rgba(255,255,255,.1)';
-    const lblCtr = d.svLblCtr || 'ช่องบริการ';
-    const lblQ   = d.svLblQ   || 'หมายเลขที่เรียกเข้าบริการ';
-    card.style.background  = rowBg;
-    card.style.borderColor = divClr;
-    card.innerHTML = `
-      <div class="split-seg" style="border-bottom:2px solid ${divClr}">
-        <div class="split-hdr" style="background:${hdrBg};color:${hdrClr};padding:${hdrPad} 14px;font-size:${hdrFs}">${lblCtr}</div>
-        <div class="split-val">
-          <div style="font-size:${cFs};font-weight:900;color:${ctrClr}">${counter.name}</div>
-        </div>
-      </div>
-      <div class="split-seg">
-        <div class="split-hdr" style="background:${hdrBg};color:${hdrClr};padding:${hdrPad} 14px;font-size:${hdrFs}">${lblQ}</div>
-        <div class="split-val">
-          ${ticket
-            ? `${badgeRow}<div data-flash="${doFlash?'1':''}" style="font-size:${qFs};font-weight:900;letter-spacing:4px;color:${ticket.color}">${ticket.display}</div>`
-            : `<div style="color:#1e3a5f;font-size:.9rem">รอเรียกคิว...</div>`}
-        </div>
-      </div>`;
   }
 
   if (doFlash) {
-    const el = card.querySelector('[data-flash="1"]');
-    if (el) {
-      el.style.animation = 'none';
-      void el.offsetWidth;   // force reflow
-      el.style.animation = `numBlink ${dur}s ${cnt} forwards`;
-    }
+    // background blink target: the number half of the row
+    const box = card.querySelectorAll('.split-td')[1];
+    flashCall(card.querySelector('[data-flash="1"]'), box);
   }
 }
 
@@ -1378,26 +1918,11 @@ function onLayoutModeChange(mode) {
   const currentCfg = getCurrentCfg();
   currentCfg.layoutMode = mode;
   document.getElementById('splitOptsH').style.display = mode === 'split-h' ? '' : 'none';
-  document.getElementById('splitOptsV').style.display = mode === 'split-v' ? '' : 'none';
+  document.getElementById('boardOpts').style.display  = mode === 'board' ? '' : 'none';
+  document.getElementById('colsOpts').style.display   = (mode === 'split-h' || mode === 'board') ? '' : 'none';
   saveCfg();
+  rebuildCfgList();
   buildCounterGrid();
-}
-function onSplitVOptChange() {
-  const c = getCurrentCfg();
-  c.svLblCtr = document.getElementById('cfgSvLblCtr').value;
-  c.svLblQ   = document.getElementById('cfgSvLblQ').value;
-  c.svHdrBg  = document.getElementById('cfgSvHdrBg').value;
-  c.svHdrClr = document.getElementById('cfgSvHdrClr').value;
-  c.svRowBg  = document.getElementById('cfgSvRowBg').value;
-  c.svCtrClr = document.getElementById('cfgSvCtrClr').value;
-  c.svDivClr = document.getElementById('cfgSvDivClr').value;
-  c.svHdrFs  = parseFloat(document.getElementById('cfgSvHdrFsN').value) || 1.0;
-  c.svHdrPad = parseInt(document.getElementById('cfgSvHdrPadN').value)  || 12;
-  c.svNumFs  = parseFloat(document.getElementById('cfgSvNumFsN').value) || 4.5;
-  c.svCtrFs  = parseFloat(document.getElementById('cfgSvCtrFsN').value) || 2.8;
-  c.svCardH  = parseInt(document.getElementById('cfgSvCardHN').value)   || 200;
-  document.querySelectorAll('.split-card').forEach(el => el.style.height = c.svCardH + 'px');
-  saveCfg(); renderCounters(false, null);
 }
 function onSplitOptChange() {
   const currentCfg = getCurrentCfg();
@@ -1419,17 +1944,19 @@ function onSplitOptChange() {
   currentCfg.splitTypePos = document.querySelector('input[name="cfgSplitTypePos"]:checked')?.value || 'above';
   applySplitCssVars();
   // Update header labels live
-  document.querySelectorAll('.split-th').forEach((th,i) => th.textContent = i===0 ? currentCfg.splitLblCtr : currentCfg.splitLblQ);
+  buildCounterGrid();   // headers per column (labels / column header overrides)
   // Update row heights and column ratios
   const ratio = `${currentCfg.splitCtrRatio}fr ${currentCfg.splitQRatio}fr`;
   document.querySelectorAll('.split-trow,.split-thead').forEach(el => el.style.gridTemplateColumns = ratio);
-  document.querySelectorAll('.split-trow,.split-card').forEach(el => el.style.height = currentCfg.splitCardH + 'px');
+  document.querySelectorAll('.split-trow').forEach(el => el.style.height = currentCfg.splitCardH + 'px');
   saveCfg(); renderCounters(false, null);
 }
 
 function renderCounters(animate, latestCall) {
   const mode = getDisplayCfg().layoutMode || 'grid';
-  if (mode === 'split-h' || mode === 'split-v') {
+  if (mode === 'board') {
+    renderBoard(animate, animate ? latestCall : null);
+  } else if (mode === 'split-h') {
     getVisibleCounters().forEach(c => renderSplitCard(c, animate, animate ? latestCall : null));
   } else {
     getVisibleCounters().forEach(c => renderCell(c.id, animate, animate ? latestCall : null));
@@ -1440,14 +1967,22 @@ function renderCounters(animate, latestCall) {
 function renderNoShow() {
   const dcfg = getDisplayCfg();
   if (!dcfg.showNoShow) return;
-  const list      = noShows.filter(modeMatches).slice(0, dcfg.nsRows);
+  // only the no-shows of counters this screen shows (another room's no-shows don't belong here)
+  const visIds    = new Set(getVisibleCounters().map(c => c.id));
+  const scoped    = noShows.filter(modeMatches).filter(t => !visIds.size || !t.counterId || visIds.has(t.counterId));
+  const rows      = Math.max(1, dcfg.nsRows || 5);
+  const autoScroll= dcfg.nsAutoScroll && scoped.length > rows;
+  const list      = autoScroll ? scoped : scoped.slice(0, rows);
   const el        = document.getElementById('nsList');
+  const cnt       = document.getElementById('nsCount');
+  if (cnt) { cnt.textContent = scoped.length; cnt.style.display = scoped.length ? '' : 'none'; }
+  const lbl = document.getElementById('nsLabel'); if (lbl) lbl.textContent = dcfg.nsLabel || 'เรียกแล้วไม่มา';
   const detail    = dcfg.showNsDetail !== false;
   const bsz       = dcfg.nsBadgeSize || 28;
   const bFs       = Math.max(0.6, bsz * 0.032) + 'rem';
   const bRadius   = Math.round(bsz * 0.28) + 'px';
-  if (!list.length) { el.innerHTML = '<div class="ns-empty">ยังไม่มีรายการ</div>'; return; }
-  el.innerHTML = list.map(t => `
+  if (!list.length) { el.innerHTML = `<div class="ns-empty">${escHtml(dcfg.nsEmptyText || 'ยังไม่มีรายการ')}</div>`; return; }
+  const html = list.map(t => `
     <div class="ns-item" style="height:${dcfg.nsRowH}px;${!detail ? 'justify-content:center;gap:8px' : ''}">
       <div class="ns-badge" style="background:${t.color};width:${bsz}px;height:${bsz}px;border-radius:${bRadius};font-size:${bFs}">${t.prefix}</div>
       <div style="${!detail ? 'text-align:center' : ''}">
@@ -1459,6 +1994,10 @@ function renderNoShow() {
         <div class="ns-at">ไม่มา ${t.noShowAt}</div>
       </div>` : ''}
     </div>`).join('');
+  // seamless loop: the list twice, moved up by exactly one copy (-50%), so the restart can't be seen
+  el.innerHTML = autoScroll
+    ? `<div class="ns-viewport" style="height:${rows * ((dcfg.nsRowH || 70) + 6)}px"><div class="ns-track" style="animation-duration:${Math.max(3, dcfg.nsSpeed || 20)}s">${html}${html}</div></div>`
+    : html;
 }
 
 // ── Ticker ────────────────────────────────────────────────────────────────
@@ -1470,8 +2009,57 @@ function updateTicker() {
 }
 
 // ── Drawer ────────────────────────────────────────────────────────────────
-function openDrawer()  { buildThemeGrid(); syncCustomUI(); loadCfgUI(); rebuildCfgList(); rebuildTypeList(); updateVoiceActiveInfo(); document.getElementById('drawer').classList.add('open'); document.getElementById('drawerOverlay').classList.add('open'); }
-function closeDrawer() { document.getElementById('drawer').classList.remove('open'); document.getElementById('drawerOverlay').classList.remove('open'); }
+function openDrawer()  { buildThemeGrid(); syncCustomUI(); loadCfgUI(); rebuildCfgList(); rebuildTypeList(); updateVoiceActiveInfo(); document.getElementById('drawer').classList.add('open'); document.getElementById('drawerOverlay').classList.add('open'); restoreDrawerPos(); }
+function closeDrawer() { dockDrawer(false); document.getElementById('drawer').classList.remove('open'); document.getElementById('drawerOverlay').classList.remove('open'); }
+
+// ── Settings window can be dragged by its header (position kept per browser) ──
+const DRAWER_POS_KEY = 'qf_drawer_pos';
+function placeDrawer(left, top) {
+  const dr = document.getElementById('drawer');
+  left = Math.min(Math.max(0, left), window.innerWidth - 140);   // keep the header reachable
+  top  = Math.min(Math.max(0, top), window.innerHeight - 80);
+  Object.assign(dr.style, { left: left + 'px', top: top + 'px', right: 'auto', bottom: 'auto',
+    height: Math.max(240, window.innerHeight - top - 8) + 'px', transform: 'none' });
+  dr.classList.add('floating');
+  // a floating window is meant for watching the screen while adjusting — don't darken it
+  document.getElementById('drawerOverlay').classList.add('light');
+  return { left, top };
+}
+// back to the docked right-hand panel (remember = also forget the saved position)
+function dockDrawer(forget) {
+  const dr = document.getElementById('drawer');
+  ['left', 'top', 'right', 'bottom', 'height', 'transform'].forEach(p => dr.style[p] = '');
+  dr.classList.remove('floating');
+  document.getElementById('drawerOverlay').classList.remove('light');
+  if (forget) { try { localStorage.removeItem(DRAWER_POS_KEY); } catch (e) {} }
+}
+function restoreDrawerPos() {
+  let pos = null;
+  try { pos = JSON.parse(localStorage.getItem(DRAWER_POS_KEY) || 'null'); } catch (e) {}
+  if (pos && typeof pos.left === 'number') placeDrawer(pos.left, pos.top);
+}
+(function () {
+  const hdr = document.getElementById('drawerHdr');
+  hdr.addEventListener('pointerdown', e => {
+    if (e.target.closest('button')) return;   // the ✕ button still closes
+    const dr = document.getElementById('drawer');
+    const r = dr.getBoundingClientRect();
+    const dx = e.clientX - r.left, dy = e.clientY - r.top;
+    dr.classList.add('dragging');
+    hdr.setPointerCapture(e.pointerId);
+    let last = null;
+    const move = ev => { last = placeDrawer(ev.clientX - dx, ev.clientY - dy); };
+    const up = () => {
+      dr.classList.remove('dragging');
+      hdr.removeEventListener('pointermove', move);
+      hdr.removeEventListener('pointerup', up);
+      if (last) { try { localStorage.setItem(DRAWER_POS_KEY, JSON.stringify(last)); } catch (e) {} }
+    };
+    hdr.addEventListener('pointermove', move);
+    hdr.addEventListener('pointerup', up);
+  });
+  hdr.addEventListener('dblclick', e => { if (!e.target.closest('button')) dockDrawer(true); });
+})();
 function switchDTab(name, el) {
   document.querySelectorAll('.dtab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.dpane').forEach(p => p.classList.remove('active'));
@@ -1480,11 +2068,14 @@ function switchDTab(name, el) {
 }
 function loadCfgUI() {
   const currentCfg = getCurrentCfg();
+  if (currentCfg.layoutMode === 'split-v') currentCfg.layoutMode = 'split-h';   // the vertical layout was removed
   const mode = currentCfg.layoutMode || 'grid';
   const modeEl = document.querySelector(`input[name="layoutMode"][value="${mode}"]`);
   if (modeEl) modeEl.checked = true;
   document.getElementById('splitOptsH').style.display = mode === 'split-h' ? '' : 'none';
-  document.getElementById('splitOptsV').style.display = mode === 'split-v' ? '' : 'none';
+  document.getElementById('boardOpts').style.display  = mode === 'board' ? '' : 'none';
+  document.getElementById('colsOpts').style.display   = (mode === 'split-h' || mode === 'board') ? '' : 'none';
+  loadNewCfgUI(currentCfg);
   document.getElementById('cfgSplitLblCtr').value  = currentCfg.splitLblCtr || 'ช่องบริการ';
   document.getElementById('cfgSplitLblQ').value    = currentCfg.splitLblQ   || 'หมายเลขที่เรียกเข้าบริการ';
   document.getElementById('cfgSplitHdrBg').value   = currentCfg.splitHdrBg  || '#2e7d32';
@@ -1521,29 +2112,6 @@ function loadCfgUI() {
   const stp = currentCfg.splitTypePos || 'above';
   const stpEl = document.getElementById(stp === 'left' ? 'cfgSplitTypePosLeft' : 'cfgSplitTypePosAbove');
   if (stpEl) stpEl.checked = true;
-  // sv* (split-v settings)
-  document.getElementById('cfgSvLblCtr').value = currentCfg.svLblCtr || 'ช่องบริการ';
-  document.getElementById('cfgSvLblQ').value   = currentCfg.svLblQ   || 'หมายเลขที่เรียกเข้าบริการ';
-  document.getElementById('cfgSvHdrBg').value  = currentCfg.svHdrBg  || '#1565c0';
-  document.getElementById('cfgSvHdrClr').value = currentCfg.svHdrClr || '#ffffff';
-  document.getElementById('cfgSvRowBg').value  = currentCfg.svRowBg  || '#0d1f33';
-  document.getElementById('cfgSvCtrClr').value = currentCfg.svCtrClr || '#ffd54f';
-  document.getElementById('cfgSvDivClr').value = currentCfg.svDivClr || '#1e3a5f';
-  const svhf = currentCfg.svHdrFs || 1.0;
-  document.getElementById('cfgSvHdrFs').value  = Math.min(20, svhf);
-  document.getElementById('cfgSvHdrFsN').value = svhf;
-  const svhp = currentCfg.svHdrPad || 12;
-  document.getElementById('cfgSvHdrPad').value  = Math.min(200, svhp);
-  document.getElementById('cfgSvHdrPadN').value = svhp;
-  const svnf = currentCfg.svNumFs || 4.5;
-  document.getElementById('cfgSvNumFs').value  = Math.min(30, svnf);
-  document.getElementById('cfgSvNumFsN').value = svnf;
-  const svcf = currentCfg.svCtrFs || 2.8;
-  document.getElementById('cfgSvCtrFs').value  = Math.min(20, svcf);
-  document.getElementById('cfgSvCtrFsN').value = svcf;
-  const svch = currentCfg.svCardH || 200;
-  document.getElementById('cfgSvCardH').value  = Math.min(600, svch);
-  document.getElementById('cfgSvCardHN').value = svch;
   document.getElementById('cfgColumns').value       = currentCfg.columns;
   document.getElementById('cfgMaxPerCtr').value     = currentCfg.maxPerCounter;
   document.getElementById('cfgShowNs').checked        = currentCfg.showNoShow;
@@ -1579,17 +2147,186 @@ function loadCfgUI() {
 }
 function rebuildCfgList() {
   const currentCfg = getCurrentCfg();
+  const d = getDisplayCfg();
   const selected = currentCfg.selectedCounters || [];
-  document.getElementById('cfgCounterList').innerHTML = allCounters.map(c => `
+  const mode = d.layoutMode || 'grid';
+  const ordered = sortByOrder(allCounters, d.ctrOrder);
+  // column picker only where columns exist (split-h / board with 2+ columns)
+  const { n, map } = effectiveCols(d, getVisibleCounters());
+  const showCols = (mode === 'split-h' || mode === 'board') && n > 1;
+  document.getElementById('cfgCounterList').innerHTML = ordered.map((c, i) => `
     <div class="cc-chk-item cc-chk-row">
       <label>
         <input type="checkbox" value="${c.id}"
           ${!selected.length || selected.includes(c.id) ? 'checked' : ''}
           onchange="onCounterCheck()"/>
-        <span class="cc-chk-label">🪟 ${c.name}</span>
+        <span class="cc-chk-label">🪟 ${escHtml(c.name)}</span>
       </label>
+      <div class="ctr-place">
+        ${showCols ? `<select title="คอลัมน์" onchange="setCtrCol(${c.id},this.value)">${
+          Array.from({ length: n }, (_, k) => `<option value="${k + 1}" ${(map[c.id] || 1) === k + 1 ? 'selected' : ''}>คอลัมน์ ${k + 1}</option>`).join('')}</select>` : ''}
+        <button class="btn-ord" title="เลื่อนขึ้น" onclick="moveCtr(${c.id},-1)" ${i === 0 ? 'disabled style="opacity:.3"' : ''}>▲</button>
+        <button class="btn-ord" title="เลื่อนลง" onclick="moveCtr(${c.id},1)" ${i === ordered.length - 1 ? 'disabled style="opacity:.3"' : ''}>▼</button>
+      </div>
       <button class="btn-clear-ctr" onclick="clearCounter(${c.id},'${c.name.replace(/'/g,"\\'")}')" title="เคลียหน้าจอช่องนี้">✕ เคลีย</button>
     </div>`).join('');
+}
+function moveCtr(id, dir) {
+  const c = getCurrentCfg();
+  const order = sortByOrder(allCounters, getDisplayCfg().ctrOrder).map(x => x.id);
+  const i = order.indexOf(id), j = i + dir;
+  if (i < 0 || j < 0 || j >= order.length) return;
+  [order[i], order[j]] = [order[j], order[i]];
+  c.ctrOrder = order;
+  saveCfg(); rebuildCfgList(); buildCounterGrid(); renderNoShow();
+}
+function setCtrCol(id, k) {
+  const c = getCurrentCfg();
+  // first manual pick: freeze the automatic spread so the other counters stay where they are
+  const { map } = effectiveCols(getDisplayCfg(), getVisibleCounters());
+  c.ctrCols = { ...map, ...(getDisplayCfg().ctrCols || {}), [id]: Number(k) };
+  saveCfg(); rebuildCfgList(); buildCounterGrid();
+}
+function setSplitCols(n) {
+  const c = getCurrentCfg();
+  c.splitCols = n;
+  c.ctrCols = {};   // spread the counters evenly again; adjust per counter afterwards
+  saveCfg(); loadNewCfgUI(getDisplayCfg()); rebuildCfgList(); buildCounterGrid();
+}
+function setColHdr(k, val) {
+  const c = getCurrentCfg();
+  c.colHeaders = { ...(getDisplayCfg().colHeaders || {}), [k]: val.trim() };
+  saveCfg(); buildCounterGrid();
+}
+function onBoardOptChange() {
+  const c = getCurrentCfg();
+  c.boardHdr      = document.getElementById('cfgBoardHdr').value;
+  c.boardLeft     = Math.min(80, Math.max(20, parseInt(document.getElementById('cfgBoardLeft').value) || 50));
+  c.boardNumFs    = Math.max(2, parseFloat(document.getElementById('cfgBoardNumFs').value) || 11);
+  c.boardRowFs    = Math.max(1, parseFloat(document.getElementById('cfgBoardRowFs').value) || 4.5);
+  c.boardCtrFs    = Math.max(0.5, parseFloat(document.getElementById('cfgBoardCtrFs').value) || 1.8);
+  c.showUpcoming  = document.getElementById('cfgShowUpcoming').checked;
+  c.boardRowFit   = document.getElementById('cfgBoardRowFit').checked;
+  c.boardHero     = document.getElementById('cfgBoardHero').checked;
+  document.getElementById('boardHeroClrRow').style.display = c.boardHero ? '' : 'none';
+  c.boardHdrH     = Math.min(300, Math.max(20, parseInt(document.getElementById('cfgBoardHdrH').value) || 48));
+  c.boardHdrFs    = Math.min(8, Math.max(0.5, parseFloat(document.getElementById('cfgBoardHdrFs').value) || 1.3));
+  c.boardRowH     = Math.min(90, Math.max(5, parseInt(document.getElementById('cfgBoardRowH').value) || 24));
+  document.getElementById('boardRowHRow').style.display = c.boardRowFit ? 'none' : '';
+  c.upcomingCount = Math.max(1, parseInt(document.getElementById('cfgUpcoming').value) || 5);
+  saveCfg(); buildCounterGrid();
+}
+function onModeTagChange() {
+  const c = getCurrentCfg();
+  c.showModeTag = document.getElementById('cfgShowModeTag').checked;
+  c.modeTagFs   = Math.min(8, Math.max(0.4, parseFloat(document.getElementById('cfgModeTagFs').value) || 1));
+  document.getElementById('modeTagFsRow').style.display = c.showModeTag ? '' : 'none';
+  applyModeTagFs();
+  saveCfg(); renderCounters(false, null); renderNoShow();
+}
+function applyModeTagFs() {
+  const d = getDisplayCfg();
+  if (d.modeTagFs) document.documentElement.style.setProperty('--mode-tag-fs', d.modeTagFs + 'rem');
+  else document.documentElement.style.removeProperty('--mode-tag-fs');
+}
+function setAnim(v) {
+  getCurrentCfg().anim = v;
+  document.querySelectorAll('#cfgAnimSeg button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  saveCfg();
+}
+function onNameOptChange() {
+  const c = getCurrentCfg();
+  c.maskName = document.getElementById('cfgMaskName').checked;
+  c.nameFs   = Math.max(0.6, parseFloat(document.getElementById('cfgNameFs').value) || 1.6);
+  document.documentElement.style.setProperty('--pt-name-fs', c.nameFs + 'rem');
+  saveCfg(); renderCounters(false, null);
+}
+// Turning names ON needs the admin password (verified by the server); turning them off never does
+function onShowNameToggle(chk) {
+  if (!chk.checked) {
+    getCurrentCfg().showName = false;
+    saveCfg(); renderCounters(false, null);
+    return;
+  }
+  chk.checked = false;   // stays off until the password is confirmed
+  document.getElementById('pwdInput').value = '';
+  document.getElementById('pwdErr').textContent = '';
+  document.getElementById('pwdOverlay').classList.add('show');
+  setTimeout(() => document.getElementById('pwdInput').focus(), 50);
+}
+function cancelShowName() { document.getElementById('pwdOverlay').classList.remove('show'); }
+async function confirmShowName() {
+  const pw = document.getElementById('pwdInput').value;
+  const err = document.getElementById('pwdErr');
+  err.textContent = 'กำลังตรวจสอบ...';
+  const r = await fetch('/api/admin/login', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: 'admin', password: pw }) }).then(x => x.json()).catch(() => ({}));
+  if (!r.success) { err.textContent = '❌ รหัสผ่านไม่ถูกต้อง'; return; }
+  // the session was only needed to check the password
+  fetch('/api/admin/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: r.token }) }).catch(() => {});
+  getCurrentCfg().showName = true;
+  document.getElementById('cfgShowName').checked = true;
+  cancelShowName();
+  saveCfg(); renderCounters(false, null);
+}
+function loadNewCfgUI(d) {
+  d = getDisplayCfg();
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+  set('cfgBoardHdr', d.boardHdr || 'คิวที่กำลังเรียก');
+  set('cfgBoardLeft', d.boardLeft || 50);       set('cfgBoardLeftR', d.boardLeft || 50);
+  set('cfgBoardNumFs', d.boardNumFs || 11);     set('cfgBoardNumFsR', Math.min(22, d.boardNumFs || 11));
+  set('cfgBoardRowFs', d.boardRowFs || 4.5);    set('cfgBoardRowFsR', Math.min(12, d.boardRowFs || 4.5));
+  set('cfgBoardCtrFs', d.boardCtrFs || 1.8);    set('cfgBoardCtrFsR', Math.min(6, d.boardCtrFs || 1.8));
+  set('cfgUpcoming', d.upcomingCount || 5);     set('cfgUpcomingR', Math.min(12, d.upcomingCount || 5));
+  document.getElementById('cfgShowUpcoming').checked = d.showUpcoming !== false;
+  document.getElementById('cfgBoardRowFit').checked = d.boardRowFit !== false;
+  document.getElementById('cfgBoardHero').checked = d.boardHero !== false;
+  document.getElementById('boardHeroClrRow').style.display = d.boardHero !== false ? '' : 'none';
+  set('cfgBoardHdrH', d.boardHdrH || 48);       set('cfgBoardHdrHR', Math.min(160, d.boardHdrH || 48));
+  set('cfgBoardHdrFs', d.boardHdrFs || 1.3);    set('cfgBoardHdrFsR', Math.min(4, d.boardHdrFs || 1.3));
+  syncBoardClrUI(d);
+  document.getElementById('boardRowHRow').style.display = d.boardRowFit !== false ? 'none' : '';
+  set('cfgBoardRowH', d.boardRowH || 24);        set('cfgBoardRowHR', Math.min(60, d.boardRowH || 24));
+  const n = Math.min(4, Math.max(1, Number(d.splitCols) || 1));
+  document.querySelectorAll('#cfgSplitColsSeg button').forEach(b => b.classList.toggle('on', Number(b.dataset.v) === n));
+  document.getElementById('colHdrInputs').innerHTML = n > 1 ? Array.from({ length: n }, (_, i) => `
+    <div class="sf-row" style="margin-bottom:6px"><label class="sf-label">หัวคอลัมน์ ${i + 1}</label>
+      <input class="sf-input" type="text" value="${escHtml((d.colHeaders || {})[i + 1] || '')}"
+        placeholder="${escHtml(d.splitLblCtr || 'ช่องบริการ')}" oninput="setColHdr(${i + 1},this.value)"/></div>`).join('') : '';
+  document.querySelectorAll('#cfgAnimSeg button').forEach(b => b.classList.toggle('on', b.dataset.v === (d.anim || 'scale')));
+  document.getElementById('cfgShowModeTag').checked = d.showModeTag !== false;
+  document.getElementById('modeTagFsRow').style.display = d.showModeTag !== false ? '' : 'none';
+  set('cfgModeTagFs', d.modeTagFs || 1);        set('cfgModeTagFsR', Math.min(4, d.modeTagFs || 1));
+  document.getElementById('cfgShowName').checked = !!d.showName;
+  document.getElementById('cfgMaskName').checked = d.maskName !== false;
+  set('cfgNameFs', d.nameFs || 1.6);            set('cfgNameFsR', Math.min(5, d.nameFs || 1.6));
+  document.getElementById('cfgNsAutoScroll').checked = !!d.nsAutoScroll;
+  document.getElementById('nsSpeedRow').style.display = d.nsAutoScroll ? '' : 'none';
+  document.getElementById('lblNsSpeed').textContent = d.nsSpeed || 20;
+  set('cfgNsLabel', d.nsLabel || '');
+  syncNsClrUI(d);
+  set('cfgNsEmptyText', d.nsEmptyText || '');
+  set('cfgNsSpeed', d.nsSpeed || 20);           set('cfgNsSpeedR', Math.min(120, d.nsSpeed || 20));
+}
+
+// ── Shared default for new screens ───────────────────────────────────────
+function saveAsDefault() {
+  if (!confirm('ตั้งรูปแบบหน้าจอนี้เป็นค่าเริ่มต้นของจอแสดงคิวที่ยังไม่เคยตั้งค่า?\n\n(ไม่รวมการเลือกช่องบริการ / การจัดคอลัมน์ของระบบนี้)')) return;
+  fetch(`/api/sys/${sysId}/display-default`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ cfg, theme: activeTheme }) })
+    .then(r => r.json())
+    .then(d => alert(d.success ? '✓ บันทึกเป็นค่าเริ่มต้นแล้ว' : (d.message || 'บันทึกไม่สำเร็จ')))
+    .catch(() => alert('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้'));
+}
+function loadDisplayDefault() {
+  fetch(`/api/sys/${sysId}/display-default`).then(r => r.json()).then(def => {
+    if (!def || !def.cfg || !Object.keys(def.cfg).length) return;
+    cfg = { ...DEF, ...def.cfg }; if (!cfg.custom) cfg.custom = {};
+    if (def.theme && THEMES[def.theme]) activeTheme = def.theme;
+    saveCfg();   // keep it as this screen's own settings from now on
+    applyTheme(activeTheme); restoreCustom(); loadCfgUI(); applyNsFontSizes(); applyLayout();
+    renderCounters(false, null); renderNoShow();
+  }).catch(() => {});
 }
 function clearCounter(counterId, counterName) {
   if (!confirm(`เคลียหน้าจอช่อง "${counterName}" ?\n\n(จะล้างหมายเลขคิวที่แสดงอยู่ ณ ขณะนี้)`)) return;
@@ -1676,6 +2413,28 @@ function applyNsFontSizes() {
   r.style.setProperty('--ns-num-fs',   (displayCfg.nsNumFs  || 1.1)  + 'rem');
   r.style.setProperty('--ns-meta-fs',  (displayCfg.nsMetaFs || 0.68) + 'rem');
   r.style.setProperty('--ns-times-fs', (displayCfg.nsMetaFs || 0.68) + 'rem');
+  for (const [k, v] of Object.entries(NS_CLR_VARS)) {
+    if (displayCfg[k]) r.style.setProperty(v, displayCfg[k]); else r.style.removeProperty(v);
+  }
+}
+const NS_CLR_VARS = { nsHdrClr: '--ns-hdr-clr', nsNumClr: '--ns-num-clr', nsMetaClr: '--ns-meta-clr', nsEmptyClr: '--ns-empty-clr',
+  nsBg: '--ns-bg', nsHdrBg: '--ns-hdr-bg', nsItemBg: '--ns-item-bg' };
+const NS_CLR_DEFAULT = { nsHdrClr: '#ef9a9a', nsNumClr: '#ef5350', nsMetaClr: '#555555', nsEmptyClr: '#ef9a9a',
+  nsBg: '#020a14', nsHdrBg: '#1a0a0a', nsItemBg: '#1a0808' };
+function syncNsClrUI(d) {
+  for (const k of Object.keys(NS_CLR_VARS)) {
+    const id = k.charAt(0).toUpperCase() + k.slice(1);
+    const inp = document.getElementById('cfg' + id), pair = document.getElementById('pair' + id);
+    if (!inp) continue;
+    inp.value = d[k] || NS_CLR_DEFAULT[k];
+    pair.classList.toggle('theme', !d[k]);
+  }
+}
+function setNsClr(key, val) {
+  getCurrentCfg()[key] = val;
+  applyNsFontSizes();
+  syncNsClrUI(getDisplayCfg());
+  saveCfg();
 }
 function applyNoShowSettings() {
   const currentCfg = getCurrentCfg();
@@ -1688,6 +2447,12 @@ function applyNoShowSettings() {
   currentCfg.nsNumFs      = Math.max(0.6, Math.min(16.0, parseFloat(document.getElementById('cfgNsNumFs').value)  || 1.1));
   currentCfg.nsMetaFs     = Math.max(0.3, Math.min(4.0,  parseFloat(document.getElementById('cfgNsMetaFs').value) || 0.68));
   currentCfg.nsBadgeSize  = Math.max(10,  Math.min(160,  parseInt(document.getElementById('cfgNsBadgeSz').value)   || 28));
+  currentCfg.nsAutoScroll = document.getElementById('cfgNsAutoScroll').checked;
+  currentCfg.nsLabel      = document.getElementById('cfgNsLabel').value.trim();
+  currentCfg.nsEmptyText  = document.getElementById('cfgNsEmptyText').value.trim();
+  document.getElementById('nsSpeedRow').style.display = currentCfg.nsAutoScroll ? '' : 'none';
+  document.getElementById('lblNsSpeed').textContent = parseInt(document.getElementById('cfgNsSpeed').value) || 20;
+  currentCfg.nsSpeed      = Math.max(3,   Math.min(300,  parseInt(document.getElementById('cfgNsSpeed').value)     || 20));
   applyNsFontSizes();
   saveCfg(); applyLayout(); renderNoShow();
 }
@@ -1795,7 +2560,10 @@ function syncCustomUI() {
   set('ccNumColor',   'numColor',   t.accent || '#ffd54f');
   set('ccBlinkColor', 'blinkColor', '#ffd54f');
   set('ccBlinkCount', 'blinkCount', 3);
-  set('ccBlinkDur',   'blinkDur',   0.5);
+  set('ccBlinkDur',   'blinkDur',   1.0);
+  set('ccBlinkTarget','blinkTarget','text');
+  const onEl = document.getElementById('ccBlinkOn'); if (onEl) onEl.checked = c.blinkEnabled !== false;
+  syncBlinkUI();
   const bcEl = document.getElementById('ccBlinkCount');
   const bdEl = document.getElementById('ccBlinkDur');
   if (bcEl) document.getElementById('lblBlinkCount').textContent = bcEl.value;
@@ -1847,7 +2615,9 @@ function applyCustom() {
     numColor:  document.getElementById('ccNumColorOn')?.checked ? (g('ccNumColor')||'') : '',
     blinkColor: g('ccBlinkColor') || '#ffd54f',
     blinkCount: parseInt(g('ccBlinkCount'))  || 3,
-    blinkDur:   parseFloat(g('ccBlinkDur'))  || 0.5,
+    blinkDur:   parseFloat(g('ccBlinkDur'))  || 1.0,
+    blinkTarget: g('ccBlinkTarget') || 'text',
+    blinkEnabled: document.getElementById('ccBlinkOn') ? document.getElementById('ccBlinkOn').checked : true,
     ccNameFs:  parseFloat(g('ccNameFs'))  || 0,
     ccNameClr: g('ccNameClr') || '',
     ccTypeFs:  parseFloat(g('ccTypeFs'))  || 0,
@@ -1891,8 +2661,21 @@ function applyCustom() {
     prev.style.fontFamily = ff || 'inherit';
     prev.style.display = ff ? 'block' : 'none';
   }
+  syncBlinkUI();
   saveCfg();
   renderCounters(false, null);
+}
+function setBlinkTarget(v) { document.getElementById('ccBlinkTarget').value = v; applyCustom(); }
+function syncBlinkUI() {
+  const c = cfg.custom || {};
+  const on = c.blinkEnabled !== false;
+  const opts = document.getElementById('blinkOpts'); if (opts) opts.style.display = on ? '' : 'none';
+  const tgt = c.blinkTarget || document.getElementById('ccBlinkTarget').value || 'text';
+  document.querySelectorAll('#blinkTargetSeg button').forEach(b => b.classList.toggle('on', b.dataset.v === tgt));
+  const dur = Math.max(0.5, c.blinkDur > 0 ? c.blinkDur : 1), cnt = c.blinkCount >= 1 ? c.blinkCount : 3;
+  const tot = document.getElementById('blinkTotal');
+  if (tot) tot.textContent = '⏱ กระพริบ ' + cnt + ' ครั้ง × ' + dur.toFixed(1) + ' วินาที = นานรวม ' + (cnt * dur).toFixed(1) +
+    ' วินาที (สีกระพริบค้างครั้งละ ' + (dur / 2).toFixed(2) + ' วินาที)';
 }
 function resetCustom() {
   cfg.custom = {}; saveCfg();
@@ -1988,6 +2771,28 @@ function updateSoundBtn() {
   btn.classList.toggle('on', soundEnabled);
 }
 
+// Browsers keep a page silent until it has been touched once. A TV that just booted would miss every
+// announcement without anyone noticing — so ask for one tap (kiosk browsers started with autoplay allowed skip this).
+let _audioUnlocked = false;
+function audioBlocked() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const st = ctx.state; ctx.close();
+    return st !== 'running';
+  } catch (e) { return false; }
+}
+function checkAudioUnlock() {
+  if (soundEnabled && !_audioUnlocked && audioBlocked()) document.getElementById('audioUnlock').classList.add('show');
+}
+function unlockAudio() {
+  _audioUnlocked = true;
+  document.getElementById('audioUnlock').classList.remove('show');
+  // starting the shared output inside the tap makes the page's audio permission stick (and keeps it awake)
+  audioCtx();
+}
+// any first touch of the screen (e.g. opening settings) counts too
+document.addEventListener('pointerdown', () => { if (!_audioUnlocked) unlockAudio(); }, { once: true, capture: true });
+
 function toggleSound() {
   soundEnabled = !soundEnabled;
   localStorage.setItem('qf_sound_' + sysId + '_' + dispMode, soundEnabled);
@@ -2029,21 +2834,35 @@ function updateVoiceActiveInfo() {
 
 // ── Google Translate TTS engine (ผ่าน /api/tts proxy บนเซิร์ฟเวอร์) — เสียงเดียวของระบบ ──
 let _googleAudio = null;
-function speakGoogle(text, onEnd, onError) {
+// start downloading a phrase now, so it is ready the moment it should be spoken
+function prepareSpeech(text) {
+  const audio = new Audio(`/api/tts?text=${encodeURIComponent(text)}&lang=th`);
+  audio.preload = 'auto';
+  try { audio.load(); } catch (e) {}
+  return audio;
+}
+function speakGoogle(text, onEnd, onError, prepared) {
   try {
-    if (_googleAudio) { try { _googleAudio.pause(); } catch(e){} _googleAudio = null; }
-    const audio = new Audio(`/api/tts?text=${encodeURIComponent(text)}&lang=th`);
+    if (_googleAudio && _googleAudio !== prepared) { try { _googleAudio.pause(); } catch(e){} }
+    audioCtx();   // make sure the output is awake before the first word
+    const audio = prepared || prepareSpeech(text);
     audio.playbackRate = getDisplayCfg().speechRate || 1;
     _googleAudio = audio;
-    let settled = false;
+    let settled = false, started = false;
     audio.onended = () => { if (settled) return; settled = true; if (onEnd) onEnd(); };
     audio.onerror = () => {
       if (settled) return; settled = true;
       console.warn('Google TTS error');
       if (onError) onError();
     };
-    const p = audio.play();
-    if (p && p.catch) p.catch(() => { if (settled) return; settled = true; if (onError) onError(); });
+    // play only once the whole clip is buffered — starting on a half-loaded clip can skip its first syllables
+    const go = () => {
+      if (started || settled) return; started = true;
+      const p = audio.play();
+      if (p && p.catch) p.catch(() => { if (settled) return; settled = true; if (onError) onError(); });
+    };
+    if (audio.readyState >= 4) go();
+    else { audio.addEventListener('canplaythrough', go, { once: true }); setTimeout(go, 4000); }
   } catch (e) {
     if (onError) onError();
   }
@@ -2057,12 +2876,46 @@ function sanitizeForSpeech(str) {
   return (str || '').replace(/\//g, ' ทับ ').replace(/\s+/g, ' ').trim();
 }
 
-function announceQueue(ticket) {
+// "อ่านคิว 2 รอบ" is switched on the call-queue page (cashier-settings of this system)
+let sysRepeatAnnounce = false;
+socket.on('cashier_settings_updated', cs => { sysRepeatAnnounce = !!(cs && cs.repeatAnnounce); });
+
+// Calls that arrive together are announced one after another: the next bell waits until the
+// previous announcement (and its repeat) has finished, so no call is cut off
+const _announceQ = [];
+let _announcing = false;
+function enqueueAnnounce(ticket) {
   if (!soundEnabled || !ticket) return;
+  _announceQ.push(ticket);
+  if (!_announcing) nextAnnounce();
+}
+function nextAnnounce() {
+  const ticket = _announceQ.shift();
+  if (!ticket || !soundEnabled) { _announceQ.length = 0; _announcing = false; return; }
+  _announcing = true;
+  let done = false;
+  const finish = () => { if (done) return; done = true; clearTimeout(guard); setTimeout(nextAnnounce, 800); };
+  // a clip that never reports its end (network stall) must not hold up the calls behind it
+  const guard = setTimeout(finish, 30000);
+  let bellMs = 0;
+  try { bellMs = playBell(); } catch(e) {}
+  announceQueue(ticket, bellMs ? bellMs + 250 : 0, finish);
+}
+
+// afterMs: wait for the bell to finish, so the chime never covers "ขอเชิญ หมายเลข"
+// onDone: called after the last round (or on error)
+function announceQueue(ticket, afterMs = 0, onDone) {
+  if (!soundEnabled || !ticket) { if (onDone) onDone(); return; }
   const num = fmtQueueNum(ticket.display);
   const ctr = sanitizeForSpeech(ticket.counterName || '');
   const text = ctr ? `ขอเชิญ หมายเลข ${num} ที่ช่องบริการ ${ctr}` : `ขอเชิญ หมายเลข ${num}`;
-  speakGoogle(text, null, () => console.warn('TTS ประกาศคิวไม่สำเร็จ (Google Translate)'));
+  const times = sysRepeatAnnounce ? 2 : 1;
+  const first = prepareSpeech(text);   // downloads while the bell rings
+  const say = round => speakGoogle(text,
+    () => { if (round < times) setTimeout(() => say(round + 1), 1200); else if (onDone) onDone(); },
+    () => { console.warn('TTS ประกาศคิวไม่สำเร็จ (Google Translate)'); if (onDone) onDone(); },
+    round === 1 ? first : undefined);
+  setTimeout(() => say(1), afterMs);
 }
 
 function setDiag(msg, color) {
@@ -2089,6 +2942,7 @@ restoreCustom();
 applyNsFontSizes();
 updateSoundBtn();
 updateVoiceActiveInfo();
+checkAudioUnlock();
 
 // ── Polling fallback (ensures display stays in sync) ─────────────────────
 setInterval(() => {
@@ -2098,25 +2952,48 @@ setInterval(() => {
     recentByCtr   = d.recentByCounter      || {};
     noShows       = d.noShows              || [];
     lastByCounter = d.lastCalledByCounter  || {};
-    if (allCounters.length && !document.getElementById('cell-' + allCounters[0].id)) buildCounterGrid();
+    waitingList   = d.allWaiting           || waitingList;
+    if (allCounters.length && !gridIsBuilt()) buildCounterGrid();
     renderCounters(false, null);
     renderNoShow();
   }).catch(() => {});
 }, 3000);
 
+// ── Shared audio output ───────────────────────────────────────────────────
+// One AudioContext for the whole page (browsers cap how many can exist — a new one per call eventually
+// went silent). It also plays an inaudible tone all the time: speakers / HDMI / USB audio that go to sleep
+// when idle otherwise spend the first ~0.5 s of the next sound waking up — which cut "ขอเชิญ หมายเลข".
+let _actx = null;
+function audioCtx() {
+  if (!_actx) {
+    try {
+      _actx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = _actx.createOscillator(), g = _actx.createGain();
+      g.gain.value = 0.00001; o.frequency.value = 40;
+      o.connect(g); g.connect(_actx.destination); o.start();
+    } catch (e) { _actx = null; }
+  }
+  if (_actx && _actx.state === 'suspended') _actx.resume().catch(() => {});
+  return _actx;
+}
+audioCtx();   // starts now if the browser allows sound without a tap; otherwise on the first tap / call
+
 // ── Bell ──────────────────────────────────────────────────────────────────
+// returns how long the chime lasts (ms) so the announcement can start after it instead of under it
 function playBell() {
   try {
-    const ctx = new(window.AudioContext||window.webkitAudioContext)();
+    const ctx = audioCtx();
+    if (!ctx) return 0;
     [523,659,784].forEach((freq, i) => {
       const o = ctx.createOscillator(), g = ctx.createGain();
       o.connect(g); g.connect(ctx.destination);
       o.frequency.value = freq; o.type = 'sine';
-      const t = ctx.currentTime + i * .18;
+      const t = ctx.currentTime + 0.05 + i * .18;
       g.gain.setValueAtTime(.3, t); g.gain.exponentialRampToValueAtTime(.001, t + .5);
       o.start(t); o.stop(t + .5);
     });
-  } catch(e) {}
+    return 950;
+  } catch(e) { return 0; }
 }
 </script>
 <div id="_uiPnl" style="position:fixed;bottom:72px;right:16px;z-index:10000;font-family:'Segoe UI',Tahoma,sans-serif">
@@ -2128,8 +3005,8 @@ function playBell() {
       <input id="_brSlider" type="range" min="0.4" max="1.6" step="0.05" value="1" style="width:100%;accent-color:#ffd54f;cursor:pointer"/>
     </div>
     <div style="margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;font-size:.72rem;color:#ccc;margin-bottom:4px"><span>🎨 ความสด</span><span id="_stLbl" style="color:#80deea;font-weight:700">1.20</span></div>
-      <input id="_stSlider" type="range" min="0.3" max="2.5" step="0.05" value="1.2" style="width:100%;accent-color:#80deea;cursor:pointer"/>
+      <div style="display:flex;justify-content:space-between;font-size:.72rem;color:#ccc;margin-bottom:4px"><span>🎨 ความสด</span><span id="_stLbl" style="color:#80deea;font-weight:700">1.00</span></div>
+      <input id="_stSlider" type="range" min="0.3" max="2.5" step="0.05" value="1" style="width:100%;accent-color:#80deea;cursor:pointer"/>
     </div>
     <button onclick="_uiReset()" style="width:100%;background:rgba(255,255,255,.06);border:1px solid #1e3a5f;color:#90caf9;border-radius:8px;padding:6px;font-size:.75rem;cursor:pointer;font-family:inherit">↺ รีเซ็ต</button>
   </div>
@@ -2137,14 +3014,14 @@ function playBell() {
 <script>
 (function(){
   var BK='qf_brightness',SK='qf_saturation';
-  function _applyV(b,s){b=parseFloat(b)||1;s=parseFloat(s)||1.2;localStorage.setItem(BK,b);localStorage.setItem(SK,s);document.body.style.filter='brightness('+b+') saturate('+s+')';var bl=document.getElementById('_brLbl'),sl=document.getElementById('_stLbl'),bs=document.getElementById('_brSlider'),ss=document.getElementById('_stSlider');if(bl)bl.textContent=b.toFixed(2);if(bs)bs.value=b;if(sl)sl.textContent=s.toFixed(2);if(ss)ss.value=s;}
+  function _applyV(b,s){b=parseFloat(b)||1;s=parseFloat(s)||1;localStorage.setItem(BK,b);localStorage.setItem(SK,s);document.body.style.filter='brightness('+b+') saturate('+s+')';var bl=document.getElementById('_brLbl'),sl=document.getElementById('_stLbl'),bs=document.getElementById('_brSlider'),ss=document.getElementById('_stSlider');if(bl)bl.textContent=b.toFixed(2);if(bs)bs.value=b;if(sl)sl.textContent=s.toFixed(2);if(ss)ss.value=s;}
   window._applyGlobalColor=_applyV;
-  function _applyF(){_applyV(parseFloat(localStorage.getItem(BK)||'1'),parseFloat(localStorage.getItem(SK)||'1.2'));}
+  function _applyF(){_applyV(parseFloat(localStorage.getItem(BK)||'1'),parseFloat(localStorage.getItem(SK)||'1'));}
   _applyF();
   fetch('/api/global-config').then(function(r){return r.json();}).then(function(d){if(d&&d.brightness!=null)_applyV(d.brightness,d.saturation);}).catch(function(){});
   window._uiToggle=function(){var b=document.getElementById('_uiBox');b.style.display=b.style.display==='none'?'block':'none';};
-  window._uiReset=function(){_applyV(1,1.2);fetch('/api/global-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({brightness:1,saturation:1.2})}).catch(function(){});};
-  document.addEventListener('DOMContentLoaded',function(){_applyF();document.getElementById('_brSlider').oninput=function(){var b=parseFloat(this.value),s=parseFloat(localStorage.getItem(SK)||'1.2');_applyV(b,s);fetch('/api/global-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({brightness:b,saturation:s})}).catch(function(){});};document.getElementById('_stSlider').oninput=function(){var b=parseFloat(localStorage.getItem(BK)||'1'),s=parseFloat(this.value);_applyV(b,s);fetch('/api/global-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({brightness:b,saturation:s})}).catch(function(){});};});
+  window._uiReset=function(){_applyV(1,1);fetch('/api/global-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({brightness:1,saturation:1})}).catch(function(){});};
+  document.addEventListener('DOMContentLoaded',function(){_applyF();document.getElementById('_brSlider').oninput=function(){var b=parseFloat(this.value),s=parseFloat(localStorage.getItem(SK)||'1');_applyV(b,s);fetch('/api/global-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({brightness:b,saturation:s})}).catch(function(){});};document.getElementById('_stSlider').oninput=function(){var b=parseFloat(localStorage.getItem(BK)||'1'),s=parseFloat(this.value);_applyV(b,s);fetch('/api/global-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({brightness:b,saturation:s})}).catch(function(){});};});
 })();
 socket.on('global_config_updated',d=>{if(window._applyGlobalColor&&d&&d.brightness!=null)window._applyGlobalColor(d.brightness,d.saturation);});
 </script>

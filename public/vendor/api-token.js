@@ -2,7 +2,7 @@
 // สคริปต์นี้แนบ token ให้ทุก fetch() ไปยัง endpoint ที่ป้องกันไว้โดยอัตโนมัติ — หน้าจอทำงานปกติ ไม่ต้องกรอกอะไรเอง
 // token ได้จาก /api/client-token ซึ่ง server ให้เฉพาะหน้าเว็บของระบบเอง (same-origin) หรือผู้ที่ login แล้ว
 (function () {
-  var PROTECTED = [/^\/api\/sys\//, /^\/api\/patient-lookup/, /^\/api\/patient-drugs/, /^\/api\/systems/,
+  var PROTECTED = [/^\/api\/sys\//, /^\/api\/patient-lookup/, /^\/api\/patient-drugs/, /^\/api\/drug-counts/, /^\/api\/systems/,
                    /^\/api\/server\/restart/, /^\/api\/startup\/set/, /^\/api\/global-config/, /^\/api\/local-print/];
   var nativeFetch = window.fetch.bind(window);
   var authToken = '';

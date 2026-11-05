@@ -173,18 +173,22 @@ function loadSysData(sysId) {
   const displaySettings      = loadJson(displaySettingsFile, {});
   const cashierSettingsFile  = path.join(dir, 'cashier-settings.json');
   const cashierSettings      = loadJson(cashierSettingsFile, {});
+  // how the kiosk issues tickets: 'type' = staff picks a queue type, 'drug' = by drug count (rules → queue types)
+  const issueModeFile        = path.join(dir, 'issue-mode.json');
+  const issueMode            = loadJson(issueModeFile, { mode: 'type', rules: [] });
 
   const state = {};
   queueTypes.forEach(t => { state[t.id] = { serial: 0, waiting: [], served: [], calledQueue: null }; });
 
   sysData[sysId] = {
-    queueTypes, counters, displayConfig, printConfig, screenConfig, lookupConfig, displaySettings, cashierSettings,
-    typesFile, ctrsFile, displayFile, printConfigFile, screenConfigFile, lookupConfigFile, displaySettingsFile, cashierSettingsFile,
+    queueTypes, counters, displayConfig, printConfig, screenConfig, lookupConfig, displaySettings, cashierSettings, issueMode,
+    typesFile, ctrsFile, displayFile, printConfigFile, screenConfigFile, lookupConfigFile, displaySettingsFile, cashierSettingsFile, issueModeFile,
     nextTypeId:          Math.max(0, ...queueTypes.map(t => t.id)) + 1,
     nextCounterId:       Math.max(0, ...counters.map(c => c.id))   + 1,
     state,
     noShows:             [],
     clearedNoShows:      [],
+    deletedQueues:       [],
     lastCalledByCounter: {},
     recentByCounter:     {},
   };
@@ -336,6 +340,7 @@ function saveQueueState(sysId, sys) {
     state:               sys.state,
     noShows:             sys.noShows,
     clearedNoShows:      sys.clearedNoShows || [],
+    deletedQueues:       sys.deletedQueues  || [],
     lastCalledByCounter: sys.lastCalledByCounter,
     recentByCounter:     sys.recentByCounter,
   });
@@ -353,6 +358,7 @@ function restoreQueueState(sysId, sys) {
     }
     sys.noShows             = saved.noShows             || [];
     sys.clearedNoShows      = saved.clearedNoShows      || [];
+    sys.deletedQueues       = saved.deletedQueues       || [];
     sys.lastCalledByCounter = saved.lastCalledByCounter || {};
     sys.recentByCounter     = saved.recentByCounter     || {};
   } catch {}
@@ -422,7 +428,12 @@ app.post('/api/systems', (req, res) => {
   loadSysData(sys.id);
   // Associate with dept if logged in
   const depcode = token && sessions[token] ? sessions[token].depcode : null;
-  if (depcode) addSysToDept(depcode, sys.id);
+  if (depcode) {
+    addSysToDept(depcode, sys.id);
+    // remember which HOSxP database this ห้องตรวจ system belongs to (forward-candidates filter)
+    sys.db = currentDbKey();
+    saveJson(SYSTEMS_FILE, systems);
+  }
   io.emit('systems_updated', systems);
   res.json({ success: true, system: sys });
 });
@@ -436,6 +447,28 @@ app.put('/api/systems/:id', (req, res) => {
   if (description !== undefined) systems[idx].description = description;
   if (icon)                      systems[idx].icon        = icon;
   if (color)                     systems[idx].color       = color;
+  saveJson(SYSTEMS_FILE, systems);
+  io.emit('systems_updated', systems);
+  res.json({ success: true, system: systems[idx] });
+});
+
+// ── Queue forwarding (one ticket number passed between systems, e.g. ห้องยา ↔ การเงิน) ──
+// systems[i].forwardTo = [sysId, ...] — targets this system may send a called ticket to
+function linkedSysIds(sysId) {
+  const me = systems.find(s => s.id === sysId);
+  const ids = new Set((me && me.forwardTo) || []);
+  for (const s of systems) if ((s.forwardTo || []).includes(sysId)) ids.add(s.id);
+  ids.delete(sysId);
+  return [...ids].filter(id => systems.some(s => s.id === id));
+}
+
+app.put('/api/systems/:id/forward', (req, res) => {
+  const id  = parseInt(req.params.id);
+  const idx = systems.findIndex(s => s.id === id);
+  if (idx === -1) return res.status(404).json({ success: false, message: 'ไม่พบระบบ' });
+  const list = Array.isArray(req.body.forwardTo) ? req.body.forwardTo : [];
+  systems[idx].forwardTo = [...new Set(list.map(Number))]
+    .filter(t => t !== id && systems.some(s => s.id === t));
   saveJson(SYSTEMS_FILE, systems);
   io.emit('systems_updated', systems);
   res.json({ success: true, system: systems[idx] });
@@ -593,7 +626,16 @@ app.post('/api/sys/:sysId/get-serial', requireSys, (req, res) => {
   if (!type) return res.status(400).json({ success: false, message: 'ระบุประเภทคิวไม่ถูกต้อง' });
   initTypeState(sys, type.id);
   const s = sys.state[type.id];
-  s.serial += 1;
+  // Linked systems share one running number per prefix, so a forwarded ticket never clashes
+  let serial = s.serial;
+  for (const lid of linkedSysIds(sysId)) {
+    const other = getSys(lid);
+    if (!other) continue;
+    for (const ot of other.queueTypes) {
+      if (ot.prefix === type.prefix && other.state[ot.id]) serial = Math.max(serial, other.state[ot.id].serial || 0);
+    }
+  }
+  s.serial = serial + 1;
   const ticket = {
     number:      s.serial,
     display:     type.prefix + String(s.serial).padStart(3, '0'),
@@ -662,7 +704,9 @@ app.post('/api/sys/:sysId/call-next', requireSys, (req, res) => {
     const idx = s.waiting.findIndex(t => t.display === ticket.display);
     if (idx !== -1) s.waiting.splice(idx, 1);
   }
-  res.json({ success: true, calledQueue: doCall(sys, sysId, ticket, s, counterId) });
+  const prev = currentAtCounter(sys, counterId);
+  const calledQueue = doCall(sys, sysId, ticket, s, counterId);
+  res.json({ success: true, calledQueue, autoForwarded: autoForwardPrevious(sysId, sys, prev, calledQueue.display) });
 });
 
 app.post('/api/sys/:sysId/call-number', requireSys, (req, res) => {
@@ -677,7 +721,9 @@ app.post('/api/sys/:sysId/call-number', requireSys, (req, res) => {
     );
     if (idx !== -1) {
       const [ticket] = s.waiting.splice(idx, 1);
-      return res.json({ success: true, calledQueue: doCall(sys, sysId, ticket, s, counterId) });
+      const prev = currentAtCounter(sys, counterId);
+      const calledQueue = doCall(sys, sysId, ticket, s, counterId);
+      return res.json({ success: true, calledQueue, autoForwarded: autoForwardPrevious(sysId, sys, prev, calledQueue.display) });
     }
   }
   res.json({ success: false, message: 'ไม่พบหมายเลขคิวนี้ในระบบ' });
@@ -735,17 +781,50 @@ app.post('/api/sys/:sysId/delete-waiting', requireSys, (req, res) => {
   for (const s of Object.values(sys.state)) {
     const idx = s.waiting.findIndex(t => t.display === display);
     if (idx !== -1) {
-      s.waiting.splice(idx, 1);
+      const [ticket] = s.waiting.splice(idx, 1);
+      // kept for the day (history → "คิวที่ลบ") so a wrong delete can be put back
+      if (!sys.deletedQueues) sys.deletedQueues = [];
+      sys.deletedQueues.unshift({ ...ticket, deletedAt: new Date().toLocaleTimeString('th-TH') });
+      if (sys.deletedQueues.length > 200) sys.deletedQueues.pop();
       saveQueueState(sysId, sys);
-      io.to('sys-' + sysId).emit('queue_deleted_waiting', {
-        display,
-        typeWaiting: typeWaiting(sys),
-        allWaiting:  allWaiting(sys),
-      });
+      emitWaitingChanged(sysId, sys, display);
       return res.json({ success: true });
     }
   }
   res.json({ success: false, message: 'ไม่พบคิวนี้ในรายการรอ' });
+});
+
+// waiting list changed by a delete / restore — every page refreshes its waiting list and "คิวที่ลบ"
+function emitWaitingChanged(sysId, sys, display) {
+  io.to('sys-' + sysId).emit('queue_deleted_waiting', {
+    display,
+    typeWaiting:   typeWaiting(sys),
+    allWaiting:    allWaiting(sys),
+    deletedQueues: sys.deletedQueues || [],
+  });
+}
+
+// ── Restore a deleted queue (same number, back in its original place in the line) ──
+app.post('/api/sys/:sysId/restore-deleted', requireSys, (req, res) => {
+  const { sys, sysId } = req;
+  const display = (req.body.display || '').toUpperCase().trim();
+  const idx = (sys.deletedQueues || []).findIndex(t => t.display === display);
+  if (idx === -1) return res.json({ success: false, message: 'ไม่พบคิวนี้ในรายการคิวที่ลบ' });
+  const inLine = Object.values(sys.state).some(s => s.waiting.some(t => t.display === display) || s.served.some(t => t.display === display));
+  if (inLine) return res.json({ success: false, message: `คิว ${display} อยู่ในระบบแล้ว` });
+  const { deletedAt, ...ticket } = sys.deletedQueues[idx];
+  // its queue type may have been removed since — then the first type of the same mode takes it
+  const type = sys.queueTypes.find(t => t.id === ticket.typeId)
+    || sys.queueTypes.find(t => t.forMode === (ticket.mode || 'opd') || t.forMode === 'both') || sys.queueTypes[0];
+  if (!type) return res.json({ success: false, message: 'ระบบนี้ยังไม่มีประเภทคิว' });
+  initTypeState(sys, type.id);
+  const s = sys.state[type.id];
+  s.waiting.push(type.id === ticket.typeId ? ticket : { ...ticket, typeId: type.id, typeName: type.name, color: type.color });
+  s.waiting.sort((a, b) => a._ts - b._ts);
+  sys.deletedQueues.splice(idx, 1);
+  saveQueueState(sysId, sys);
+  emitWaitingChanged(sysId, sys, display);
+  res.json({ success: true });
 });
 
 // ── Clear counter display ─────────────────────────────────────────────────
@@ -868,6 +947,112 @@ app.post('/api/sys/:sysId/recall-noshow', requireSys, (req, res) => {
   res.json({ success: true, calledQueue: recalled });
 });
 
+// ── Forward a called ticket to a linked system (same number, original issue time) ──
+app.post('/api/sys/:sysId/forward', requireSys, (req, res) => {
+  const { sys, sysId } = req;
+  res.json(forwardTicket(sysId, sys, req.body.display, Number(req.body.targetSysId)));
+});
+
+function findServed(sys, display) {
+  for (const s of Object.values(sys.state)) {
+    const t = s.served.find(x => x.display === display && !x.noShow);
+    if (t) return t;
+  }
+  return null;
+}
+function forwardTicket(sysId, sys, displayIn, targetId) {
+  const display = String(displayIn || '').toUpperCase().trim();
+  const me = systems.find(s => s.id === sysId);
+  if (!((me && me.forwardTo) || []).includes(targetId))
+    return { success: false, message: 'ระบบนี้ไม่ได้ตั้งค่าให้ส่งต่อไปยังระบบปลายทาง' };
+  const target = getSys(targetId);
+  const targetInfo = systems.find(s => s.id === targetId);
+  if (!target || !targetInfo) return { success: false, message: 'ไม่พบระบบปลายทาง' };
+  const ticket = findServed(sys, display);
+  if (!ticket) return { success: false, message: 'ไม่พบคิวนี้ในรายการที่เรียกแล้ว' };
+  // each leg of the journey (e.g. ห้องยา→การเงิน) may happen once, so a round trip can't loop forever
+  const hop = `${sysId}>${targetId}`;
+  if (ticketHops(ticket, sysId).includes(hop)) return { success: false, message: `คิว ${display} เคยส่ง ${me.name} → ${targetInfo.name} ไปแล้ว` };
+  const already = Object.values(target.state).some(s => s.waiting.some(t => t.display === display));
+  if (already) return { success: false, message: `คิว ${display} อยู่ในรายการรอของ ${targetInfo.name} แล้ว` };
+  if (!target.queueTypes.length) return { success: false, message: `${targetInfo.name} ยังไม่มีประเภทคิว` };
+  // Same prefix type in the target if it has one, otherwise its first type
+  const tType = target.queueTypes.find(t => t.prefix === ticket.prefix) || target.queueTypes[0];
+  initTypeState(target, tType.id);
+  const ts = ticket.issuedTs || ticket._ts;
+  const fwd = {
+    ...ticket,
+    typeId: tType.id, typeName: tType.name, color: tType.color,
+    _ts: ts, issuedTs: ts,
+    forwardedFrom: { sysId, name: me.name, at: new Date().toLocaleTimeString('th-TH') },
+    fwdHops: [...ticketHops(ticket, sysId), hop],
+    returned: undefined, returnedAt: undefined, returnCount: undefined,
+    calledAt: undefined, counterId: undefined, counterName: undefined,
+    recalled: undefined, noShow: undefined, forwardedTo: undefined, _dbId: undefined,
+  };
+  const ts2 = target.state[tType.id];
+  ts2.waiting.push(fwd);
+  ts2.waiting.sort((a, b) => a._ts - b._ts);
+  // Keep the serial ahead so the target never re-issues this number
+  if (tType.prefix === ticket.prefix) ts2.serial = Math.max(ts2.serial, ticket.number || 0);
+  ticket.forwardedTo = { sysId: targetId, name: targetInfo.name, at: fwd.forwardedFrom.at };
+  saveQueueState(targetId, target);
+  saveQueueState(sysId, sys);
+  dbIssueTicket(targetId, fwd);
+  io.to('sys-' + targetId).emit('queue_issued', { ticket: fwd, typeWaiting: typeWaiting(target), allWaiting: allWaiting(target) });
+  io.to('sys-' + sysId).emit('queue_forwarded', { display, forwardedTo: ticket.forwardedTo, allServed: allServed(sys) });
+  return { success: true, forwardedTo: ticket.forwardedTo };
+}
+
+// "ไม่ต้องส่ง" — take a called ticket off the not-yet-forwarded list (e.g. the patient needs no payment)
+app.post('/api/sys/:sysId/forward-skip', requireSys, (req, res) => {
+  const { sys, sysId } = req;
+  const t = findServed(sys, String(req.body.display || '').toUpperCase().trim());
+  if (!t) return res.json({ success: false, message: 'ไม่พบคิวนี้ในรายการที่เรียกแล้ว' });
+  t.forwardSkipped = req.body.undo ? undefined : true;
+  saveQueueState(sysId, sys);
+  io.to('sys-' + sysId).emit('queue_forwarded', { display: t.display, forwardedTo: t.forwardedTo, allServed: allServed(sys) });
+  res.json({ success: true });
+});
+
+// ── Auto-forward: calling the next patient at a counter means the previous one there is done ──
+// (cashier-settings.autoForward, on unless switched off; target = autoForwardTo or the first forwardTo)
+function autoForwardTarget(sysId, sys) {
+  if (sys.cashierSettings.autoForward === false) return null;
+  const me = systems.find(s => s.id === sysId);
+  const targets = (me && me.forwardTo) || [];
+  if (!targets.length) return null;
+  const pick = Number(sys.cashierSettings.autoForwardTo);
+  return targets.includes(pick) ? pick : targets[0];
+}
+// legs this ticket already travelled ("25>30" = จ่ายยา→การเงิน); older tickets only know where they came from
+function ticketHops(t, hereSysId) {
+  const hops = [...(t.fwdHops || [])];
+  if (t.forwardedFrom && !hops.length) hops.push(`${t.forwardedFrom.sysId}>${hereSysId}`);
+  return hops;
+}
+// may auto-forward send this called ticket on to targetId? Auto only moves queues that started in this room;
+// one sent in from another room (back to collect drugs, paid first, …) goes on only by the staff's choice
+// (➜ button / "ยังไม่ส่งต่อ" list) — so a patient is never bounced to a room they don't need
+function canSendOn(sys, t, sysId, targetId) {
+  if (t.forwardedFrom) return false;
+  return !ticketHops(t, sysId).includes(`${sysId}>${targetId}`);
+}
+// the ticket that was on screen at this counter before a new call (doCall falls back to the first counter too)
+function currentAtCounter(sys, counterId) {
+  const counter = sys.counters.find(c => c.id === Number(counterId)) || sys.counters[0];
+  return counter ? sys.lastCalledByCounter[counter.id] || null : null;
+}
+function autoForwardPrevious(sysId, sys, prev, newDisplay) {
+  const targetId = autoForwardTarget(sysId, sys);
+  if (!targetId || !prev || prev.display === newDisplay) return null;
+  const t = findServed(sys, prev.display);            // gone = marked no-show or returned to the waiting list
+  if (!t || t.forwardedTo || t.forwardSkipped) return null;   // already sent / staff said it needn't go
+  if (!canSendOn(sys, t, sysId, targetId)) return null;
+  const r = forwardTicket(sysId, sys, t.display, targetId);
+  return r.success ? { display: t.display, to: r.forwardedTo.name } : null;
+}
+
 app.get('/api/sys/:sysId/no-shows', requireSys, (req, res) => res.json(req.sys.noShows));
 
 // ── Status ────────────────────────────────────────────────────────────────
@@ -883,12 +1068,14 @@ app.get('/api/sys/:sysId/status', requireSys, (req, res) => {
     lastCalled:          allServed(sys)[0] || null,
     noShows:             sys.noShows.slice(0, 40),
     clearedNoShows:      (sys.clearedNoShows || []).slice(0, 40),
+    deletedQueues:       sys.deletedQueues || [],
     lastCalledByCounter: sys.lastCalledByCounter,
     recentByCounter:     sys.recentByCounter,
     displayConfig:       sys.displayConfig,
     displaySettings:     sys.displaySettings,
     printConfig:         sys.printConfig,
     screenConfig:        sys.screenConfig,
+    issueMode:           sys.issueMode,
   });
 });
 
@@ -944,6 +1131,24 @@ app.post('/api/sys/:sysId/display-settings', requireSys, (req, res) => {
   res.json({ success: true });
 });
 
+// Shared starting layout for display screens that have no settings of their own yet ("ตั้งเป็นค่าเริ่มต้น")
+const DISPLAY_DEFAULT_FILE = path.join(DATA_DIR, 'display-default.json');
+app.get('/api/sys/:sysId/display-default', requireSys, (req, res) => res.json(loadJson(DISPLAY_DEFAULT_FILE, {})));
+app.post('/api/sys/:sysId/display-default', requireSys, (req, res) => {
+  const { cfg, theme } = req.body || {};
+  if (!cfg || typeof cfg !== 'object') return res.status(400).json({ success: false, message: 'ไม่มีข้อมูลการตั้งค่า' });
+  // the counter selection / column placement belong to this system's own counters — don't carry them to others
+  const { selectedCounters, ctrCols, ctrOrder, ...shared } = cfg;
+  for (const o of ['landscape', 'portrait']) {
+    if (shared[o] && typeof shared[o] === 'object') {
+      const { selectedCounters: _s, ctrCols: _c, ctrOrder: _o, ...rest } = shared[o];
+      shared[o] = rest;
+    }
+  }
+  saveJson(DISPLAY_DEFAULT_FILE, { cfg: shared, theme: theme || null, savedFrom: req.sysId, savedAt: new Date().toISOString() });
+  res.json({ success: true });
+});
+
 // ── Google Translate TTS proxy (disk cache + offline Google voice clips — tts-voice.js) ──
 const TTS_CACHE_DIR = path.join(DATA_DIR, 'tts-cache');
 const tts = createTts({ appDir: APP_DIR, cacheDir: TTS_CACHE_DIR });
@@ -982,6 +1187,69 @@ function learnCounterWords() {
 }
 setTimeout(learnCounterWords, 5000);
 setInterval(learnCounterWords, 30 * 60 * 1000);
+
+// ── Kiosk issue mode: by queue type, or automatically by drug count ───────
+// Each drug rule owns a queue type (created here, flagged drugRule) so numbering, displays and the
+// call page work unchanged.
+const DRUG_RULE_COLORS = ['#26a69a', '#ef6c00', '#7e57c2', '#ec407a', '#5c6bc0', '#8d6e63'];
+app.get('/api/sys/:sysId/issue-mode', requireSys, (req, res) => res.json(req.sys.issueMode));
+
+app.put('/api/sys/:sysId/issue-mode', requireSys, (req, res) => {
+  const { sys, sysId } = req;
+  const mode  = (req.body || {}).mode === 'drug' ? 'drug' : 'type';
+  const input = Array.isArray((req.body || {}).rules) ? req.body.rules : [];
+  const bad = msg => res.status(400).json({ success: false, message: msg });
+
+  const rules = [];
+  for (const [i, r] of input.entries()) {
+    const n = i + 1;
+    const name = String(r.name || '').trim();
+    const min = Number(r.min), max = Number(r.max);
+    const prefix = String(r.prefix || '').toUpperCase().trim();
+    if (!name) return bad(`แถวที่ ${n}: ต้องระบุชื่อประเภท`);
+    if (!Number.isInteger(min) || !Number.isInteger(max) || min < 0 || max < min) return bad(`แถวที่ ${n}: จำนวนยาต้องเป็นตัวเลข และ "ถึง" ต้องไม่น้อยกว่า "ตั้งแต่"`);
+    if (!/^[A-Z0-9]{1,3}$/.test(prefix)) return bad(`แถวที่ ${n}: Prefix ต้องเป็นตัวอักษร/ตัวเลข 1–3 ตัว`);
+    rules.push({ name, min, max, prefix, typeId: Number(r.typeId) || null });
+  }
+  for (let i = 0; i < rules.length; i++) for (let j = i + 1; j < rules.length; j++) {
+    if (rules[i].prefix === rules[j].prefix) return bad(`Prefix "${rules[i].prefix}" ซ้ำกันใน 2 แถว`);
+    if (rules[i].min <= rules[j].max && rules[j].min <= rules[i].max) return bad(`ช่วงจำนวนยาของ "${rules[i].name}" กับ "${rules[j].name}" ทับกัน`);
+  }
+  if (mode === 'drug' && !rules.length) return bad('โหมดตามจำนวนยาต้องมีอย่างน้อย 1 ประเภท');
+  // a prefix may not belong to an ordinary (manually picked) queue type
+  for (const r of rules) {
+    const clash = sys.queueTypes.find(t => t.prefix === r.prefix && !t.drugRule);
+    if (clash) return bad(`Prefix "${r.prefix}" ซ้ำกับประเภทคิว "${clash.name}" — เลือก prefix อื่น`);
+  }
+
+  // create / update the queue type behind each rule
+  const keep = new Set();
+  rules.forEach((r, i) => {
+    let t = sys.queueTypes.find(x => x.drugRule && x.id === r.typeId) || sys.queueTypes.find(x => x.drugRule && x.prefix === r.prefix);
+    // another drug type may still hold this prefix (rules were re-ordered) — free it first
+    sys.queueTypes.forEach(x => { if (x.drugRule && x !== t && x.prefix === r.prefix) x.prefix = ''; });
+    if (!t) {
+      t = { id: sys.nextTypeId++, name: r.name, prefix: r.prefix, color: DRUG_RULE_COLORS[i % DRUG_RULE_COLORS.length], forMode: 'opd', drugRule: true };
+      sys.queueTypes.push(t); initTypeState(sys, t.id);
+    }
+    t.name = r.name; t.prefix = r.prefix;
+    r.typeId = t.id; keep.add(t.id);
+  });
+  // drug types whose rule was removed: drop them unless people are still waiting in them
+  sys.queueTypes = sys.queueTypes.filter(t => {
+    if (!t.drugRule || keep.has(t.id)) return true;
+    if ((sys.state[t.id]?.waiting || []).length) return true;
+    delete sys.state[t.id];
+    return false;
+  });
+
+  sys.issueMode = { mode, rules };
+  saveJson(sys.issueModeFile, sys.issueMode);
+  saveJson(sys.typesFile, sys.queueTypes);
+  io.to('sys-' + sysId).emit('types_updated', sys.queueTypes);
+  io.to('sys-' + sysId).emit('issue_mode_updated', sys.issueMode);
+  res.json({ success: true, issueMode: sys.issueMode });
+});
 
 // ── Per-sys cashier settings ──────────────────────────────────────────────
 app.get('/api/sys/:sysId/cashier-settings', requireSys, (req, res) => res.json(req.sys.cashierSettings));
@@ -1052,7 +1320,7 @@ app.post('/api/local-print', corsLocal, (req, res) => {
 function resetSys(sysId, sys) {
   for (const id of Object.keys(sys.state))
     sys.state[id] = { serial: 0, waiting: [], served: [], calledQueue: null };
-  sys.noShows = []; sys.clearedNoShows = []; sys.lastCalledByCounter = {}; sys.recentByCounter = {};
+  sys.noShows = []; sys.clearedNoShows = []; sys.deletedQueues = []; sys.lastCalledByCounter = {}; sys.recentByCounter = {};
   try { fs.unlinkSync(path.join(sysDir(sysId), 'queue-state.json')); } catch {}
   io.to('sys-' + sysId).emit('queue_reset');
 }
@@ -1301,6 +1569,41 @@ app.post('/api/patient-drugs', requireApiToken, async (req, res) => {
   }
 });
 
+// ── Drug item count per visit (distinct icode LIKE '1%') for the call page ─
+app.post('/api/drug-counts', requireApiToken, async (req, res) => {
+  const vns = [...new Set(((req.body || {}).vns || []).map(v => String(v).trim()).filter(Boolean))].slice(0, 200);
+  if (!vns.length) return res.json({ success: true, counts: {} });
+  const cfg = loadDbConfig();
+  if (!cfg.host) return res.json({ success: false, message: 'ยังไม่ได้ตั้งค่าฐานข้อมูล' });
+  const sql = ph => `SELECT o.vn, COUNT(DISTINCT op.icode) AS n
+         FROM ovst o
+         JOIN opitemrece op ON op.vn = o.vn
+         WHERE o.vn IN (${vns.map((_, i) => ph(i)).join(',')}) AND op.icode LIKE '1%'
+         GROUP BY o.vn`;
+  try {
+    let rows = [];
+    if (isMysqlType(cfg.type)) {
+      const mysql = require('mysql2/promise');
+      const conn  = await mysql.createConnection({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectTimeout: 10000, charset: 'utf8mb4' });
+      const [r] = await conn.execute(sql(() => '?'), vns);
+      await conn.end();
+      rows = r;
+    } else {
+      const { Client } = require('pg');
+      const client = new Client({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectionTimeoutMillis: 10000 });
+      await client.connect();
+      rows = (await client.query(sql(i => '$' + (i + 1)), vns)).rows;
+      await client.end();
+    }
+    // visits with no drug rows are absent from the result → 0
+    const counts = Object.fromEntries(vns.map(v => [v, 0]));
+    rows.forEach(r => { counts[String(r.vn).trim()] = Number(r.n) || 0; });
+    res.json({ success: true, counts });
+  } catch (err) {
+    res.json({ success: false, message: 'เกิดข้อผิดพลาด: ' + err.message });
+  }
+});
+
 // ── Dept → System mapping  (format: { depcode: [sysId, ...] }) ───────────
 const DEPT_SYS_FILE = path.join(DATA_DIR, 'dept-systems.json');
 function loadDeptSystems() {
@@ -1313,6 +1616,63 @@ function loadDeptSystems() {
   return out;
 }
 function saveDeptSystems(d) { saveJson(DEPT_SYS_FILE, d); }
+// depcode → ห้องตรวจ name, remembered at login (select-dept) for labels
+const DEPT_NAMES_FILE = path.join(DATA_DIR, 'dept-names.json');
+
+function currentDbKey() {
+  const cfg = loadDbConfig();
+  // hashed: /api/systems is public, so don't expose the DB host
+  return cfg.host ? crypto.createHash('md5').update(`${cfg.host}/${cfg.database}`).digest('hex').slice(0, 12) : '';
+}
+
+// ห้องตรวจ names straight from kskdepartment of the connected database
+async function fetchDeptNames(codes) {
+  const cfg = loadDbConfig();
+  if (!cfg.host || !codes.length) return {};
+  const out = {};
+  if (isMysqlType(cfg.type)) {
+    const mysql = require('mysql2/promise');
+    const conn  = await mysql.createConnection({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectTimeout: 10000, charset: 'utf8mb4' });
+    try {
+      const [rows] = await conn.execute(`SELECT depcode, department FROM kskdepartment WHERE depcode IN (${codes.map(() => '?').join(',')})`, codes);
+      rows.forEach(r => { out[r.depcode] = r.department; });
+    } finally { await conn.end(); }
+  } else {
+    const { Client } = require('pg');
+    const client = new Client({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectionTimeoutMillis: 10000 });
+    await client.connect();
+    try {
+      const r = await client.query(`SELECT depcode, department FROM kskdepartment WHERE depcode = ANY($1)`, [codes]);
+      r.rows.forEach(row => { out[row.depcode] = row.department; });
+    } finally { await client.end(); }
+  }
+  return out;
+}
+
+// Forward targets offered in settings: systems a ห้องตรวจ created after login on the
+// currently connected database, plus any already selected so they can still be unticked
+app.get('/api/sys/:sysId/forward-candidates', requireSys, async (req, res) => {
+  const { sysId } = req;
+  const me = systems.find(s => s.id === sysId);
+  const selected = (me && me.forwardTo) || [];
+  const dbKey = currentDbKey();
+  const deptSys = loadDeptSystems();
+  const depts = {};
+  for (const [code, ids] of Object.entries(deptSys))
+    for (const id of ids) (depts[id] = depts[id] || []).push(code.trim());
+  const pick = systems.filter(s => s.id !== sysId &&
+    ((depts[s.id] && dbKey && s.db === dbKey) || selected.includes(s.id)));
+  let names = loadJson(DEPT_NAMES_FILE, {});
+  try {
+    const codes = [...new Set(pick.flatMap(s => depts[s.id] || []))];
+    names = { ...names, ...(await fetchDeptNames(codes)) };
+  } catch {}  // DB unreachable → fall back to names remembered at login
+  res.json(pick.map(s => ({
+    ...s,
+    depts: s.db === dbKey ? (depts[s.id] || []).map(code => ({ code, name: names[code] || '' })) : [],
+    selected: selected.includes(s.id),
+  })));
+});
 function addSysToDept(depcode, sysId) {
   const d = loadDeptSystems();
   if (!d[depcode]) d[depcode] = [];
@@ -1750,6 +2110,10 @@ app.post('/api/auth/select-dept', (req, res) => {
   if (!depcode) return res.json({ success: false, message: 'กรุณาเลือกห้องตรวจ' });
   sessions[token].depcode  = depcode;
   sessions[token].deptName = deptName || depcode;
+  if (deptName) {
+    const names = loadJson(DEPT_NAMES_FILE, {});
+    if (names[depcode] !== deptName) { names[depcode] = deptName; saveJson(DEPT_NAMES_FILE, names); }
+  }
   res.json({ success: true, depcode, deptName: deptName || depcode });
 });
 

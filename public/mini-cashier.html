@@ -73,6 +73,14 @@
       font-size:.95rem;padding:13px;box-shadow:0 4px 14px rgba(37,99,235,.35)}
     .btn-next:hover{box-shadow:0 6px 18px rgba(37,99,235,.45)}
     .btn-row{display:flex;gap:7px}
+    .rep-row{display:flex;align-items:center;gap:8px;padding:1px 2px;cursor:pointer;user-select:none;width:fit-content}
+    .rep-row input{width:16px;height:16px;accent-color:#2563eb;cursor:pointer;flex-shrink:0}
+    .rep-row span{font-size:.82rem;font-weight:700;color:#1e3a8a}
+    .opt-line{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+    .rep-row.fwd span{color:#5b21b6}
+    .fwd-chip{width:100%;border-radius:9px;padding:4px 10px;font-size:.76rem;font-weight:800;cursor:pointer;font-family:inherit;
+      background:#fff7ed;border:1.5px solid #fdba74;color:#9a3412;text-align:left}
+    .fwd-chip:hover{background:#ffedd5}
     .btn-recall{flex:1;background:#fff;color:#2563eb;border:2px solid #93c5fd;font-size:.82rem;
       box-shadow:0 2px 8px rgba(37,99,235,.12)}
     .btn-recall:hover{background:#eff6ff;box-shadow:0 4px 12px rgba(37,99,235,.2)}
@@ -301,6 +309,17 @@
     <button class="btn btn-recall" id="btnRecall" onclick="recallCurrent()" disabled>↺ เรียกซ้ำ</button>
     <button class="btn btn-noshow" id="btnNoShow" onclick="markNoShow()" disabled>✕ ไม่มา</button>
   </div>
+  <div class="opt-line">
+    <label class="rep-row" title="จอแสดงคิวของระบบนี้จะประกาศหมายเลขซ้ำอีกครั้ง (ตั้งค่าเดียวกับหน้าเรียกคิว)">
+      <input type="checkbox" id="cbRepeat" onchange="toggleRepeat(this.checked)"/>
+      <span>🔁 อ่านคิว 2 รอบ</span>
+    </label>
+    <label class="rep-row fwd" id="autoFwdRow" style="display:none" title="เรียกคิวถัดไปแล้ว คิวก่อนหน้าส่งต่อให้เอง (ตั้งค่าเดียวกับหน้าเรียกคิว)">
+      <input type="checkbox" id="cbAutoFwd" onchange="toggleAutoFwd(this.checked)"/>
+      <span id="autoFwdLbl">↪ ส่งต่ออัตโนมัติ</span>
+    </label>
+  </div>
+  <button class="fwd-chip" id="fwdChip" style="display:none" onclick="sendPendingFwd()"></button>
 </div>
 
 <div class="scan-box">
@@ -414,8 +433,9 @@ let myCounterId = Number(localStorage.getItem('qf_counter_id_' + sysId)) || null
 
 socket.on('connect', () => socket.emit('join_sys', Number(sysId)));
 
-socket.on('queue_called', ({ calledQueue, allWaiting:aw, allServed:as, noShows:ns }) => {
+socket.on('queue_called', ({ calledQueue, allWaiting:aw, allServed:as, noShows:ns, lastCalledByCounter:lbc }) => {
   allWaiting = aw; allServed = as; noShows = ns || noShows;
+  if (lbc) curByCounter = lbc; renderFwdUI();
   lastCalled = calledQueue; showCalled(calledQueue); updateNext(); updateStats();
   updateAvatar(); pulseAvatar();
   if (_wqOpen) renderWqList(); if (_svOpen) renderSvList();
@@ -442,7 +462,71 @@ socket.on('queue_reset', () => {
 });
 socket.on('counters_updated', c => { counters=c; renderCtr(); });
 socket.on('types_updated',    t => { queueTypes=t; });
+// "อ่านคิว 2 รอบ" lives in this system's cashier-settings — shared with the full call page and read by the displays
+function setRepeatUI(on) { const el = document.getElementById('cbRepeat'); if (el) el.checked = !!on; }
+function toggleRepeat(on) {
+  fetch(`/api/sys/${sysId}/cashier-settings`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ repeatAnnounce: !!on }) })
+    .then(r => r.json()).then(d => { if (!d.success) setRepeatUI(!on); })
+    .catch(() => setRepeatUI(!on));
+}
+socket.on('cashier_settings_updated', s => { setRepeatUI(s && s.repeatAnnounce); cashierSet = s || cashierSet; renderFwdUI(); });
+fetch(`/api/sys/${sysId}/cashier-settings`).then(r => r.json()).then(s => { setRepeatUI(s && s.repeatAnnounce); cashierSet = s || {}; renderFwdUI(); }).catch(() => {});
+
+// ── Auto-forward (shared cashier-settings; the server forwards the previous ticket when the next is called) ──
+let cashierSet = {}, fwdTargets = [], curByCounter = {};
+fetch('/api/systems').then(r => r.json()).then(list => {
+  const me = list.find(x => x.id === Number(sysId));
+  fwdTargets = ((me && me.forwardTo) || []).map(id => list.find(x => x.id === id)).filter(Boolean);
+  renderFwdUI();
+}).catch(() => {});
+// same rule as the call-queue page: any linked room, each leg (e.g. 25>30) once; a queue back at a room it
+// already left (ห้องยา → การเงิน → ห้องยา) has finished its trip
+function ticketHops(t) {
+  const h = [...(t.fwdHops || [])];
+  if (t.forwardedFrom && !h.length) h.push(t.forwardedFrom.sysId + '>' + Number(sysId));
+  return h;
+}
+function canSendOn(t, targetId) { return !ticketHops(t).includes(Number(sysId) + '>' + targetId); }
+const backHome = t => ticketHops(t).some(h => h.split('>')[0] === String(Number(sysId)));
+function fwdTarget() { return fwdTargets.find(x => x.id === Number(cashierSet.autoForwardTo)) || fwdTargets[0] || null; }
+function toggleAutoFwd(on) {
+  fetch(`/api/sys/${sysId}/cashier-settings`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ autoForward: !!on }) }).catch(() => {});
+}
+function pendingFwd() {
+  const busy = new Set(Object.values(curByCounter || {}).filter(Boolean).map(t => t.display));
+  return allServed.filter(t => !t.noShow && !t.forwardedTo && !t.forwardSkipped && (t.mode || 'opd') === mode
+    && !backHome(t) && canSendOn(t, (fwdTarget() || {}).id) && !busy.has(t.display));
+}
+function renderFwdUI() {
+  const tgt = fwdTarget();
+  document.getElementById('autoFwdRow').style.display = tgt ? '' : 'none';
+  const chip = document.getElementById('fwdChip');
+  if (!tgt) { chip.style.display = 'none'; return; }
+  document.getElementById('cbAutoFwd').checked = cashierSet.autoForward !== false;
+  document.getElementById('autoFwdLbl').textContent = '↪ ส่ง' + tgt.name + 'อัตโนมัติ';
+  const n = pendingFwd().length;
+  chip.style.display = n ? '' : 'none';
+  chip.textContent = `⚠ เรียกแล้ว ยังไม่ส่ง${tgt.name} ${n} คิว — แตะเพื่อส่ง`;
+}
+async function sendPendingFwd() {
+  const tgt = fwdTarget(), list = pendingFwd();
+  if (!tgt || !list.length) return;
+  if (!confirm(`ส่งต่อ ${list.map(t => t.display).join(', ')} ไป ${tgt.name}?`)) return;
+  let ok = 0;
+  for (const t of list) {
+    const d = await fetch(`/api/sys/${sysId}/forward`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ display: t.display, targetSysId: tgt.id }) }).then(r => r.json()).catch(() => ({}));
+    if (d.success) ok++;
+  }
+  toast(`ส่งต่อ ${ok}/${list.length} คิว ไป ${tgt.name} แล้ว`, ok === list.length ? 'ok' : 'err');
+}
+socket.on('queue_forwarded', ({ allServed: as }) => { if (as) allServed = as; renderFwdUI(); });
+
 socket.on('sys_state', d => {
+  if (d.cashierSettings) { setRepeatUI(d.cashierSettings.repeatAnnounce); cashierSet = d.cashierSettings; }
+  if (d.lastCalledByCounter) curByCounter = d.lastCalledByCounter;
   if (d.counters)   { counters=d.counters; renderCtr(); }
   if (d.queueTypes)   queueTypes=d.queueTypes;
   if (d.allWaiting)   allWaiting=d.allWaiting;
@@ -453,7 +537,7 @@ socket.on('sys_state', d => {
     const lc = d.lastCalledByCounter[myCounterId];
     if (lc) { lastCalled=lc; showCalled(lc); }
   }
-  updateNext(); updateStats();
+  updateNext(); updateStats(); renderFwdUI();
 });
 
 fetch(`/api/sys/${sysId}/status`).then(r=>r.json()).then(d => {
@@ -463,6 +547,8 @@ fetch(`/api/sys/${sysId}/status`).then(r=>r.json()).then(d => {
   allServed       = d.allServed       || [];
   noShows         = d.noShows         || [];
   clearedNoShows  = d.clearedNoShows  || [];
+  curByCounter    = d.lastCalledByCounter || {};
+  renderFwdUI();
   if (d.sysInfo) document.getElementById('hdrSys').textContent = d.sysInfo.name;
   if (d.lastCalled) { lastCalled=d.lastCalled; showCalled(d.lastCalled); }
   if (myCounterId && !counters.find(c => c.id===myCounterId)) {
@@ -561,6 +647,7 @@ function confirmCall() {
     body: JSON.stringify({ display:d.display, counterId:myCounterId })
   }).then(r=>r.json()).then(r => {
     if (!r.success) toast(r.message,'err');
+    else if (r.autoForwarded) toast(`↪ ส่ง ${r.autoForwarded.display} ไป ${r.autoForwarded.to} แล้ว`, 'ok');
     document.getElementById('spNum').focus();
   });
 }

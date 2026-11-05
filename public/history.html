@@ -133,11 +133,21 @@
     .h-row.ns-item:hover{border-color:rgba(220,38,38,.4)}
 
     /* Called columns: badge+num | patient | time | actions */
-    .thead-called{grid-template-columns:140px 1fr 85px 170px}
-    .row-called  {grid-template-columns:140px 1fr 85px 170px}
+    .thead-called{grid-template-columns:140px 1fr 85px 290px}
+    .row-called  {grid-template-columns:140px 1fr 85px 290px}
     /* No-show columns: badge+num | patient | called | noshow | actions */
     .thead-ns    {grid-template-columns:140px 1fr 80px 80px 100px}
     .row-ns      {grid-template-columns:140px 1fr 80px 80px 100px}
+    /* Deleted columns: badge+num | patient | issued | deleted | actions */
+    .thead-del   {grid-template-columns:140px 1fr 80px 80px 110px}
+    .row-del     {grid-template-columns:140px 1fr 80px 80px 110px}
+    .h-row.del-item{background:rgba(248,250,252,.8);border-color:rgba(148,163,184,.4)}
+    .h-num.del-num{color:#64748b;text-decoration:line-through;text-decoration-thickness:2px}
+    .tab.del.active{color:#475569;border-bottom-color:#475569}
+    .tab.del.active .tab-cnt{background:rgba(71,85,105,.14);color:#475569}
+    .btn-restore{border:none;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border-radius:7px;
+      padding:4px 12px;font-size:.72rem;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit}
+    .btn-restore:hover{opacity:.85}
 
     .h-cell{display:flex;align-items:center;gap:8px;overflow:hidden;min-width:0}
     .h-badge{
@@ -209,7 +219,15 @@
       .thead-ns,.row-ns{grid-template-columns:120px 1fr 70px 80px}
       .row-ns>*:nth-child(3){display:none}
       .thead-ns>*:nth-child(3){display:none}
+      .thead-del,.row-del{grid-template-columns:120px 1fr 70px 90px}
+      .row-del>*:nth-child(3),.thead-del>*:nth-child(3){display:none}
     }
+    .btn-fwd-hist{border:none;background:#ede9fe;border:1px solid #c4b5fd;color:#5b21b6;border-radius:6px;
+      padding:4px 10px;font-size:.72rem;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit}
+    .btn-fwd-hist:hover{background:#ddd6fe}
+    .fwd-tag{display:inline-block;background:#ede9fe;border:1px solid #c4b5fd;color:#5b21b6;
+      border-radius:20px;padding:2px 8px;font-size:.66rem;font-weight:800;white-space:nowrap}
+    .fwd-tag.skip{background:#f1f5f9;border-color:#cbd5e1;color:#64748b}
   </style>
 </head>
 <body>
@@ -245,11 +263,15 @@
   <div class="tab ns" id="tabNoShow" onclick="swTab('noshow',this)">
     ✕ เรียกแล้วไม่มา <span class="tab-cnt" id="hcN">0</span>
   </div>
+  <div class="tab del" id="tabDeleted" onclick="swTab('deleted',this)">
+    🗑 คิวที่ลบ <span class="tab-cnt" id="hcD">0</span>
+  </div>
 </div>
 
 <!-- content panes -->
 <div class="pane active" id="paneCalled"></div>
 <div class="pane"        id="paneNoShow"></div>
+<div class="pane"        id="paneDeleted"></div>
 
 <div class="toast" id="toast"></div>
 
@@ -263,6 +285,7 @@ let   myCounterId = Number(localStorage.getItem('myCounterId_' + sysId)) || null
 let allServed      = [];
 let noShows        = [];
 let clearedNoShows = [];
+let deletedQueues  = [];
 let curTab         = 'called';
 let nsSubTab       = 'active';
 
@@ -294,15 +317,47 @@ socket.on('noshow_display_cleared', d => {
   renderNoShowHist(); updateStats();
 });
 socket.on('queue_reset', () => {
-  allServed = []; noShows = []; clearedNoShows = [];
+  allServed = []; noShows = []; clearedNoShows = []; deletedQueues = [];
   renderAll();
 });
+socket.on('queue_deleted_waiting', d => {
+  if (d.deletedQueues) deletedQueues = d.deletedQueues;
+  renderDeletedHist(); updateStats();
+});
+socket.on('queue_forwarded', d => { if (d.allServed) allServed = d.allServed; renderCalledHist(); });
+
+// ── Forward targets (systems this one passes its queue on to, e.g. ห้องการเงิน) ──
+let fwdTargets = [];
+fetch('/api/systems').then(r => r.json()).then(list => {
+  const me = list.find(x => x.id === Number(sysId));
+  fwdTargets = ((me && me.forwardTo) || []).map(id => list.find(x => x.id === id)).filter(Boolean);
+  renderCalledHist();
+}).catch(() => {});
+// staff may send a called queue to any linked room, back to where it came from too — each leg (e.g. 25>30) once
+function ticketHops(t) {
+  const h = [...(t.fwdHops || [])];
+  if (t.forwardedFrom && !h.length) h.push(t.forwardedFrom.sysId + '>' + Number(sysId));
+  return h;
+}
+function canSendOn(t, targetId) { return !ticketHops(t).includes(Number(sysId) + '>' + targetId); }
+function fwdBtns(t) {
+  if (t.forwardedTo) return `<span class="fwd-tag">✓ ส่ง${t.forwardedTo.name}แล้ว</span>`;
+  if (t.forwardSkipped) return `<span class="fwd-tag skip">ไม่ต้องส่งต่อ</span>`;
+  return fwdTargets.filter(x => canSendOn(t, x.id)).map(x => `<button class="btn-fwd-hist" title="ส่งต่อไป ${x.name}" onclick="forwardTicket('${t.display}', ${x.id})">➜ ${x.name}</button>`).join('');
+}
+function forwardTicket(display, targetSysId) {
+  fetch(`/api/sys/${sysId}/forward`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ display, targetSysId }) })
+    .then(r => r.json()).then(d => toast(d.success ? `ส่งต่อ ${display} ไป ${d.forwardedTo.name} แล้ว` : d.message, d.success ? 'ok' : 'err'))
+    .catch(() => toast('ส่งต่อไม่สำเร็จ', 'err'));
+}
 
 // ── Load initial data ────────────────────────────────────────────────────────
 fetch(`/api/sys/${sysId}/status`).then(r=>r.json()).then(d => {
   allServed      = d.allServed      || [];
   noShows        = d.noShows        || [];
   clearedNoShows = d.clearedNoShows || [];
+  deletedQueues  = d.deletedQueues  || [];
   renderAll();
 });
 
@@ -336,6 +391,7 @@ function swTab(tab, el) {
   el.classList.add('active');
   document.getElementById('paneCalled').classList.toggle('active', tab === 'called');
   document.getElementById('paneNoShow').classList.toggle('active', tab === 'noshow');
+  document.getElementById('paneDeleted').classList.toggle('active', tab === 'deleted');
 }
 
 // ── Stats ─────────────────────────────────────────────────────────────────────
@@ -346,10 +402,11 @@ function updateStats() {
   document.getElementById('stN').textContent  = n.length;
   document.getElementById('hcC').textContent  = s.length;
   document.getElementById('hcN').textContent  = n.length;
+  document.getElementById('hcD').textContent  = deletedQueues.filter(t => (t.mode||'opd') === cashierMode).length;
 }
 
 // ── Render helpers ────────────────────────────────────────────────────────────
-function renderAll() { renderCalledHist(); renderNoShowHist(); updateStats(); }
+function renderAll() { renderCalledHist(); renderNoShowHist(); renderDeletedHist(); updateStats(); }
 
 function patientMeta(t) {
   const isIpd = t.mode === 'ipd';
@@ -387,6 +444,7 @@ function renderCalledHist() {
         <div class="action-btns">
           <button class="btn-recall-hist" onclick="recallServed('${t.display}')">↺ เรียกซ้ำ</button>
           <button class="btn-uncall"      onclick="uncallTicket('${t.display}')">↩ คืนคิว</button>
+          ${fwdBtns(t)}
         </div>
       </div>`).join('');
 }
@@ -452,6 +510,43 @@ function renderNoShowHist() {
       ? thead + activeList.map(t => rowHtml(t, false)).join('')
       : `<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-txt">ไม่มีรายการเรียกแล้วไม่มา</div></div>`);
   }
+}
+
+// Queues deleted from the waiting list today (newest first) — ↩ กู้คืน puts one back in its old place
+function renderDeletedHist() {
+  const el   = document.getElementById('paneDeleted');
+  const list = deletedQueues.filter(t => (t.mode||'opd') === cashierMode);
+  if (!list.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🗑</div><div class="empty-txt">วันนี้ยังไม่มีคิวที่ถูกลบ</div></div>`;
+    return;
+  }
+  el.innerHTML = `
+    <div class="h-thead thead-del">
+      <span>หมายเลขคิว</span><span>ผู้ป่วย / ประเภท</span><span>เวลาออกคิว</span><span>เวลาลบ</span><span>จัดการ</span>
+    </div>` +
+    list.map(t => `
+      <div class="h-row row-del del-item">
+        <div class="h-cell">
+          <div class="h-badge" style="background:${t.color}">${t.prefix||'#'}</div>
+          <span class="h-num del-num">${t.display}</span>
+        </div>
+        <div class="h-meta">
+          <div class="h-type">${t.typeName || ''}${t.forwardedFrom ? ' · มาจาก ' + t.forwardedFrom.name : ''}</div>
+          ${patientMeta(t)}
+        </div>
+        <div class="h-time">${t.issuedAt || '-'}</div>
+        <div class="h-time-ns">${t.deletedAt || '-'}</div>
+        <div class="action-btns">
+          <button class="btn-restore" title="คืนเข้ารายการรอ ด้วยเลขเดิม ลำดับเดิม" onclick="restoreDeleted('${t.display}')">↩ กู้คืน</button>
+        </div>
+      </div>`).join('');
+}
+function restoreDeleted(display) {
+  fetch(`/api/sys/${sysId}/restore-deleted`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ display })
+  }).then(r=>r.json()).then(d => d.success ? toast(`กู้คืนคิว ${display} กลับเข้ารายการรอแล้ว`,'ok') : toast(d.message,'err'))
+    .catch(() => toast('เกิดข้อผิดพลาด','err'));
 }
 
 // ── Actions ───────────────────────────────────────────────────────────────────

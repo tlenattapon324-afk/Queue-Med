@@ -47,4 +47,12 @@ const NODE_RANGE = 'node20';
                                   ...(t.config ? ['--config', t.config] : [])],
                { cwd: ROOT, stdio: 'inherit', env: { ...process.env, PKG_NODE_PATH: iconBase } });
   console.log(`built ${t.out} with ${t.icon}`);
+
+  // 4. Display screens on a fresh install start from this machine's "ตั้งเป็นค่าเริ่มต้น" layout
+  const def = path.join(ROOT, 'data', 'display-default.json');
+  if (process.argv[2] === 'server' && fs.existsSync(def)) {
+    const { cfg, theme } = JSON.parse(fs.readFileSync(def, 'utf8'));
+    fs.writeFileSync(path.join(ROOT, 'dist', 'data-defaults', 'display-default.json'), JSON.stringify({ cfg, theme }, null, 2));
+    console.log('copied display default → dist/data-defaults');
+  }
 })().catch(e => { console.error(e); process.exit(1); });

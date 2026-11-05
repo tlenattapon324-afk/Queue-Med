@@ -26,7 +26,7 @@
       --cs-stat-w:#b6752f;--cs-stat-s:#4d8760;--cs-stat-n:#a8524d;
       --cs-nav-txt:#1a6ba8;--cs-logo-clr:#1a6ba8;
       --cs-nav-fs:.86rem;
-      --wq-cols:52px 100px 120px 110px 1fr 180px 130px 90px 120px;
+      --wq-cols:52px 100px 110px 120px 110px 1fr 180px 130px 90px 120px;
       --wq-th-fs:.72rem;--wq-patient-fs:1.0rem;--wq-hn-fs:1.0rem;
       --wq-thead-bg:#1f83d1;--wq-thead-clr:#ffffff;
       --cs-call-type-clr:#1f83d1;--cs-call-ctr-clr:#ab6c32;
@@ -36,6 +36,20 @@
       --cs-stat-fs:1.7rem;
       --cs-wq-fs:1.4rem;
       --cs-wq-meta-fs:.85rem;
+    }
+    /* Fixed theme (not user-editable): soft pastel-blue page, white cards, dark navy-teal table header */
+    :root{
+      --cs-body-bg:linear-gradient(180deg,#e8f0fb 0%,#d3e3f7 100%);--cs-nav-bg:#ffffff;--cs-cbar-bg:#ffffff;--cs-tabs-bg:#f4f8fd;
+      --cs-called-top:#ffffff;--cs-called-bot:#ffffff;--cs-hist-bg:#ffffff;
+      --cs-wq-hdr-bg:linear-gradient(135deg,#0f4c75,#1565a8);
+      --wq-thead-bg:linear-gradient(90deg,#0d3b5e,#0f4c75);--wq-thead-clr:#ffffff;
+      --cs-btn-next1:#2563eb;--cs-btn-next2:#1e40af;
+      --cs-btn-recall-bg:#ffffff;--cs-btn-recall-clr:#1e40af;
+      --cs-btn-noshow1:#dc2626;--cs-btn-noshow2:#b91c1c;
+      --cs-wq-next:#2563eb;
+      --cs-stat-w:#c2410c;--cs-stat-s:#15803d;--cs-stat-n:#b91c1c;
+      --cs-nav-txt:#1e3a8a;--cs-logo-clr:#1e3a8a;
+      --cs-call-type-clr:#1d4ed8;--cs-call-ctr-clr:#b45309;
     }
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'Segoe UI',Tahoma,sans-serif;background:var(--cs-body-bg,#e2ecfa);
@@ -51,11 +65,16 @@
       font-size:var(--cs-nav-fs,.86rem);font-weight:600;transition:background .2s;white-space:nowrap}
     nav a:hover{background:#ecf1fb}
     nav a.active{background:#1f83d1;color:#fff}
+    nav a.nav-linked{background:#ede9fe;color:#5b21b6;border:1.5px solid #c4b5fd}
+    nav a.nav-linked:hover{background:#ddd6fe}
+    nav a.nav-linked.current{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;border-color:#5b21b6;
+      box-shadow:0 2px 8px rgba(91,33,182,.35);cursor:default}
+    nav a.nav-linked.current:hover{background:linear-gradient(135deg,#7c3aed,#5b21b6)}
 
     /* ── COUNTER BAR ── */
     .cbar{background:var(--cs-cbar-bg,#e7f0fb);border-bottom:1px solid #b3c6e8;padding:8px 22px;
       display:flex;align-items:center;gap:10px;flex-shrink:0}
-    .cbar-lbl{font-size:var(--cs-cbar-lbl-fs,.78rem);color:#7691ab;font-weight:600}
+    .cbar-lbl{font-size:var(--cs-cbar-lbl-fs,.78rem);color:#1e3a8a;font-weight:800}
     .cbadge{background:#1f83d1;color:#fff;border-radius:14px;padding:3px 12px;
       font-size:.82rem;font-weight:700;display:flex;align-items:center;gap:5px}
     .cbadge .dot{width:7px;height:7px;background:#69f0ae;border-radius:50%}
@@ -73,11 +92,11 @@
     /* ── TYPE TABS ── */
     .type-tabs{background:var(--cs-tabs-bg,#e2ecfa);border-bottom:1px solid #b3c6e8;
       padding:0 22px;display:flex;gap:6px;flex-shrink:0;overflow-x:auto}
-    .ttab{padding:10px 16px;font-size:.86rem;font-weight:700;color:#7691ab;
+    .ttab{padding:10px 16px;font-size:.92rem;font-weight:800;color:#334e7a;
       cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;
       transition:color .2s;display:flex;align-items:center;gap:5px}
     .ttab:hover{color:#1a6ba8}
-    .ttab.active{color:#1a6ba8;border-bottom-color:#1f83d1}
+    .ttab.active{color:#1e3a8a;border-bottom-color:#1e40af;background:#ffffff99}
     .ttab .tpfx{width:20px;height:20px;border-radius:5px;display:flex;align-items:center;
       justify-content:center;font-size:.7rem;font-weight:900;color:#000}
     .ttab .tbcnt{background:#e5eefa;color:#1a6ba8;border-radius:8px;padding:1px 7px;font-size:.72rem;font-weight:700}
@@ -87,10 +106,10 @@
       grid-template-rows:1fr;gap:0;overflow:hidden;min-height:0}
 
     /* ── LEFT PANEL ── */
-    .left-panel{display:flex;flex-direction:column;overflow:hidden;border-right:1px solid #e5eefa}
+    .left-panel{display:flex;flex-direction:column;overflow:hidden;border-right:none;padding:8px 0 0 8px}
 
-    .called-box{background:linear-gradient(160deg,var(--cs-called-top,#ffffff),var(--cs-called-bot,#f7fafd));padding:22px 18px 18px;flex-shrink:0;border-bottom:2px solid #e5eefa}
-    .called-top{font-size:var(--cs-called-top-fs,.72rem);color:#6d8296;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;font-weight:700}
+    .called-box{background:linear-gradient(160deg,var(--cs-called-top,#ffffff),var(--cs-called-bot,#f7fafd));padding:22px 18px 18px;flex-shrink:0;border:1px solid #c9dcf3;border-radius:14px;box-shadow:0 4px 14px rgba(15,76,117,.08)}
+    .called-top{font-size:var(--cs-called-top-fs,.72rem);color:#1e3a8a;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;font-weight:700}
     .called-main{display:flex;align-items:center;gap:16px;min-height:72px}
     .call-badge{width:80px;height:80px;border-radius:18px;display:flex;align-items:center;
       justify-content:center;font-size:2rem;font-weight:900;color:#000;flex-shrink:0;
@@ -100,14 +119,14 @@
     .call-type{font-size:var(--cs-call-meta-fs,.78rem);color:var(--cs-call-type-clr,#1f83d1);margin-bottom:2px;font-weight:700}
     .call-time{font-size:var(--cs-call-meta-fs,.78rem);color:#6d8296}
     .call-ctr{font-size:var(--cs-call-meta-fs,.78rem);color:var(--cs-call-ctr-clr,#ab6c32);margin-top:3px;font-weight:700}
-    .idle-txt{font-size:.9rem;color:#8fb4d1;padding:4px 0;font-weight:600}
+    .idle-txt{font-size:.95rem;color:#475569;padding:4px 0;font-weight:600}
 
     .action-area{padding:14px 16px;display:flex;flex-direction:column;gap:8px;flex-shrink:0;
       border-bottom:1px solid #e5eefa}
     .skip-row{display:flex;align-items:center;gap:8px;padding:4px 2px;cursor:pointer;
       user-select:none;width:fit-content}
     .skip-row input[type=checkbox]{width:16px;height:16px;accent-color:#1f83d1;cursor:pointer;flex-shrink:0}
-    .skip-row span{font-size:.82rem;color:#1f83d1;font-weight:600}
+    .skip-row span{font-size:.88rem;color:#1e3a8a;font-weight:700}
     .btn{width:100%;padding:13px;border-radius:12px;border:none;font-size:.92rem;
       font-weight:800;cursor:pointer;transition:transform .12s,opacity .15s,box-shadow .15s;
       letter-spacing:.3px;display:flex;align-items:center;justify-content:center;gap:6px;
@@ -137,22 +156,22 @@
 
     .stats-area{padding:12px 16px;display:grid;grid-template-columns:repeat(3,1fr);
       gap:8px;flex-shrink:0}
-    .stat{background:#ffffff;border-radius:11px;padding:11px 6px;text-align:center;
-      border:1.5px solid #e5eefa;box-shadow:0 2px 6px rgba(31,131,209,.06)}
+    .stat{background:#ffffff;border-radius:14px;padding:11px 6px;text-align:center;
+      border:1px solid #c9dcf3;box-shadow:0 2px 6px rgba(31,131,209,.06)}
     .stat .sv{font-size:var(--cs-stat-fs,1.7rem);font-weight:900}
-    .stat .sl{font-size:var(--cs-stat-lbl-fs,.72rem);color:#6d8296;margin-top:2px;font-weight:700}
+    .stat .sl{font-size:var(--cs-stat-lbl-fs,.72rem);color:#334155;margin-top:2px;font-weight:700}
     .sv-w{color:var(--cs-stat-w,#b6752f)}.sv-s{color:var(--cs-stat-s,#4d8760)}.sv-n{color:var(--cs-stat-n,#a8524d)}
 
     /* ── RIGHT PANEL ── */
-    .right-panel{display:flex;flex-direction:column;overflow:hidden;background:#e2ecfa}
-    .rp-header{background:var(--cs-wq-hdr-bg,#1f83d1);padding:12px 16px;
+    .right-panel{display:flex;flex-direction:column;overflow:hidden;background:transparent}
+    .rp-header{background:var(--cs-wq-hdr-bg);padding:12px 16px;
       display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
       border-radius:12px;margin:8px 8px 0;box-shadow:0 2px 8px rgba(26,107,168,.18)}
-    .rp-title{font-size:var(--cs-rp-title-fs,.9rem);color:#fff;font-weight:700;letter-spacing:1px;
+    .rp-title{font-size:var(--cs-rp-title-fs,.9rem);color:#fff;font-weight:800;letter-spacing:1px;
       display:flex;align-items:center;gap:8px}
     .rp-cnt{background:#ffffff;color:#1a6ba8;border-radius:10px;padding:2px 10px;
       font-size:.8rem;font-weight:800}
-    .rp-type-filter{font-size:.75rem;color:#dceeff;font-weight:600}
+    .rp-type-filter{font-size:.8rem;color:#ffffff;font-weight:700}
 
     .waiting-list{flex:1;overflow-y:auto;padding:8px}
     .waiting-list::-webkit-scrollbar{width:6px}
@@ -168,17 +187,17 @@
     .wq-thead{background:var(--wq-thead-bg,#1a6ba8);
       flex-shrink:0;border-radius:12px;overflow:hidden;margin:0 8px 8px;
       box-shadow:0 2px 8px rgba(26,107,168,.18)}
-    .wq-th{font-size:var(--wq-th-fs,1rem);font-weight:800;color:var(--wq-thead-clr,#fff);
+    .wq-th{font-size:var(--wq-th-fs,1rem);font-weight:900;color:var(--wq-thead-clr,#fff);
       letter-spacing:.4px;text-align:center;padding:16px 8px;white-space:nowrap;
       display:flex;align-items:center;justify-content:center;
       border-right:1px solid rgba(255,255,255,.12);text-transform:uppercase}
     .wq-th:last-child{border-right:none}
 
     /* Row */
-    .wq-item{background:#fff;border:1.5px solid #dce8f6;
+    .wq-item{background:#fff;border:1px solid #d5e3f3;
       border-radius:10px;margin-bottom:6px;overflow:hidden;transition:background .15s;
-      box-shadow:0 1px 4px rgba(31,131,209,.06)}
-    .wq-item:nth-child(even){background:#f8fbfe}
+      box-shadow:0 2px 6px rgba(30,64,175,.10)}
+    .wq-item:nth-child(even){background:#fafcff}
     .wq-item:hover{background:#eff6ff}
     .wq-item.wq-next{background:#dbeafe;border-left:5px solid #1f83d1;border-color:#93c5fd}
     .wq-item.wq-ret{border-left:5px solid #f97316}
@@ -187,7 +206,7 @@
     /* Cell base */
     .wq-item > *{
       padding:9px 8px;
-      border-right:1px solid #eef3f8;
+      border-right:1px solid #dbe7f7;
       overflow:hidden;min-width:0;
       display:flex;align-items:center;justify-content:center;
       min-height:56px}
@@ -207,7 +226,7 @@
       white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
       text-align:center;max-width:100%;
       padding:3px 10px;border-radius:20px}
-    .wq-time{font-size:.88rem;color:#475569;font-weight:700;
+    .wq-time{font-size:.88rem;color:#1e293b;font-weight:700;
       letter-spacing:.3px;white-space:nowrap;text-align:center}
     .wq-ret-badge{display:inline-block;background:rgba(249,115,22,.1);
       border:1px solid rgba(249,115,22,.4);color:#c2410c;
@@ -232,10 +251,18 @@
 
     /* Col 6-7: HN / QN */
     .wq-hn-cell,.wq-qn-cell{justify-content:center}
-    .wq-hn-val{font-size:var(--wq-hn-fs,.88rem);color:#475569;font-weight:700;
+    .wq-hn-val{font-size:var(--wq-hn-fs,.88rem);color:#1e293b;font-weight:700;
       letter-spacing:.3px;text-align:center;white-space:nowrap}
 
-    /* Col 8: action */
+    /* Col 8: จำนวนยา (OPD — distinct drug icodes of the visit) */
+    .wq-drug-cell{justify-content:center}
+    .wq-drug{display:inline-flex;align-items:center;gap:4px;background:#eef6ff;border:1px solid #9ec5f3;
+      color:#1e3a8a;border-radius:10px;padding:4px 10px;font-size:.82rem;font-weight:800;white-space:nowrap}
+    .wq-drug b{font-size:1.05rem;color:#1d4ed8}
+    .wq-drug.zero{background:#f8fafc;border-color:#e2e8f0;color:#64748b}
+    .wq-drug.zero b{color:#64748b}
+
+    /* Col 9: action */
     .btn-call-item{padding:9px 20px;border-radius:20px;border:none;
       background:linear-gradient(135deg,#1f83d1,#3573a6);color:#fff;
       font-size:.78rem;font-weight:800;cursor:pointer;white-space:nowrap;
@@ -310,6 +337,17 @@
       cursor:pointer;white-space:nowrap;font-family:inherit}
     .btn-recall-hist:hover{background:#cfe8fc}
     .action-btns{display:flex;gap:4px;align-items:center}
+    /* ── Forward to linked system ── */
+    .fwd-row{display:flex;flex-direction:column;gap:6px}
+    .fwd-row:empty{display:none}
+    .btn-fwd{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;font-size:.95rem;box-shadow:0 3px 10px rgba(91,33,182,.28)}
+    .btn-fwd.done,.btn-fwd.done:disabled{background:#ede9fe;color:#5b21b6;border:1.5px solid #c4b5fd;box-shadow:none;opacity:1}
+    .btn-fwd-hist{border:none;background:#ede9fe;border:1px solid #c4b5fd;
+      color:#5b21b6;border-radius:6px;padding:4px 10px;font-size:.7rem;font-weight:700;
+      cursor:pointer;white-space:nowrap;font-family:inherit}
+    .btn-fwd-hist:hover{background:#ddd6fe}
+    .fwd-tag{display:inline-block;background:#ede9fe;border:1px solid #c4b5fd;color:#5b21b6;
+      border-radius:20px;padding:2px 8px;font-size:.62rem;font-weight:800;white-space:nowrap}
     .btn-recall-ns{border:none;background:linear-gradient(135deg,#1f83d1,#1a6ba8);
       color:#fff;border-radius:6px;padding:4px 10px;font-size:.7rem;
       font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit}
@@ -472,7 +510,186 @@
       transition:transform .25s;box-shadow:0 1px 3px rgba(0,0,0,.4)}
     .nav-ipd-sw input:checked + .nav-ipd-knob{background:linear-gradient(135deg,#00e676,#00c853)}
     .nav-ipd-sw input:checked + .nav-ipd-knob::before{transform:translateX(15px)}
+
+    /* ── Auto-forward + "ยังไม่ส่ง" list ── */
+    .fwd-auto{display:flex;flex-direction:column;gap:8px}
+    .fwd-auto .skip-row span b{color:#5b21b6}
+    .fwd-auto select{border:1px solid #c4b5fd;border-radius:8px;padding:2px 6px;color:#5b21b6;font-weight:700;font-family:inherit}
+    .fwd-pending{width:100%;display:flex;align-items:center;gap:8px;justify-content:space-between;border-radius:12px;
+      padding:10px 12px;font-size:.9rem;font-weight:800;cursor:pointer;font-family:inherit;
+      background:#fff7ed;border:1.5px solid #fdba74;color:#9a3412;animation:pendPulse 2s ease-in-out infinite}
+    .fwd-pending.none{background:#f0fdf4;border-color:#86efac;color:#166534;animation:none;cursor:default}
+    @keyframes pendPulse{50%{box-shadow:0 0 0 4px rgba(249,115,22,.18)}}
+    .fwd-plist{display:none;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto;padding:2px}
+    .fwd-plist.open{display:flex}
+    .fwd-prow{display:flex;flex-direction:column;gap:6px;background:#fff;border:1px solid #fed7aa;border-radius:10px;padding:7px 9px}
+    .fwd-prow .ptop{display:flex;align-items:center;gap:8px}
+    .fwd-prow .pgo{display:flex;flex-wrap:wrap;gap:6px}
+    .fwd-prow .pgo .go{flex:1 1 auto}
+    .fwd-prow .pn{font-weight:900;font-size:1.05rem;min-width:62px}
+    .fwd-prow .pm{flex:1;min-width:0;font-size:.78rem;color:#475569;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .fwd-prow button{border-radius:8px;padding:5px 9px;font-size:.76rem;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap}
+    .fwd-prow .go{background:#7c3aed;border:none;color:#fff}
+    .fwd-prow .skip{background:#fff;border:1px solid #cbd5e1;color:#64748b}
+    .fwd-all{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;border:none;border-radius:10px;padding:9px;
+      font-weight:800;cursor:pointer;font-family:inherit}
+
+    /* ═══════════ Modern skin: neutral page, white cards, flat data table ═══════════ */
+    :root{--ui-ink:#0f172a;--ui-text:#334155;--ui-muted:#64748b;--ui-line:#e2e8f0;--ui-soft:#f8fafc;
+      --ui-primary:#2563eb;--ui-primary-d:#1d4ed8;--ui-card-shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px rgba(15,23,42,.06);
+      --cs-body-bg:#eef2f7;--cs-cbar-bg:#ffffff;--cs-tabs-bg:#ffffff;--wq-thead-bg:#f8fafc;--wq-thead-clr:#64748b}
+    body{font-family:'Noto Sans Thai','Sarabun','Segoe UI',Tahoma,sans-serif;background:#eef2f7;color:var(--ui-text)}
+
+    nav{height:60px;padding:0 20px;gap:6px;border-bottom:1px solid var(--ui-line);box-shadow:0 1px 3px rgba(15,23,42,.05)}
+    .nav-logo{font-size:1.05rem;color:var(--ui-ink);letter-spacing:.3px}
+    nav a{color:#475569;border-radius:10px;padding:8px 14px}
+    nav a:hover{background:#f1f5f9;color:var(--ui-ink)}
+    nav a.active{background:#eff6ff;color:var(--ui-primary-d);box-shadow:inset 0 0 0 1px #bfdbfe}
+    nav a.nav-linked{border-radius:10px}
+    .nav-officer{color:var(--ui-muted)}
+    .nav-ipd-toggle,.btn-logout{border-radius:10px}
+    .btn-gear{background:var(--ui-soft);border:1px solid var(--ui-line);color:#475569;border-radius:10px;margin-left:8px}
+    .btn-gear:hover{background:#f1f5f9;border-color:#cbd5e1}
+
+    .cbar{padding:10px 20px;border-bottom:1px solid var(--ui-line)}
+    .cbar-lbl{color:var(--ui-muted);font-weight:700}
+    .cbar-sel{border:1px solid #cbd5e1;border-radius:10px;color:var(--ui-ink);padding:7px 12px}
+    .btn-clear-disp{border-radius:10px;border-color:#cbd5e1;color:var(--ui-muted)}
+    /* type tabs → pill segmented control */
+    div:has(> #typeTabs){background:#fff !important;border-bottom:1px solid var(--ui-line) !important}
+    .type-tabs{padding:10px 20px;gap:8px;align-items:center}
+    .ttab{border:1px solid var(--ui-line);border-radius:999px;padding:6px 14px;background:#fff;color:#475569;
+      font-size:.88rem;font-weight:700;transition:all .15s}
+    .ttab:hover{background:var(--ui-soft);border-color:#cbd5e1;color:var(--ui-ink)}
+    .ttab.active{background:var(--ui-primary-d);border-color:var(--ui-primary-d);color:#fff;box-shadow:0 4px 12px rgba(29,78,216,.25)}
+    .ttab .tpfx{border-radius:6px}
+    .ttab .tbcnt{background:#f1f5f9;color:#475569;border-radius:999px;padding:1px 8px}
+    .ttab.active .tbcnt{background:rgba(255,255,255,.22);color:#fff}
+    #btnHistLink{border-left:1px solid var(--ui-line) !important;color:#475569 !important}
+
+    /* layout: two columns of cards with breathing room */
+    .layout{gap:16px;padding:16px}
+    .left-panel{padding:0;gap:14px;overflow-y:auto}
+    .called-box{background:#fff;border:1px solid var(--ui-line);border-radius:18px;box-shadow:var(--ui-card-shadow);
+      position:relative;overflow:hidden;padding:22px 20px 20px}
+    .called-box::before{content:'';position:absolute;left:0;right:0;top:0;height:4px;background:linear-gradient(90deg,#2563eb,#7c3aed)}
+    .called-top{display:flex;align-items:center;gap:8px;color:var(--ui-muted);letter-spacing:1.5px}
+    .called-top::before{content:'';width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 4px rgba(34,197,94,.18)}
+    .call-time{color:var(--ui-muted)}
+    .idle-txt{color:var(--ui-muted)}
+    .action-area{background:#fff;border:1px solid var(--ui-line);border-radius:18px;box-shadow:var(--ui-card-shadow);padding:16px;gap:10px}
+    .skip-row span{color:var(--ui-text);font-weight:600}
+    .btn{border-radius:12px;box-shadow:none;letter-spacing:.2px}
+    .btn:hover{box-shadow:none}
+    .btn-next{background:linear-gradient(135deg,var(--ui-primary),var(--ui-primary-d));box-shadow:0 8px 20px rgba(37,99,235,.28)}
+    .btn-next:hover{box-shadow:0 10px 24px rgba(37,99,235,.36)}
+    .btn-recall{background:#fff;border:1px solid #cbd5e1;color:#1e293b}
+    .btn-recall:hover{background:var(--ui-soft)}
+    .btn-noshow{background:#fff1f2;border:1px solid #fecdd3;color:#be123c;box-shadow:none}
+    .btn-noshow:hover:not(:disabled){background:#ffe4e6}
+    .btn-fwd{box-shadow:0 6px 16px rgba(91,33,182,.22)}
+    #spLblRow{color:var(--ui-muted) !important}
+    .sp-row input{border:1px solid #cbd5e1;border-radius:10px;color:var(--ui-ink);text-transform:none}
+    .sp-row input:focus{border-color:var(--ui-primary);box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+    .btn-sp{border-radius:10px;background:#0f766e;box-shadow:none}
+    .stats-area{padding:0;gap:10px}
+    .stat{border:1px solid var(--ui-line);border-radius:16px;box-shadow:var(--ui-card-shadow);padding:14px 6px 12px;position:relative;overflow:hidden}
+    .stat::before{content:'';position:absolute;left:0;right:0;top:0;height:3px}
+    .stat:nth-child(1)::before{background:#f97316}.stat:nth-child(2)::before{background:#22c55e}.stat:nth-child(3)::before{background:#ef4444}
+    .stat .sl{color:var(--ui-muted);font-weight:600}
+
+    /* right: one card holding a flat data table */
+    .right-panel{background:#fff;border:1px solid var(--ui-line);border-radius:18px;box-shadow:var(--ui-card-shadow)}
+    .rp-header{background:#fff;margin:0;border-radius:0;box-shadow:none;border-bottom:1px solid var(--ui-line);padding:14px 18px}
+    .rp-title{color:var(--ui-ink);font-size:1rem;letter-spacing:.3px}
+    .rp-cnt{background:#eff6ff;color:var(--ui-primary-d);border-radius:999px;padding:2px 10px}
+    .rp-type-filter{color:var(--ui-muted)}
+    .wq-thead{margin:0;border-radius:0;box-shadow:none;border-bottom:1px solid var(--ui-line)}
+    .wq-th{font-size:.78rem;font-weight:700;letter-spacing:.6px;padding:12px 8px;border-right:none;text-transform:none}
+    .waiting-list{padding:0}
+    .waiting-list::-webkit-scrollbar-thumb{background:#cbd5e1}
+    .wq-item{background:#fff;border:none;border-bottom:1px solid #f1f5f9;border-radius:0;margin:0;box-shadow:none;transition:background .12s}
+    .wq-item:nth-child(even){background:#fcfdff}
+    .wq-item:hover{background:#f5f8ff}
+    .wq-item > *{border-right:none;min-height:60px}
+    .wq-item.wq-next{background:#eff6ff;border-left:4px solid var(--ui-primary);border-color:transparent;border-bottom:1px solid #dbeafe}
+    .wq-item.wq-ret,.wq-item.wq-next.wq-ret{border-left:4px solid #f97316}
+    .wq-badge{border-radius:8px;box-shadow:none}
+    .wq-patient{color:var(--ui-ink);font-weight:600}
+    .wq-pttype{background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:999px;box-shadow:none;font-weight:600}
+    .wq-drug{border-radius:999px;background:#eff6ff;border-color:#bfdbfe}
+    .wq-hn-val,.wq-time{color:#1e293b;font-weight:600;font-variant-numeric:tabular-nums}
+    .wq-del-cell{border-right:none}
+    .btn-del-item{background:#fff;border:1px solid #fecdd3;color:#e11d48;border-radius:10px;padding:6px 9px}
+    .btn-del-item:hover{background:#fff1f2;color:#be123c}
+    .btn-call-item{background:var(--ui-primary);border-radius:10px;padding:9px 18px;box-shadow:0 4px 10px rgba(37,99,235,.25)}
+    .btn-call-item:hover{background:var(--ui-primary-d);transform:translateY(-1px);box-shadow:0 6px 14px rgba(37,99,235,.32);opacity:1}
+    .wq-empty{color:var(--ui-muted)}
+    .pick-box,.confirm-box{border-radius:18px;border-color:var(--ui-line);box-shadow:0 20px 50px rgba(15,23,42,.18)}
+    .toast{border-radius:12px}
+
+    /* ═══════════ Blue accent: colour on top of the modern skin ═══════════ */
+    body{background:
+      radial-gradient(ellipse 60% 50% at 0% 0%,rgba(56,189,248,.22),transparent 60%),
+      radial-gradient(ellipse 50% 45% at 100% 10%,rgba(37,99,235,.18),transparent 60%),
+      radial-gradient(ellipse 70% 50% at 50% 110%,rgba(14,165,233,.16),transparent 60%),
+      linear-gradient(180deg,#eef6ff 0%,#e0efff 100%)}
+    /* nav: deep blue → sky gradient, white text */
+    nav{background:linear-gradient(90deg,#1e3a8a 0%,#1d4ed8 45%,#0ea5e9 100%);border-bottom:none;
+      box-shadow:0 4px 18px rgba(29,78,216,.28)}
+    .nav-logo{color:#fff}
+    nav a{color:rgba(255,255,255,.85)}
+    nav a:hover{background:rgba(255,255,255,.14);color:#fff}
+    nav a.active{background:#fff;color:#1d4ed8;box-shadow:0 2px 8px rgba(15,23,42,.18)}
+    .nav-officer{color:rgba(255,255,255,.9)}
+    .btn-gear{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:#fff}
+    .btn-gear:hover{background:rgba(255,255,255,.24);border-color:rgba(255,255,255,.5)}
+    .nav-ipd-toggle{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:#fff}
+    .nav-ipd-toggle:hover{background:rgba(255,255,255,.24);color:#fff}
+    .nav-ipd-knob{background:rgba(255,255,255,.35)}
+    .btn-logout{background:rgba(255,255,255,.95);border-color:transparent;color:#be123c}
+    /* counter bar + tabs: frosted light-blue strip */
+    .cbar{background:rgba(255,255,255,.72);backdrop-filter:blur(8px);border-bottom:1px solid #dbeafe}
+    .cbar-lbl{color:#1e40af}
+    .cbar-sel{border-color:#93c5fd;color:#1e3a8a;background:#fff}
+    div:has(> #typeTabs){background:rgba(255,255,255,.55) !important;border-bottom:1px solid #dbeafe !important;backdrop-filter:blur(8px)}
+    .ttab{border-color:#bfdbfe;color:#1e40af;background:#fff}
+    .ttab:hover{background:#eff6ff;border-color:#93c5fd;color:#1e3a8a}
+    .ttab.active{background:linear-gradient(135deg,#2563eb,#0ea5e9);border-color:transparent;box-shadow:0 6px 16px rgba(37,99,235,.32)}
+    .ttab .tbcnt{background:#dbeafe;color:#1d4ed8}
+    #btnHistLink{color:#1d4ed8 !important;border-left-color:#dbeafe !important}
+    /* cards: blue-tinted borders and a soft blue glow */
+    .called-box,.action-area,.stat,.right-panel{border-color:#dbeafe;box-shadow:0 1px 2px rgba(30,64,175,.05),0 10px 28px rgba(37,99,235,.10)}
+    .called-box{background:linear-gradient(180deg,#ffffff 0%,#f5f9ff 100%)}
+    .called-box::before{height:6px;background:linear-gradient(90deg,#1d4ed8,#0ea5e9,#38bdf8)}
+    .called-top{color:#1d4ed8}
+    .btn-next{background:linear-gradient(135deg,#1d4ed8 0%,#2563eb 50%,#0ea5e9 100%)}
+    .btn-recall{border-color:#93c5fd;color:#1d4ed8}
+    .btn-recall:hover{background:#eff6ff}
+    .skip-row input[type=checkbox]{accent-color:#2563eb}
+    .sp-row input{border-color:#bfdbfe}
+    .btn-sp{background:linear-gradient(135deg,#0284c7,#0369a1)}
+    .stat{background:linear-gradient(180deg,#ffffff 0%,#f5f9ff 100%)}
+    .stat:nth-child(1)::before{background:linear-gradient(90deg,#f97316,#fb923c)}
+    .stat:nth-child(2)::before{background:linear-gradient(90deg,#16a34a,#22c55e)}
+    .stat:nth-child(3)::before{background:linear-gradient(90deg,#dc2626,#f87171)}
+    /* table card: blue gradient title bar, light-blue column header */
+    .rp-header{background:linear-gradient(90deg,#1d4ed8 0%,#2563eb 50%,#0ea5e9 100%);border-bottom:none}
+    .rp-title{color:#fff}
+    .rp-cnt{background:#fff;color:#1d4ed8}
+    .rp-type-filter{color:rgba(255,255,255,.9)}
+    .wq-thead{background:#eff6ff;border-bottom:1px solid #dbeafe}
+    .wq-th{color:#1e40af}
+    .wq-item{border-bottom-color:#eef4ff}
+    .wq-item:nth-child(even){background:#f8fbff}
+    .wq-item:hover{background:#eaf3ff}
+    .wq-item.wq-next{background:linear-gradient(90deg,#dbeafe 0%,#eff6ff 60%,#f8fbff 100%);border-left-color:#2563eb}
+    .btn-call-item{background:linear-gradient(135deg,#2563eb,#0ea5e9);box-shadow:0 4px 12px rgba(14,165,233,.3)}
+    .btn-call-item:hover{background:linear-gradient(135deg,#1d4ed8,#0284c7)}
+    .waiting-list::-webkit-scrollbar-thumb{background:#93c5fd}
   </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 </head>
 <body>
 
@@ -482,6 +699,7 @@
   <a href="#" id="navCashier" class="active">เรียกคิว</a>
   <a href="#" id="navDisplay" target="_blank">แสดงคิว</a>
   <a href="#" id="navSettings">ตั้งค่า</a>
+  <span id="navLinked" style="display:flex;gap:4px"></span>
   <span class="nav-officer" id="navOfficer"></span>
   <label class="nav-ipd-toggle" for="chkIpd" id="navIpdToggle" title="สวิทช์โหมดผู้ป่วยใน (IPD)">
     <span>🛏</span>
@@ -541,8 +759,18 @@
         <input type="checkbox" id="cbSkip" onchange="toggleSkip(this.checked)"/>
         <span>✓ เรียกทันที ไม่ต้องยืนยัน</span>
       </label>
+      <label class="skip-row repeat-row" title="จอแสดงคิวของระบบนี้จะประกาศหมายเลขซ้ำอีกครั้ง">
+        <input type="checkbox" id="cbRepeat" onchange="toggleRepeatAnnounce(this.checked)"/>
+        <span>🔁 อ่านคิว 2 รอบ</span>
+      </label>
       <button class="btn btn-recall" id="btnRecall" onclick="recallCurrent()" disabled>↺ เรียกซ้ำ</button>
       <button class="btn btn-noshow" id="btnNoShow" onclick="markNoShow()"    disabled>✕ ไม่มา</button>
+      <div class="fwd-row" id="fwdRow"></div>
+      <div class="fwd-auto" id="fwdAutoBox" style="display:none">
+        <div id="autoFwdRows" style="display:flex;flex-direction:column;gap:8px"></div>
+        <button class="fwd-pending none" id="fwdPendingBtn" onclick="togglePendingFwd()"></button>
+        <div class="fwd-plist" id="fwdPendingList"></div>
+      </div>
       <div id="spLblRow" style="font-size:.68rem;color:#6d8296;letter-spacing:.6px;margin-bottom:3px;display:flex;align-items:center;gap:5px;padding:0 2px">
         <span id="spLblTxt">🔢 เลขคิว / HN</span>
         <span style="font-size:.58rem;opacity:.55">📷 สแกนบาร์โค้ดได้</span>
@@ -569,6 +797,7 @@
     <div class="wq-thead">
       <div class="wq-th"></div>
       <div class="wq-th">เลขคิว</div>
+      <div class="wq-th">จำนวนยา</div>
       <div class="wq-th">ประเภท</div>
       <div class="wq-th">เวลา</div>
       <div class="wq-th">ชื่อผู้รับบริการ</div>
@@ -618,7 +847,7 @@
 <div class="confirm-overlay" id="deleteConfirmOverlay">
   <div class="confirm-box">
     <h3 style="color:#ef4444">🗑 ลบคิวออกจากรายการรอ</h3>
-    <p>คิวนี้จะถูกลบออกจากระบบและไม่สามารถกู้คืนได้</p>
+    <p>คิวนี้จะถูกเอาออกจากรายการรอ · ลบผิดกู้คืนได้ที่ 📋 ประวัติเรียกคิว → 🗑 คิวที่ลบ (ภายในวันนี้)</p>
     <div class="confirm-ticket">
       <div class="ct-badge" id="delCtBadge"></div>
       <div>
@@ -647,7 +876,6 @@
   </div>
   <div class="sp-tabs">
     <button class="sptab active" onclick="swSpTab('general',this)">ทั่วไป</button>
-    <button class="sptab" onclick="swSpTab('colors',this)">สี</button>
     <button class="sptab" onclick="swSpTab('text',this)">ข้อความ</button>
   </div>
   <div class="sp-body">
@@ -790,61 +1018,6 @@
             onchange="onST('showCallDetail',this.checked)">
           <span>แสดงรายละเอียด (ชื่อ / ประเภท / เวลา) ในกล่องเรียกคิว</span>
         </label>
-      </div>
-      <button class="sp-reset" onclick="resetStyle()">↺ คืนค่าเริ่มต้น</button>
-    </div>
-
-    <!-- ── Colors tab ── -->
-    <div class="sptab-pane" id="spColors">
-      <div class="sp-sec">
-        <div class="sp-sec-lbl">🖼 พื้นหลัง</div>
-        <div class="sp-crow"><label>หน้าหลัก</label><input type="color" id="cs_bodyBg" oninput="onSC('bodyBg',this.value)"></div>
-        <div class="sp-crow"><label>แถบ nav</label><input type="color" id="cs_navBg" oninput="onSC('navBg',this.value)"></div>
-        <div class="sp-crow"><label>แถบช่องบริการ</label><input type="color" id="cs_cbarBg" oninput="onSC('cbarBg',this.value)"></div>
-        <div class="sp-crow"><label>แถบประเภทคิว</label><input type="color" id="cs_tabsBg" oninput="onSC('tabsBg',this.value)"></div>
-        <div class="sp-crow"><label>กล่องคิวปัจจุบัน (บน)</label><input type="color" id="cs_calledTop" oninput="onSC('calledTop',this.value)"></div>
-        <div class="sp-crow"><label>กล่องคิวปัจจุบัน (ล่าง)</label><input type="color" id="cs_calledBot" oninput="onSC('calledBot',this.value)"></div>
-        <div class="sp-crow"><label>หัวรายการรอ</label><input type="color" id="cs_wqHdrBg" oninput="onSC('wqHdrBg',this.value)"></div>
-        <div class="sp-crow"><label>แถบประวัติ</label><input type="color" id="cs_histBg" oninput="onSC('histBg',this.value)"></div>
-      </div>
-      <div class="sp-sec">
-        <div class="sp-sec-lbl">📋 หัวคอลัมน์ตารางรอ</div>
-        <div class="sp-crow"><label>พื้นหลัง</label><input type="color" id="cs_wqTheadBg" oninput="onSC('wqTheadBg',this.value)"></div>
-        <div class="sp-crow"><label>ตัวอักษร</label><input type="color" id="cs_wqTheadClr" oninput="onSC('wqTheadClr',this.value)"></div>
-      </div>
-      <div class="sp-sec">
-        <div class="sp-sec-lbl">🔵 ปุ่มเรียกถัดไป</div>
-        <div class="sp-crow"><label>สี 1</label><input type="color" id="cs_btnNext1" oninput="onSC('btnNext1',this.value)"></div>
-        <div class="sp-crow"><label>สี 2</label><input type="color" id="cs_btnNext2" oninput="onSC('btnNext2',this.value)"></div>
-      </div>
-      <div class="sp-sec">
-        <div class="sp-sec-lbl">🔁 ปุ่มเรียกซ้ำ</div>
-        <div class="sp-crow"><label>พื้นหลัง</label><input type="color" id="cs_btnRecallBg" oninput="onSC('btnRecallBg',this.value)"></div>
-        <div class="sp-crow"><label>ข้อความ</label><input type="color" id="cs_btnRecallClr" oninput="onSC('btnRecallClr',this.value)"></div>
-      </div>
-      <div class="sp-sec">
-        <div class="sp-sec-lbl">✕ ปุ่มไม่มา</div>
-        <div class="sp-crow"><label>สี 1</label><input type="color" id="cs_btnNoshow1" oninput="onSC('btnNoshow1',this.value)"></div>
-        <div class="sp-crow"><label>สี 2</label><input type="color" id="cs_btnNoshow2" oninput="onSC('btnNoshow2',this.value)"></div>
-      </div>
-      <div class="sp-sec">
-        <div class="sp-sec-lbl">📋 ปุ่มเรียก (รายการรอ)</div>
-        <div class="sp-crow"><label>สี 1</label><input type="color" id="cs_btnCi1" oninput="onSC('btnCi1',this.value)"></div>
-        <div class="sp-crow"><label>สี 2</label><input type="color" id="cs_btnCi2" oninput="onSC('btnCi2',this.value)"></div>
-        <div class="sp-crow"><label>ขอบคิวถัดไป</label><input type="color" id="cs_wqNext" oninput="onSC('wqNext',this.value)"></div>
-      </div>
-      <div class="sp-sec">
-        <div class="sp-sec-lbl">📊 สีตัวเลขสถิติ</div>
-        <div class="sp-crow"><label>คิวรอ</label><input type="color" id="cs_statW" oninput="onSC('statW',this.value)"></div>
-        <div class="sp-crow"><label>ให้บริการแล้ว</label><input type="color" id="cs_statS" oninput="onSC('statS',this.value)"></div>
-        <div class="sp-crow"><label>ไม่มา</label><input type="color" id="cs_statN" oninput="onSC('statN',this.value)"></div>
-      </div>
-      <div class="sp-sec">
-        <div class="sp-sec-lbl">🔤 สีข้อความ</div>
-        <div class="sp-crow"><label>nav link</label><input type="color" id="cs_navTxt" oninput="onSC('navTxt',this.value)"></div>
-        <div class="sp-crow"><label>โลโก้</label><input type="color" id="cs_logoClr" oninput="onSC('logoClr',this.value)"></div>
-        <div class="sp-crow"><label>ประเภทคิว (กล่องเรียก)</label><input type="color" id="cs_callTypeClr" oninput="onSC('callTypeClr',this.value)"></div>
-        <div class="sp-crow"><label>ช่องบริการ (กล่องเรียก)</label><input type="color" id="cs_callCtrClr" oninput="onSC('callCtrClr',this.value)"></div>
       </div>
       <button class="sp-reset" onclick="resetStyle()">↺ คืนค่าเริ่มต้น</button>
     </div>
@@ -1029,7 +1202,7 @@ function goHistory() {
   location.href = `/history.html?sys=${sysId}&mode=${cashierMode}`;
 }
 function openMiniWindow() {
-  const w = 360, h = 570;
+  const w = 360, h = 610;   // room for the "ยังไม่ส่ง" chip when something is left to forward
   const left = Math.max(0, screen.width  - w - 24);
   const top  = Math.max(0, Math.round((screen.height - h) / 2));
   const win  = window.open(
@@ -1075,8 +1248,9 @@ socket.on('queue_issued', ({ typeWaiting: tw, allWaiting: aw }) => {
   typeWaiting = tw; allWaiting = aw;
   renderTabs(); renderWaiting(); updateStats();
 });
-socket.on('queue_called', ({ calledQueue, typeWaiting: tw, allWaiting: aw, allServed: as, noShows: ns }) => {
+socket.on('queue_called', ({ calledQueue, typeWaiting: tw, allWaiting: aw, allServed: as, noShows: ns, lastCalledByCounter: lbc }) => {
   typeWaiting = tw; allWaiting = aw; allServed = as; noShows = ns || noShows;
+  if (lbc) curByCounter = lbc;
   lastCalled  = calledQueue;
   showCalled(calledQueue);
   renderTabs(); renderWaiting(); renderCalledHist(); renderNoShowHist(); updateStats();
@@ -1102,6 +1276,12 @@ socket.on('noshow_display_cleared', ({ noShows: ns, clearedNoShows: cns }) => {
   noShows = ns; clearedNoShows = cns || [];
   renderNoShowHist(); updateStats();
 });
+socket.on('queue_forwarded', ({ display, forwardedTo, allServed: as }) => {
+  if (as) allServed = as;
+  if (lastCalled && lastCalled.display === display) lastCalled.forwardedTo = forwardedTo;
+  renderFwd(); renderCalledHist();
+});
+socket.on('systems_updated', loadFwdTargets);
 socket.on('queue_reset', () => {
   typeWaiting={}; allWaiting=[]; allServed=[]; noShows=[]; clearedNoShows=[]; lastCalled=null;
   resetCalled(); renderTabs(); renderWaiting(); renderCalledHist(); renderNoShowHist(); updateStats();
@@ -1125,6 +1305,7 @@ socket.on('sys_state', d => {
   if (d.allServed)           allServed   = d.allServed;
   if (d.noShows)             noShows        = d.noShows;
   if (d.clearedNoShows)      clearedNoShows = d.clearedNoShows;
+  if (d.lastCalledByCounter) curByCounter = d.lastCalledByCounter;
   if (d.lastCalledByCounter && myCounterId) {
     const lc = d.lastCalledByCounter[myCounterId];
     if (lc && (!lastCalled || lc.display !== lastCalled.display)) {
@@ -1265,9 +1446,11 @@ function renderWaiting() {
         <div class="wq-badge" style="background:${t.color}">${t.prefix}</div>
         <span class="wq-num" style="color:${t.color}">${t.display}</span>
       </div>
+      <div class="wq-drug-cell">${drugCell(t)}</div>
       <div class="wq-type-cell">
         <div class="wq-type" style="background:${t.color}22;border:1px solid ${t.color}66;color:${t.color}">${t.typeName}</div>
         ${t.returned?`<div class="wq-ret-badge">↩ ซ้ำ${t.returnCount>1?' ×'+t.returnCount:''}</div>`:''}
+        ${t.forwardedFrom?`<div class="fwd-tag" title="ส่งต่อเมื่อ ${t.forwardedFrom.at}">⇢ จาก ${t.forwardedFrom.name}</div>`:''}
       </div>
       <div class="wq-time-cell">
         <span class="wq-time">${t.issuedAt}</span>
@@ -1291,7 +1474,41 @@ function renderWaiting() {
         <button class="btn-call-item" onclick="callByDisplay('${t.display}',${JSON.stringify(t).replace(/"/g,'&quot;')})">▶ เรียก</button>
       </div>
     </div>`).join('');
+  loadDrugCounts(list);
 }
+
+// ── จำนวนยา: distinct drug icodes (opitemrece, icode LIKE '1%') per OPD visit ──
+// cached per VN for a minute — the pharmacy may still be adding orders while the patient waits
+var drugCounts = {};          // vn → { n, at }
+const DRUG_TTL_MS = 60000;
+let drugFetching = false;
+
+function drugCell(t) {
+  if (t.mode === 'ipd' || !t.vn) return `<span style="color:#94a3b8">—</span>`;
+  const c = drugCounts[String(t.vn).trim()];
+  if (!c) return `<span style="color:#94a3b8;font-size:.8rem">…</span>`;
+  return `<span class="wq-drug${c.n ? '' : ' zero'}" title="จำนวนรายการยา (VN ${t.vn})">💊 <b>${c.n}</b> รายการ</span>`;
+}
+
+async function loadDrugCounts(list) {
+  if (drugFetching) return;
+  const now = Date.now();
+  const vns = [...new Set(list.filter(t => t.mode !== 'ipd' && t.vn).map(t => String(t.vn).trim()))]
+    .filter(v => !drugCounts[v] || now - drugCounts[v].at > DRUG_TTL_MS);
+  if (!vns.length) return;
+  drugFetching = true;
+  try {
+    const r = await fetch('/api/drug-counts', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vns }) }).then(r => r.json());
+    if (r.success) {
+      Object.entries(r.counts).forEach(([vn, n]) => { drugCounts[vn] = { n, at: Date.now() }; });
+      renderWaiting();
+    }
+  } catch {}
+  finally { drugFetching = false; }
+}
+// refresh the counts while the page sits open
+setInterval(() => { if (typeof allWaiting !== 'undefined') loadDrugCounts(getFilteredWaiting()); }, DRUG_TTL_MS);
 
 // ── Stats ─────────────────────────────────────────────────────────────────
 function updateStats() {
@@ -1326,11 +1543,144 @@ function showCalled(ticket) {
     </div>`;
   document.getElementById('btnRecall').disabled = false;
   document.getElementById('btnNoShow').disabled = !!ticket.noShow;
+  renderFwd();
 }
 function resetCalled() {
   document.getElementById('calledMain').innerHTML = '<div class="idle-txt">ยังไม่มีการเรียกคิว</div>';
   document.getElementById('btnRecall').disabled = true;
   document.getElementById('btnNoShow').disabled = true;
+  renderFwd();
+}
+
+// ── Forward to linked systems (same ticket number continues at e.g. การเงิน) ──
+var fwdTargets = []; // var: read by renderCalledHist, which can run before this line
+function loadFwdTargets(list) {
+  const me = (list || []).find(s => s.id === Number(sysId));
+  fwdTargets = ((me && me.forwardTo) || []).map(id => list.find(s => s.id === id)).filter(Boolean);
+  // Nav menu: open the call page of every linked system (targets + systems that forward here)
+  const linked = [...fwdTargets, ...list.filter(s => (s.forwardTo || []).includes(Number(sysId)))]
+    .filter((s, i, a) => a.findIndex(x => x.id === s.id) === i);
+  const nl = document.getElementById('navLinked');
+  // current page first, filled — so staff can see which side's call page this tab is
+  if (nl) nl.innerHTML = (linked.length && me
+    ? `<a class="nav-linked current" title="หน้าเรียกคิวที่เปิดอยู่" onclick="return false">${me.icon || '📋'} ${me.name} ✓</a>` : '') +
+    linked.map(s =>
+    `<a href="/cashier.html?sys=${s.id}" target="_blank" class="nav-linked" title="เปิดหน้าเรียกคิว ${s.name} (แท็บใหม่)">${s.icon || '📋'} ${s.name} ↗</a>`).join('');
+  renderFwd(); renderCalledHist(); renderPendingFwd();
+}
+fetch('/api/systems').then(r => r.json()).then(loadFwdTargets).catch(() => {});
+function renderFwd() {
+  const row = document.getElementById('fwdRow');
+  if (!row) return;
+  const t = lastCalled;
+  row.innerHTML = fwdTargets.map(sys => {
+    if (t && t.forwardedTo && t.forwardedTo.sysId === sys.id)
+      return `<button class="btn btn-fwd done" disabled>✓ ส่งต่อ ${sys.name} แล้ว</button>`;
+    return `<button class="btn btn-fwd" ${!t || t.noShow ? 'disabled' : ''} onclick="forwardTicket(lastCalled && lastCalled.display, ${sys.id})">➜ ส่งต่อ ${sys.icon||''} ${sys.name}</button>`;
+  }).join('');
+}
+function fwdHistBtns(t) {
+  if (t.forwardedTo) return `<span class="fwd-tag">✓ ส่ง${t.forwardedTo.name}</span>`;
+  return fwdTargets.map(sys =>
+    `<button class="btn-fwd-hist" title="ส่งต่อไป ${sys.name}" onclick="forwardTicket('${t.display}', ${sys.id})">➜ ${sys.name}</button>`).join('');
+}
+// ── Auto-forward switch + "เรียกแล้ว ยังไม่ส่งต่อ" list ─────────────────
+var curByCounter = {};      // counterId → ticket on screen there (still being served)
+var _pendingOpen = false;
+// the room called queues go to by themselves — null when auto-forward is off
+function autoFwdTarget() {
+  if (!fwdTargets.length || cStyle.autoForward === false) return null;
+  return fwdTargets.find(s => s.id === Number(cStyle.autoForwardTo)) || fwdTargets[0];
+}
+// staff may send a called queue to any linked room, back to where it came from too — each leg (e.g. 25>30) once
+function ticketHops(t) {
+  const h = [...(t.fwdHops || [])];
+  if (t.forwardedFrom && !h.length) h.push(t.forwardedFrom.sysId + '>' + Number(sysId));
+  return h;
+}
+function canSendOn(t, targetId) { return !ticketHops(t).includes(Number(sysId) + '>' + targetId); }
+// back at a room it already left (ห้องยา → การเงิน → ห้องยา): the trip is finished, nothing left to send
+const backHome = t => ticketHops(t).some(h => h.split('>')[0] === String(Number(sysId)));
+// one tick per linked room; a queue goes to one room, so ticking a room unticks the other
+function toggleAutoForward(id, on) {
+  if (on) { cStyle.autoForward = true; cStyle.autoForwardTo = Number(id); }
+  else cStyle.autoForward = false;
+  saveStyle(); renderPendingFwd();
+}
+function noteAutoForward(d) {
+  if (d && d.autoForwarded) toast(`↪ ส่ง ${d.autoForwarded.display} ไป ${d.autoForwarded.to} แล้ว (อัตโนมัติ)`, 'ok');
+}
+const sendableTargets = t => fwdTargets.filter(x => canSendOn(t, x.id));
+// called, not sent on, not skipped, trip not finished, sendable to at least one room, and not still at a counter
+function pendingForwardList() {
+  if (!fwdTargets.length) return [];
+  const busy = new Set(Object.values(curByCounter || {}).filter(Boolean).map(t => t.display));
+  return allServed.filter(t => !t.noShow && !t.forwardedTo && !t.forwardSkipped
+    && (t.mode || 'opd') === cashierMode
+    && !backHome(t) && sendableTargets(t).length
+    && !busy.has(t.display));
+}
+function togglePendingFwd() { _pendingOpen = !_pendingOpen; renderPendingFwd(); }
+function renderPendingFwd() {
+  const box = document.getElementById('fwdAutoBox');
+  if (!box) return;
+  box.style.display = fwdTargets.length ? '' : 'none';
+  if (!fwdTargets.length) return;
+  const auto = autoFwdTarget();
+  document.getElementById('autoFwdRows').innerHTML = fwdTargets.map(x => `
+    <label class="skip-row" title="เมื่อเรียกคิวถัดไปที่ช่องนี้ คิวก่อนหน้าจะถูกส่งไป ${x.name} ให้เอง (ยกเว้นคิวที่ไม่มา / คืนคิว / ส่งต่อแล้ว / คิวที่ห้องอื่นส่งมา — คิวเหล่านี้เลือกส่งเองจากรายการ)${fwdTargets.length > 1 ? ' · เลือกได้ทีละห้อง' : ''}">
+      <input type="checkbox" ${auto && auto.id === x.id ? 'checked' : ''} onchange="toggleAutoForward(${x.id}, this.checked)"/>
+      <span>↪ ส่งต่อ <b>${x.icon || ''} ${x.name}</b> อัตโนมัติ เมื่อเรียกคิวถัดไป</span>
+    </label>`).join('');
+  const list = pendingForwardList();
+  const btn = document.getElementById('fwdPendingBtn');
+  btn.className = 'fwd-pending' + (list.length ? '' : ' none');
+  btn.innerHTML = list.length
+    ? `<span>⚠ เรียกแล้ว ยังไม่ส่งต่อ <b>${list.length}</b> คิว</span><span>${_pendingOpen ? '▴' : '▾'}</span>`
+    : `<span>✓ ส่งต่อครบแล้ว</span>`;
+  const el = document.getElementById('fwdPendingList');
+  const open = _pendingOpen && list.length;
+  el.classList.toggle('open', !!open);
+  // one ➜ button per room the queue can go to
+  el.innerHTML = open ? list.map(t => `
+    <div class="fwd-prow">
+      <div class="ptop">
+        <span class="pn" style="color:${t.color}">${t.display}</span>
+        <span class="pm">${t.patientName ? '👤 ' + t.patientName + ' · ' : ''}เรียก ${t.calledAt || ''}</span>
+        <button class="skip" title="ไม่ต้องส่ง (เช่น ไม่ต้องชำระเงิน)" onclick="skipForward('${t.display}')">✕</button>
+      </div>
+      <div class="pgo">${sendableTargets(t).map(x =>
+        `<button class="go" onclick="forwardTicket('${t.display}', ${x.id})">➜ ${x.name}</button>`).join('')}</div>
+    </div>`).join('') + (list.length > 1 ? fwdTargets.map(x => {
+      const n = list.filter(t => sendableTargets(t).some(s => s.id === x.id)).length;
+      return n ? `<button class="fwd-all" onclick="forwardAllPending(${x.id})">➜ ส่งทั้งหมด ${n} คิว ไป ${x.name}</button>` : '';
+    }).join('') : '') : '';
+}
+function skipForward(display) {
+  fetch(`/api/sys/${sysId}/forward-skip`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ display }) })
+    .then(r => r.json()).then(d => { if (d.success) toast(`${display} — ไม่ต้องส่งต่อ`, 'ok'); else toast(d.message, 'err'); })
+    .catch(() => toast('บันทึกไม่สำเร็จ', 'err'));
+}
+async function forwardAllPending(targetId) {
+  const target = fwdTargets.find(x => x.id === targetId);
+  const list = target ? pendingForwardList().filter(t => sendableTargets(t).some(s => s.id === targetId)) : [];
+  if (!list.length) return;
+  let ok = 0;
+  for (const t of list) {   // one by one, oldest call first, so the target's waiting order follows the original queue
+    const d = await fetch(`/api/sys/${sysId}/forward`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ display: t.display, targetSysId: target.id }) }).then(r => r.json()).catch(() => ({}));
+    if (d.success) ok++;
+  }
+  toast(`ส่งต่อ ${ok}/${list.length} คิว ไป ${target.name} แล้ว`, ok === list.length ? 'ok' : 'err');
+}
+function forwardTicket(display, targetSysId) {
+  if (!display) return;
+  fetch(`/api/sys/${sysId}/forward`, { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ display, targetSysId }) })
+  .then(r => r.json()).then(d => {
+    if (d.success) toast(`ส่งต่อ "${display}" ไป ${d.forwardedTo.name} แล้ว`, 'ok');
+    else toast(d.message, 'err');
+  }).catch(() => toast('ส่งต่อไม่สำเร็จ', 'err'));
 }
 
 // ── History ───────────────────────────────────────────────────────────────
@@ -1342,6 +1692,7 @@ function swHist(pane, el) {
 }
 
 function renderCalledHist() {
+  renderPendingFwd();
   let list = (activeTab === 'all' ? allServed : allServed.filter(t => t.typeId == activeTab))
               .filter(t => (t.mode || 'opd') === cashierMode);
   const el   = document.getElementById('paneCalled');
@@ -1368,6 +1719,7 @@ function renderCalledHist() {
         <div class="action-btns">
           <button class="btn-recall-hist" onclick="recallServed('${t.display}')">↺ เรียกซ้ำ</button>
           <button class="btn-uncall"      onclick="uncallTicket('${t.display}')">↩ คืน</button>
+          ${fwdHistBtns(t)}
         </div>
       </div>`).join('');
 }
@@ -1479,12 +1831,12 @@ function confirmCall() {
     const body = { counterId: myCounterId };
     if (call.typeId) body.typeId = call.typeId;
     fetch(`/api/sys/${sysId}/call-next`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) })
-      .then(r=>r.json()).then(d => { if (!d.success) toast(d.message, 'err'); });
+      .then(r=>r.json()).then(d => { if (!d.success) toast(d.message, 'err'); else noteAutoForward(d); });
   } else {
     fetch(`/api/sys/${sysId}/call-number`, { method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ display: call.display, counterId: myCounterId }) })
       .then(r=>r.json()).then(d => {
-        if (!d.success) toast(d.message, 'err');
+        if (!d.success) toast(d.message, 'err'); else noteAutoForward(d);
         document.getElementById('spNum').focus();
       });
   }
@@ -1657,6 +2009,7 @@ document.addEventListener('keydown', function(e) {
 // ── Style settings ────────────────────────────────────────────────────────
 const SKEY = 'qf_cashier_style_' + sysId;
 const DEF_STYLE = {
+  repeatAnnounce:false, autoForward:true, autoForwardTo:null,
   bodyBg:'#e2ecfa', navBg:'#ffffff', cbarBg:'#e7f0fb',
   tabsBg:'#e2ecfa', calledTop:'#ffffff', calledBot:'#f7fafd',
   wqHdrBg:'#1f83d1', histBg:'#ffffff',
@@ -1688,32 +2041,8 @@ let cStyle = Object.assign({}, DEF_STYLE, _savedStyle);
 
 function applyStyle() {
   const r = document.documentElement.style;
-  r.setProperty('--cs-body-bg',        cStyle.bodyBg);
-  r.setProperty('--cs-nav-bg',         cStyle.navBg);
-  r.setProperty('--cs-cbar-bg',        cStyle.cbarBg);
-  r.setProperty('--cs-tabs-bg',        cStyle.tabsBg);
-  r.setProperty('--cs-called-top',     cStyle.calledTop);
-  r.setProperty('--cs-called-bot',     cStyle.calledBot);
-  r.setProperty('--cs-wq-hdr-bg',      cStyle.wqHdrBg);
-  r.setProperty('--cs-hist-bg',        cStyle.histBg);
   r.setProperty('--cs-left-w',         cStyle.leftW + 'px');
-  r.setProperty('--cs-btn-next1',      cStyle.btnNext1);
-  r.setProperty('--cs-btn-next2',      cStyle.btnNext2);
-  r.setProperty('--cs-btn-recall-bg',  cStyle.btnRecallBg);
-  r.setProperty('--cs-btn-recall-clr', cStyle.btnRecallClr);
-  r.setProperty('--cs-btn-noshow1',    cStyle.btnNoshow1);
-  r.setProperty('--cs-btn-noshow2',    cStyle.btnNoshow2);
-  r.setProperty('--cs-btn-ci1',        cStyle.btnCi1);
-  r.setProperty('--cs-btn-ci2',        cStyle.btnCi2);
-  r.setProperty('--cs-wq-next',        cStyle.wqNext);
-  r.setProperty('--cs-stat-w',         cStyle.statW);
-  r.setProperty('--cs-stat-s',         cStyle.statS);
-  r.setProperty('--cs-stat-n',         cStyle.statN);
-  r.setProperty('--cs-nav-txt',        cStyle.navTxt);
-  r.setProperty('--cs-logo-clr',       cStyle.logoClr);
   r.setProperty('--cs-nav-fs',         (cStyle.navFs||0.82) + 'rem');
-  r.setProperty('--cs-call-type-clr',  cStyle.callTypeClr);
-  r.setProperty('--cs-call-ctr-clr',   cStyle.callCtrClr);
   r.setProperty('--cs-call-fs',       cStyle.callFs + 'rem');
   r.setProperty('--cs-call-meta-fs',  cStyle.callMetaFs + 'rem');
   r.setProperty('--cs-btn-next-fs',   cStyle.btnNextFs + 'rem');
@@ -1730,8 +2059,6 @@ function applyStyle() {
   r.setProperty('--wq-th-fs',         (cStyle.wqThFs      || 1.0) + 'rem');
   r.setProperty('--wq-patient-fs',    (cStyle.wqPatientFs || 1.0)  + 'rem');
   r.setProperty('--wq-hn-fs',         (cStyle.wqHnFs      || 1.0)  + 'rem');
-  r.setProperty('--wq-thead-bg',      cStyle.wqTheadBg || '#1a6ba8');
-  r.setProperty('--wq-thead-clr',     cStyle.wqTheadClr || '#ffffff');
   const setTxt = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
   setTxt('navLogo',      cStyle.lblLogo      || DEF_STYLE.lblLogo);
   setTxt('cbarLbl',      cStyle.lblCbarCtr   || DEF_STYLE.lblCbarCtr);
@@ -1749,6 +2076,14 @@ function applyStyle() {
   if (statsEl)  statsEl.style.display  = cStyle.showStats   ? '' : 'none';
   if (histEl)   histEl.style.display   = cStyle.showHistory ? '' : 'none';
   if (skipEl)   skipEl.style.display   = cStyle.showSkip    ? '' : 'none';
+  const repeatEl  = document.getElementById('cbRepeat');
+  if (repeatEl) repeatEl.checked = !!cStyle.repeatAnnounce;
+}
+
+// Saved per queue system (cashier-settings) — every display of this system reads it and announces twice
+function toggleRepeatAnnounce(on) {
+  cStyle.repeatAnnounce = !!on;
+  saveStyle();
 }
 let _saveStyleTimer = null;
 function saveStyle() {
@@ -1809,14 +2144,7 @@ function onST2(key, val) {
 }
 
 function restoreStyleInputs() {
-  ['bodyBg','navBg','cbarBg','tabsBg','calledTop','calledBot','wqHdrBg','histBg',
-   'wqTheadBg','wqTheadClr',
-   'btnNext1','btnNext2','btnRecallBg','btnRecallClr','btnNoshow1','btnNoshow2',
-   'btnCi1','btnCi2','wqNext','statW','statS','statN',
-   'navTxt','logoClr','callTypeClr','callCtrClr'].forEach(k => {
-    const el = document.getElementById('cs_' + k);
-    if (el) el.value = cStyle[k];
-  });
+  renderPendingFwd();   // auto-forward switch may have been changed from another screen (e.g. Mini)
   document.getElementById('cs_navFs').value        = cStyle.navFs||0.82;
   document.getElementById('cs_callFs').value      = cStyle.callFs;
   document.getElementById('cs_callMetaFs').value  = cStyle.callMetaFs;
@@ -1883,7 +2211,7 @@ function swSpTab(tab, el) {
   document.querySelectorAll('.sptab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.sptab-pane').forEach(p => p.classList.remove('active'));
   el.classList.add('active');
-  const paneId = tab === 'general' ? 'spGeneral' : tab === 'colors' ? 'spColors' : 'spText';
+  const paneId = tab === 'general' ? 'spGeneral' : 'spText';
   document.getElementById(paneId).classList.add('active');
 }
 function resetStyle() {
