@@ -500,7 +500,7 @@ function pendingFwd() {
     && !backHome(t) && canSendOn(t, (fwdTarget() || {}).id) && !busy.has(t.display));
 }
 function renderFwdUI() {
-  const tgt = fwdTarget();
+  const tgt = cashierSet.forwardEnabled === false ? null : fwdTarget();   // switched off at ⚙ on the call page
   document.getElementById('autoFwdRow').style.display = tgt ? '' : 'none';
   const chip = document.getElementById('fwdChip');
   if (!tgt) { chip.style.display = 'none'; return; }

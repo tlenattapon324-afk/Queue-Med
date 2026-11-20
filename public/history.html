@@ -92,6 +92,16 @@
     .tab.ns.active .tab-cnt{background:rgba(220,38,38,.12);color:#dc2626}
 
     /* ── PANES ── */
+    .type-filter{display:flex;flex-wrap:wrap;gap:8px;max-width:1100px;margin:0 auto;padding:14px 20px 0}
+    .tf-chip{display:inline-flex;align-items:center;gap:7px;border:1.5px solid #d5e3f3;background:#fff;color:#1e293b;
+      border-radius:999px;padding:5px 12px 5px 6px;font:inherit;font-size:.86rem;font-weight:700;cursor:pointer}
+    .tf-chip:first-child{padding-left:12px}
+    .tf-chip:hover{border-color:var(--c)}
+    .tf-chip.active{border-color:var(--c);background:var(--c);color:#fff;box-shadow:0 2px 8px rgba(30,64,175,.2)}
+    .tf-pfx{min-width:24px;height:22px;padding:0 5px;border-radius:6px;color:#fff;font-size:.7rem;font-weight:900;display:inline-flex;align-items:center;justify-content:center}
+    .tf-chip.active .tf-pfx{box-shadow:0 0 0 1.5px #fff}
+    .tf-cnt{background:#eef2f7;color:#334155;border-radius:999px;padding:0 7px;font-size:.75rem}
+    .tf-chip.active .tf-cnt{background:rgba(255,255,255,.28);color:#fff}
     .pane{display:none;padding:16px 20px;max-width:1100px;margin:0 auto}
     .pane.active{display:block}
 
@@ -268,6 +278,9 @@
   </div>
 </div>
 
+<!-- filter by queue type (ทั้งหมด + each type that has tickets in this tab) -->
+<div class="type-filter" id="typeFilter"></div>
+
 <!-- content panes -->
 <div class="pane active" id="paneCalled"></div>
 <div class="pane"        id="paneNoShow"></div>
@@ -287,6 +300,7 @@ let noShows        = [];
 let clearedNoShows = [];
 let deletedQueues  = [];
 let curTab         = 'called';
+let histLoaded     = false;   // today's lists have arrived from the server
 let nsSubTab       = 'active';
 
 // ── Socket ──────────────────────────────────────────────────────────────────
@@ -327,7 +341,10 @@ socket.on('queue_deleted_waiting', d => {
 socket.on('queue_forwarded', d => { if (d.allServed) allServed = d.allServed; renderCalledHist(); });
 
 // ── Forward targets (systems this one passes its queue on to, e.g. ห้องการเงิน) ──
-let fwdTargets = [];
+let fwdTargets = [], forwardOn = true;   // forwardOn: the ⚙ switch on the call page
+const setForwardOn = s => { forwardOn = !s || s.forwardEnabled !== false; renderCalledHist(); };
+fetch(`/api/sys/${sysId}/cashier-settings`).then(r => r.json()).then(setForwardOn).catch(() => {});
+socket.on('cashier_settings_updated', setForwardOn);
 fetch('/api/systems').then(r => r.json()).then(list => {
   const me = list.find(x => x.id === Number(sysId));
   fwdTargets = ((me && me.forwardTo) || []).map(id => list.find(x => x.id === id)).filter(Boolean);
@@ -342,8 +359,11 @@ function ticketHops(t) {
 function canSendOn(t, targetId) { return !ticketHops(t).includes(Number(sysId) + '>' + targetId); }
 function fwdBtns(t) {
   if (t.forwardedTo) return `<span class="fwd-tag">✓ ส่ง${t.forwardedTo.name}แล้ว</span>`;
-  if (t.forwardSkipped) return `<span class="fwd-tag skip">ไม่ต้องส่งต่อ</span>`;
-  return fwdTargets.filter(x => canSendOn(t, x.id)).map(x => `<button class="btn-fwd-hist" title="ส่งต่อไป ${x.name}" onclick="forwardTicket('${t.display}', ${x.id})">➜ ${x.name}</button>`).join('');
+  // issued as "ไม่ผ่านการเงิน" — still sendable by hand in case the check was wrong
+  const free = t.payRoute === 'free' ? `<span class="fwd-tag skip">ไม่ผ่านการเงิน</span>` : '';
+  if (!forwardOn) return free;
+  if (t.forwardSkipped && !free) return `<span class="fwd-tag skip">ไม่ต้องส่งต่อ</span>`;
+  return free + fwdTargets.filter(x => canSendOn(t, x.id)).map(x => `<button class="btn-fwd-hist" title="ส่งต่อไป ${x.name}" onclick="forwardTicket('${t.display}', ${x.id})">➜ ${x.name}</button>`).join('');
 }
 function forwardTicket(display, targetSysId) {
   fetch(`/api/sys/${sysId}/forward`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -358,6 +378,7 @@ fetch(`/api/sys/${sysId}/status`).then(r=>r.json()).then(d => {
   noShows        = d.noShows        || [];
   clearedNoShows = d.clearedNoShows || [];
   deletedQueues  = d.deletedQueues  || [];
+  histLoaded = true;
   renderAll();
 });
 
@@ -392,6 +413,7 @@ function swTab(tab, el) {
   document.getElementById('paneCalled').classList.toggle('active', tab === 'called');
   document.getElementById('paneNoShow').classList.toggle('active', tab === 'noshow');
   document.getElementById('paneDeleted').classList.toggle('active', tab === 'deleted');
+  renderTypeFilter();
 }
 
 // ── Stats ─────────────────────────────────────────────────────────────────────
@@ -405,8 +427,41 @@ function updateStats() {
   document.getElementById('hcD').textContent  = deletedQueues.filter(t => (t.mode||'opd') === cashierMode).length;
 }
 
+// ── Filter by queue type ──────────────────────────────────────────────────────
+let typeFilter = localStorage.getItem('histType_' + sysId) || 'all';
+const inMode = t => (t.mode || 'opd') === cashierMode;
+const byType = list => typeFilter === 'all' ? list : list.filter(t => String(t.typeId) === typeFilter);
+function tabSource() {   // the tickets of the open tab (before the type filter)
+  if (curTab === 'noshow')  return [...noShows, ...clearedNoShows].filter(inMode);
+  if (curTab === 'deleted') return deletedQueues.filter(inMode);
+  return allServed.filter(inMode);
+}
+function hEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function renderTypeFilter() {
+  const src = tabSource();
+  const types = new Map();   // typeId → { prefix, name, color, n } in order of first appearance
+  for (const t of src) {
+    const k = String(t.typeId);
+    if (!types.has(k)) types.set(k, { prefix: t.prefix || '#', name: t.typeName || '', color: t.color || '#64748b', n: 0 });
+    types.get(k).n++;
+  }
+  if (typeFilter !== 'all' && !types.has(typeFilter)) {   // chosen type has nothing in this tab: keep the chip, count 0
+    const any = [...allServed, ...noShows, ...clearedNoShows, ...deletedQueues].find(t => String(t.typeId) === typeFilter);
+    if (any) types.set(typeFilter, { prefix: any.prefix || '#', name: any.typeName || '', color: any.color || '#64748b', n: 0 });
+    else if (histLoaded) typeFilter = 'all';   // type gone from today's lists (not just "not loaded yet")
+  }
+  const chip = (k, inner, n, color) => `<button class="tf-chip${typeFilter === k ? ' active' : ''}" style="--c:${color}" onclick="setTypeFilter('${k}')">${inner} <span class="tf-cnt">${n}</span></button>`;
+  document.getElementById('typeFilter').innerHTML = chip('all', 'ทั้งหมด', src.length, '#1d4ed8') +
+    [...types.entries()].map(([k, x]) => chip(k, `<span class="tf-pfx" style="background:${hEsc(x.color)}">${hEsc(x.prefix)}</span>${hEsc(x.name)}`, x.n, hEsc(x.color))).join('');
+}
+function setTypeFilter(k) {
+  typeFilter = k;
+  try { localStorage.setItem('histType_' + sysId, k); } catch {}
+  renderAll();
+}
+
 // ── Render helpers ────────────────────────────────────────────────────────────
-function renderAll() { renderCalledHist(); renderNoShowHist(); renderDeletedHist(); updateStats(); }
+function renderAll() { renderTypeFilter(); renderCalledHist(); renderNoShowHist(); renderDeletedHist(); updateStats(); }
 
 function patientMeta(t) {
   const isIpd = t.mode === 'ipd';
@@ -420,10 +475,11 @@ function patientMeta(t) {
 }
 
 function renderCalledHist() {
-  const list = allServed.filter(t => (t.mode||'opd') === cashierMode);
+  if (curTab === 'called') renderTypeFilter();
+  const list = byType(allServed.filter(t => (t.mode||'opd') === cashierMode));
   const el   = document.getElementById('paneCalled');
   if (!list.length) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-txt">ยังไม่มีประวัติการเรียกคิว</div></div>`;
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-txt">${typeFilter === 'all' ? 'ยังไม่มีประวัติการเรียกคิว' : 'ไม่มีประวัติของประเภทนี้'}</div></div>`;
     return;
   }
   el.innerHTML = `
@@ -467,9 +523,10 @@ function clearNoShowDisplay(display) {
 }
 
 function renderNoShowHist() {
+  if (curTab === 'noshow') renderTypeFilter();
   const el           = document.getElementById('paneNoShow');
-  const activeList   = noShows.filter(t       => (t.mode||'opd') === cashierMode);
-  const clearedList  = clearedNoShows.filter(t => (t.mode||'opd') === cashierMode);
+  const activeList   = byType(noShows.filter(t       => (t.mode||'opd') === cashierMode));
+  const clearedList  = byType(clearedNoShows.filter(t => (t.mode||'opd') === cashierMode));
 
   const thead = `
     <div class="h-thead thead-ns">
@@ -514,8 +571,9 @@ function renderNoShowHist() {
 
 // Queues deleted from the waiting list today (newest first) — ↩ กู้คืน puts one back in its old place
 function renderDeletedHist() {
+  if (curTab === 'deleted') renderTypeFilter();
   const el   = document.getElementById('paneDeleted');
-  const list = deletedQueues.filter(t => (t.mode||'opd') === cashierMode);
+  const list = byType(deletedQueues.filter(t => (t.mode||'opd') === cashierMode));
   if (!list.length) {
     el.innerHTML = `<div class="empty-state"><div class="empty-icon">🗑</div><div class="empty-txt">วันนี้ยังไม่มีคิวที่ถูกลบ</div></div>`;
     return;

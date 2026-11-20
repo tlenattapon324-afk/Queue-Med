@@ -269,6 +269,43 @@
 
     /* ── BOARD (บอร์ดเรียกคิว): latest call big on the left, counters on the right ── */
     .counter-area.board-mode{display:flex;gap:0;padding:10px;grid-template-columns:unset!important}
+    /* จอแนวตั้ง (vertical) — from Queue-OPD */
+    .counter-area.vt-mode{display:flex;gap:0;padding:8px;grid-template-columns:unset!important}
+    .vt-called{flex:1;display:flex;min-width:0;min-height:0}
+    .vt-col{display:flex;flex-direction:column;min-width:0;min-height:0}
+    .vt-ch{display:flex;flex-direction:column;min-height:0;overflow:hidden;border-radius:10px;background:var(--cell)}
+    .vt-ch-hd{flex:none;display:flex;align-items:center;justify-content:center;padding:0 10px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+      background:linear-gradient(135deg,var(--ha),var(--hb));color:var(--htxt)}
+    .vt-grid{flex:1;min-height:0;display:flex;flex-wrap:wrap;align-content:flex-start;align-items:flex-start;padding:10px;overflow:hidden}
+    .vt-grid.center{justify-content:center;align-content:center;align-items:center}
+    .vt-chip{box-sizing:border-box;text-align:center;font-weight:900;line-height:1.1;padding:.06em .22em;border-radius:12px;white-space:nowrap;font-variant-numeric:tabular-nums}
+    .vt-dash{font-weight:700;text-align:center}
+    .vt-empty{margin:auto;color:var(--dim);font-size:1.4rem}
+    .vt-rsz{flex:0 0 8px;cursor:col-resize;border-radius:4px;touch-action:none}
+    .vt-rsz-h{flex:0 0 8px;cursor:row-resize;border-radius:4px;touch-action:none}
+    .vt-rsz:hover,.vt-rsz-h:hover{background:rgba(66,165,245,.35)}
+    .vt-ns{flex:none;display:flex;flex-direction:column;overflow:hidden}
+    .vt-ns-hd,.vt-wait-hd{flex:none;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:800;padding:0 8px;white-space:nowrap;overflow:hidden}
+    .vt-ns-body{flex:1;min-height:0;overflow:hidden;display:flex;flex-wrap:wrap;align-items:center;align-content:center;gap:6px;padding:6px}
+    .vt-ns-item{display:flex;flex-direction:column;align-items:center;border-radius:8px;padding:2px 10px;font-weight:900;line-height:1.1}
+    .vt-ns-time{font-size:.68rem;color:#64748b;font-weight:600}
+    .vt-ns-empty,.vt-wait-empty{margin:auto;color:rgba(255,255,255,.45);font-size:.9rem}
+    .vt-ns-track{display:flex;width:max-content;animation:vtMarq linear infinite}
+    .vt-ns-grp{display:flex;gap:6px;padding-right:6px}
+    @keyframes vtMarq{to{transform:translateX(-50%)}}
+    .vt-count{background:rgba(255,255,255,.25);border-radius:999px;padding:0 8px;font-size:.85em}
+    .vt-wait{flex:none;display:flex;flex-direction:column;border-radius:10px;overflow:hidden;min-height:0}
+    .vt-wait-body{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+    .vt-wait-list{display:flex;flex-direction:column;gap:6px;padding:6px 6px 0}
+    .vt-wait-track{animation:vtUp linear infinite}
+    @keyframes vtUp{to{transform:translateY(-50%)}}
+    .vt-wait-item{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,.06);border-radius:8px;overflow:hidden}
+    .vt-wait-no{font-weight:900;line-height:1;white-space:nowrap}
+    .vt-wait-type{font-size:.8rem;font-weight:700;opacity:.85}
+    .vt-sec{background:#081a26;border:1px solid #16384d;border-radius:9px;padding:10px;margin-bottom:10px}
+    .vt-sec-title{font-size:.78rem;font-weight:800;color:#4fc3f7;margin-bottom:8px}
+    .vt-ctr-hide{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.8rem;color:#ccc}
+    .vt-ctr-hide label{display:flex;gap:5px;align-items:center;cursor:pointer}
     .board-left{display:flex;flex-direction:column;gap:10px;min-width:0;flex-shrink:0}
     .board-hdr{background:var(--hb);color:var(--board-hdr-clr,var(--htxt));text-align:center;font-weight:800;
       padding:0 14px;border-radius:12px;font-size:var(--board-hdr-fs,1.3rem);letter-spacing:1px;flex-shrink:0;
@@ -482,7 +519,19 @@
             <input type="radio" name="layoutMode" value="board" style="accent-color:#42a5f5;width:15px;height:15px" onchange="onLayoutModeChange('board')"/>
             <span style="font-size:.88rem;color:#ccc">🎯 บอร์ดเรียกคิว — คิวล่าสุดตัวใหญ่ + รายการช่อง</span>
           </label>
+          <label style="display:flex;align-items:center;gap:9px;cursor:pointer;padding:9px 12px;background:#0f1923;border-radius:9px;border:1px solid #1e3a5f">
+            <input type="radio" name="layoutMode" value="vertical" style="accent-color:#42a5f5;width:15px;height:15px" onchange="onLayoutModeChange('vertical')"/>
+            <span style="font-size:.88rem;color:#ccc">📱 จอแนวตั้ง — คิวที่เรียกหลายคิวต่อช่อง + ไม่มาต่อช่อง + คิวที่รอเรียก</span>
+          </label>
         </div>
+      </div>
+      <!-- ═══ จอแนวตั้ง (vertical) options — fields built by buildVtOpts() ═══ -->
+      <div id="vtOpts" class="sec-box" style="display:none;border-color:#16384d;background:#06131c">
+        <div class="sec-box-title" style="color:#4fc3f7">📱 ตั้งค่าจอแนวตั้ง</div>
+        <div id="vtOptsBody"></div>
+        <button class="btn-default" style="width:100%;margin:4px 0 0" onclick="resetVtSizes()">↺ คืนขนาดคอลัมน์/ช่อง ที่ลากปรับไว้</button>
+        <div class="sf-hint">ลากเส้นแบ่งบนจอเพื่อปรับความกว้างคอลัมน์ ความสูงแต่ละช่อง ความสูงกล่องไม่มา และความกว้างคิวที่รอเรียก ·
+          เปิด/ปิดกล่อง "เรียกแล้วไม่มา" ทั้งหมดที่แท็บ ไม่มา</div>
       </div>
       <!-- ═══ บอร์ดเรียกคิว (board) options ═══ -->
       <div id="boardOpts" class="sec-box" style="display:none;border-color:#3a2a5f;background:#0c0a1a">
@@ -1186,7 +1235,20 @@ let waitingList   = [];   // for the board's "คิวถัดไป"
 
 // ── Settings ─────────────────────────────────────────────────────────────
 let LS_KEY = 'qf_display_' + sysId + '_' + dispMode;
-const DEF = { columns:2, maxPerCounter:1, selectedCounters:[], hiddenTypes:[], layoutMode:'grid', splitLblCtr:'ช่องบริการ', splitLblQ:'หมายเลขที่เรียกเข้าบริการ', splitHdrBg:'#2e7d32', splitHdrClr:'#ffffff', splitRowBg:'', splitCtrClr:'', splitDivClr:'', splitHdrFs:1.0, splitHdrPad:12, splitNumFs:4.5, splitCtrFs:2.8, splitCardH:140, splitCtrRatio:1, splitQRatio:2, splitTypeFs:0.8, splitTypePos:'above',
+// จอแนวตั้ง — same settings and defaults as Queue-OPD's vertical layout (header bg/colour '' = theme)
+const VT_DEF = {
+  vtCalledCount:3, vtCalledBg:'#ffffff', vtCalledChipBg:'#ffffff', vtCalledGap:10, vtCalledColor:'#1565c0', vtCalledFontSize:12,
+  vtCalledCenter:false, vtCalledChipBgOn:true, vtCalledBorderColor:'#bbbbbb', vtCalledBorderWidth:2,
+  vtEmptyDashText:'รอเรียกคิว', vtEmptyDashFontSize:3.5, vtEmptyDashColor:'#dddddd',
+  vtChannelBorderColor:'#2196f3', vtChannelBorderWidth:0, vtHeaderFontSize:14, vtHeaderHeight:30, vtHeaderBg:'', vtHeaderClr:'',
+  vtNoShowHiddenCtrs:[], vtNoShowHeights:{}, vtNoShowDefaultHeight:90, vtNoShowLabel:'เรียกแล้วไม่มา', vtNoShowBg:'#2a0000',
+  vtNoShowHeaderBg:'#7f0000', vtNoShowHeaderColor:'#ffffff', vtNoShowHeaderFontSize:12, vtNoShowHeaderHeight:26, vtNoShowQueueColor:'#ff6b6b',
+  vtNoShowFontSize:3, vtNoShowItemBg:'#ffffff', vtNoShowItemBorderColor:'#bbbbbb', vtNoShowItemBorderWidth:2, vtNoShowMaxItems:3,
+  vtNoShowAutoScroll:false, vtNoShowScrollSpeed:15, vtColWidths:{}, vtRowHeights:{},
+  vtShowWaiting:true, vtWaitingLabel:'คิวที่รอเรียก', vtWaitingWidth:300, vtWaitingBg:'#0d1b2a', vtWaitingHeaderBg:'#1565c0',
+  vtWaitingHeaderColor:'#ffffff', vtWaitingHeaderFontSize:16, vtWaitingHeaderHeight:36, vtWaitingQueueColor:'#64b5f6', vtWaitingFontSize:6,
+  vtWaitingMaxItems:10, vtWaitingAutoScroll:true, vtWaitingScrollSpeed:3, vtWaitingItemHeight:70 };
+const DEF = { ...VT_DEF, columns:2, maxPerCounter:1, selectedCounters:[], hiddenTypes:[], layoutMode:'grid', splitLblCtr:'ช่องบริการ', splitLblQ:'หมายเลขที่เรียกเข้าบริการ', splitHdrBg:'#2e7d32', splitHdrClr:'#ffffff', splitRowBg:'', splitCtrClr:'', splitDivClr:'', splitHdrFs:1.0, splitHdrPad:12, splitNumFs:4.5, splitCtrFs:2.8, splitCardH:140, splitCtrRatio:1, splitQRatio:2, splitTypeFs:0.8, splitTypePos:'above',
   showNoShow:false, nsRows:5, nsWidth:280, nsRowH:70, nsHdrFs:0.82, nsNumFs:1.1, nsMetaFs:0.68, nsBadgeSize:28, showNsDetail:true, speechRate:0.65, custom:{},
   // counter placement (split-h / board): 1–4 columns, column per counter, order, per-column header text
   splitCols:1, ctrCols:{}, ctrOrder:[], colHeaders:{},
@@ -1501,7 +1563,8 @@ function gridIsBuilt() {
   const c = allCounters[0];
   if (!c) return true;
   return !!(document.getElementById('cell-' + c.id) || document.getElementById('card-' + c.id) ||
-            document.getElementById('brow-' + c.id) || (getVisibleCounters().length && document.getElementById('boardBig')));
+            document.getElementById('brow-' + c.id) || document.getElementById('vtgrid-' + c.id) ||
+            (getVisibleCounters().length && document.getElementById('boardBig')));
 }
 function buildCounterGrid() {
   const displayCfg = getDisplayCfg();
@@ -1539,6 +1602,8 @@ function buildCounterGrid() {
     placeSplitResizers();
   } else if (mode === 'board') {
     buildBoard(displayCfg, visible, area);
+  } else if (mode === 'vertical') {
+    buildVertical(displayCfg, visible, area);
   } else {
     area.className = 'counter-area';
     const cols = Math.min(displayCfg.columns, visible.length || 1);
@@ -1556,7 +1621,8 @@ function buildCounterGrid() {
 function applyLayout() {
   const displayCfg = getDisplayCfg();
   const ns = document.getElementById('noShowPanel');
-  ns.style.display = displayCfg.showNoShow ? 'flex' : 'none';
+  // จอแนวตั้งแสดงไม่มาแยกในกล่องของแต่ละช่องแทนแผงรวมด้านขวา
+  ns.style.display = displayCfg.showNoShow && displayCfg.layoutMode !== 'vertical' ? 'flex' : 'none';
   if (displayCfg.showNoShow) ns.style.width = displayCfg.nsWidth + 'px';
   document.documentElement.style.setProperty('--pt-name-fs', (displayCfg.nameFs || 1.6) + 'rem');
   applyModeTagFs();
@@ -1686,6 +1752,7 @@ function renderBoard(animate, flashFor) {
   renderBoardNext();
 }
 function renderBoardNext() {
+  renderVtWaiting();   // the waiting list changed — จอแนวตั้ง shows it too
   const el = document.getElementById('boardNextList');
   if (!el) return;
   const d = getDisplayCfg();
@@ -1693,6 +1760,282 @@ function renderBoardNext() {
   el.innerHTML = list.length
     ? list.map(t => `<div class="board-next-item" style="border-color:${t.color}"><span style="color:${t.color}">${t.display}</span></div>`).join('')
     : '<div class="board-next-empty">— ไม่มีคิวรอ —</div>';
+}
+
+// ── จอแนวตั้ง (vertical) — ported from Queue-OPD ─────────────────────────
+// One column per screen column (same counter placement as split-h/board); every counter keeps its last
+// vtCalledCount calls side by side (oldest left, newest right) so patients have time to walk up, with its own
+// "เรียกแล้วไม่มา" box underneath. "คิวที่รอเรียก" scrolls in a column on the right.
+const vtNoShowOn = (d, c) => d.showNoShow && !(d.vtNoShowHiddenCtrs || []).includes(c.id);
+function buildVertical(d, visible, area) {
+  const groups = counterColumns(d, visible);
+  const colW = d.vtColWidths || {}, rowH = d.vtRowHeights || {}, nsH = d.vtNoShowHeights || {};
+  area.className = 'counter-area vt-mode';
+  area.style.gridTemplateColumns = '';
+  const hdStyle = `height:${d.vtHeaderHeight}px;font-size:${d.vtHeaderFontSize}px;${d.vtHeaderBg ? `background:${d.vtHeaderBg};` : ''}${d.vtHeaderClr ? `color:${d.vtHeaderClr};` : ''}`;
+  const cols = groups.map(({ g, k }, ci) => {
+    const lastCol = ci === groups.length - 1;
+    const w = !lastCol && colW[k];
+    const chans = g.map((c, ri) => {
+      const lastRow = ri === g.length - 1;
+      const h = !lastRow && rowH[c.id];
+      const nh = nsH[c.id] || d.vtNoShowDefaultHeight;
+      return `<div class="vt-ch" style="flex:${h ? `0 0 ${h}px` : '1 1 0'};${d.vtChannelBorderWidth > 0 ? `border:${d.vtChannelBorderWidth}px solid ${d.vtChannelBorderColor}` : ''}">
+          <div class="vt-ch-hd" style="${hdStyle}">${escHtml(c.name)}</div>
+          <div class="vt-grid" id="vtgrid-${c.id}" style="background:${d.vtCalledBg};gap:${d.vtCalledGap}px"></div>
+          ${vtNoShowOn(d, c) ? `<div class="vt-rsz-h" data-drag="ns" data-id="${c.id}" title="ลากเพื่อปรับความสูงช่องไม่มา"></div>
+          <div class="vt-ns" id="vtns-${c.id}" style="height:${nh}px;background:${d.vtNoShowBg}"></div>` : ''}
+        </div>${lastRow ? '' : `<div class="vt-rsz-h" data-drag="row" data-id="${c.id}" title="ลากเพื่อปรับความสูง"></div>`}`;
+    }).join('');
+    return `<div class="vt-col" style="flex:${w ? `0 0 ${w}px` : '1 1 0'}">${chans}</div>` +
+      (lastCol ? '' : `<div class="vt-rsz" data-drag="col" data-id="${k}" title="ลากเพื่อปรับความกว้างคอลัมน์"></div>`);
+  }).join('');
+  area.innerHTML = `<div class="vt-called">${visible.length ? cols : '<div class="vt-empty">ยังไม่ได้ตั้งค่าช่องบริการ</div>'}</div>` +
+    (d.vtShowWaiting ? `<div class="vt-rsz" data-drag="wait" title="ลากเพื่อปรับความกว้าง"></div>
+      <div class="vt-wait" id="vtWait" style="width:${d.vtWaitingWidth}px;background:${d.vtWaitingBg}"></div>` : '');
+  bindVtDrag(area);
+  renderVertical(false, null);
+}
+// the latest calls of one counter, a re-called queue counted once (at its latest call)
+function vtHistory(c, n) {
+  const seen = new Set(), out = [];
+  for (const t of (recentByCtr[String(c.id)] || []).filter(modeMatches)) {
+    if (seen.has(t.display)) continue;
+    seen.add(t.display); out.push(t);
+    if (out.length >= n) break;
+  }
+  return out.reverse();
+}
+function renderVertical(animate, flashFor) {
+  const d = getDisplayCfg();
+  getVisibleCounters().forEach(c => {
+    const grid = document.getElementById('vtgrid-' + c.id);
+    if (!grid) return;
+    const hist = vtHistory(c, Math.max(1, Number(d.vtCalledCount) || 3));
+    grid.classList.toggle('center', !!d.vtCalledCenter || !hist.length);
+    if (!hist.length) {
+      grid.innerHTML = `<span class="vt-dash" style="font-size:${d.vtEmptyDashFontSize}vw;color:${d.vtEmptyDashColor}">${escHtml(d.vtEmptyDashText || '')}</span>`;
+      return;
+    }
+    const newest = hist[hist.length - 1];
+    const isNew = animate && flashFor && newest.display === flashFor.display && String(flashFor.counterId) === String(c.id);
+    grid.innerHTML = hist.map((t, i) => {
+      const fresh = isNew && i === hist.length - 1;
+      return `<div class="vt-chip${fresh ? ' ' + animClass(d) : ''}" ${fresh ? 'data-flash="1"' : ''}
+        style="color:${d.vtCalledColor};background:${d.vtCalledChipBgOn === false ? 'transparent' : d.vtCalledChipBg};border:${d.vtCalledBorderWidth}px solid ${d.vtCalledBorderColor};font-size:${fitFs(t.display, d.vtCalledFontSize)}">${t.display}${modeTag(t)}</div>`;
+    }).join('');
+    fitVtGrid(grid);
+    if (isNew) { const el = grid.querySelector('[data-flash="1"]'); flashCall(el, el); }
+  });
+  renderVtNoShow();
+  renderVtWaiting();
+}
+// the size setting is the largest size: shrink the numbers until every queue fits inside its counter box
+function fitVtGrid(grid) {
+  const chips = [...grid.querySelectorAll('.vt-chip')];
+  if (!chips.length) return;
+  const fits = () => grid.scrollHeight <= grid.clientHeight + 1 && grid.scrollWidth <= grid.clientWidth + 1;
+  // every box as wide as the widest number, so F002 and N001 get the same frame
+  const equalize = () => {
+    chips.forEach(ch => { ch.style.width = ''; });
+    const w = Math.max(...chips.map(ch => ch.offsetWidth));   // layout size — the pop-in animation scales the box
+    chips.forEach(ch => { ch.style.width = w + 'px'; });
+  };
+  equalize();
+  for (let i = 0; i < 30 && !fits(); i++) {
+    chips.forEach(ch => { ch.style.fontSize = Math.max(8, parseFloat(getComputedStyle(ch).fontSize) * 0.9) + 'px'; });
+    equalize();
+  }
+}
+function renderVtNoShow() {
+  const d = getDisplayCfg();
+  const max = Math.max(1, Number(d.vtNoShowMaxItems) || 3);
+  getVisibleCounters().forEach(c => {
+    const box = document.getElementById('vtns-' + c.id);
+    if (!box) return;
+    // oldest left → newest right, like the called queues above
+    const all = noShows.filter(modeMatches).filter(t => String(t.counterId) === String(c.id)).reverse();
+    const scroll = d.vtNoShowAutoScroll && all.length > max;
+    const list = scroll ? all : all.slice(-max);
+    const item = t => `<div class="vt-ns-item" style="background:${d.vtNoShowItemBg};${d.vtNoShowItemBorderWidth > 0 ? `border:${d.vtNoShowItemBorderWidth}px solid ${d.vtNoShowItemBorderColor}` : ''}">
+        <span style="color:${d.vtNoShowQueueColor};font-size:${d.vtNoShowFontSize}vw">${t.display}</span><span class="vt-ns-time">${escHtml(t.calledAt || '')}</span></div>`;
+    const items = list.map(item).join('');
+    box.innerHTML = `<div class="vt-ns-hd" style="background:${d.vtNoShowHeaderBg};color:${d.vtNoShowHeaderColor};height:${d.vtNoShowHeaderHeight}px;font-size:${d.vtNoShowHeaderFontSize}px">
+        ${escHtml(d.vtNoShowLabel || '')}${all.length ? `<span class="vt-count">${all.length}</span>` : ''}</div>
+      <div class="vt-ns-body">${!list.length ? '<span class="vt-ns-empty">ไม่มีรายการ</span>'
+        : scroll ? `<div class="vt-ns-track" style="animation-duration:${Math.max(3, d.vtNoShowScrollSpeed)}s"><div class="vt-ns-grp">${items}</div><div class="vt-ns-grp" aria-hidden="true">${items}</div></div>`
+        : items}</div>`;
+  });
+}
+function renderVtWaiting() {
+  const box = document.getElementById('vtWait');
+  if (!box) return;
+  const d = getDisplayCfg();
+  const hidden = d.hiddenTypes || [];
+  const list = waitingList.filter(modeMatches);
+  const max = Math.max(1, Number(d.vtWaitingMaxItems) || 10);
+  const scroll = d.vtWaitingAutoScroll && list.length > max;
+  const items = (scroll ? list : list.slice(0, max)).map(t => `
+    <div class="vt-wait-item" style="height:${d.vtWaitingItemHeight}px">
+      <span class="vt-wait-no" style="color:${d.vtWaitingQueueColor};font-size:${fitFs(t.display, d.vtWaitingFontSize)}">${t.display}${modeTag(t)}</span>
+      ${hidden.includes(Number(t.typeId)) ? '' : `<span class="vt-wait-type" style="color:${t.color}">${escHtml(t.typeName || '')}</span>`}
+    </div>`).join('');
+  box.innerHTML = `<div class="vt-wait-hd" style="background:${d.vtWaitingHeaderBg};color:${d.vtWaitingHeaderColor};height:${d.vtWaitingHeaderHeight}px;font-size:${d.vtWaitingHeaderFontSize}px">
+      ${escHtml(d.vtWaitingLabel || '')}${list.length ? `<span class="vt-count">${list.length}</span>` : ''}</div>
+    <div class="vt-wait-body">${!list.length ? '<span class="vt-wait-empty">ไม่มีคิวรอ</span>'
+      // speed is per queue, so a long list scrolls no faster than a short one
+      : scroll ? `<div class="vt-wait-track" style="animation-duration:${Math.max(1, d.vtWaitingScrollSpeed) * list.length}s"><div class="vt-wait-list">${items}</div><div class="vt-wait-list" aria-hidden="true">${items}</div></div>`
+      : `<div class="vt-wait-list">${items}</div>`}</div>`;
+}
+// drag the dividers: col = column width, row = counter box height, ns = no-show box height, wait = waiting column width
+function bindVtDrag(area) {
+  area.querySelectorAll('[data-drag]').forEach(h => h.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    const kind = h.dataset.drag, id = h.dataset.id;
+    const target = (kind === 'col' || kind === 'row') ? h.previousElementSibling : h.nextElementSibling;
+    if (!target) return;
+    const vert = kind === 'row' || kind === 'ns';
+    const sign = (kind === 'ns' || kind === 'wait') ? -1 : 1;   // these grow towards the handle
+    const start = vert ? e.clientY : e.clientX;
+    const rect = target.getBoundingClientRect();
+    const startSize = vert ? rect.height : rect.width;
+    let size = Math.round(startSize);
+    const move = ev => {
+      size = Math.max(40, Math.round(startSize + sign * ((vert ? ev.clientY : ev.clientX) - start)));
+      if (kind === 'ns') target.style.height = size + 'px';
+      else if (kind === 'wait') target.style.width = size + 'px';
+      else target.style.flex = `0 0 ${size}px`;
+    };
+    const up = () => {
+      removeEventListener('pointermove', move); removeEventListener('pointerup', up);
+      const c = getCurrentCfg(), d = getDisplayCfg();
+      if (kind === 'col')  c.vtColWidths     = { ...(d.vtColWidths || {}), [id]: size };
+      if (kind === 'row')  c.vtRowHeights    = { ...(d.vtRowHeights || {}), [id]: size };
+      if (kind === 'ns')   c.vtNoShowHeights = { ...(d.vtNoShowHeights || {}), [id]: size };
+      if (kind === 'wait') c.vtWaitingWidth  = size;
+      saveCfg(); loadVtUI(); renderVertical(false, null);   // refit the numbers to the new box sizes
+    };
+    addEventListener('pointermove', move); addEventListener('pointerup', up);
+  }));
+}
+let _vtResizeT;
+window.addEventListener('resize', () => {
+  clearTimeout(_vtResizeT);
+  _vtResizeT = setTimeout(() => { if (document.getElementById('vtWait') || document.querySelector('.vt-grid')) renderVertical(false, null); }, 250);
+});
+function resetVtSizes() {
+  const c = getCurrentCfg();
+  c.vtColWidths = {}; c.vtRowHeights = {}; c.vtNoShowHeights = {}; c.vtWaitingWidth = VT_DEF.vtWaitingWidth;
+  saveCfg(); loadVtUI(); buildCounterGrid();
+}
+// settings form: [key, label, type, min, max, step] — tcolor = colour that may follow the theme ('')
+const VT_FIELDS = [
+  ['① คิวที่กำลังเรียก (แต่ละช่อง)', [
+    ['vtCalledCount', 'จำนวนคิวที่ค้างแสดงต่อช่อง', 'num', 1, 10, 1],
+    ['vtCalledFontSize', 'ขนาดเลขคิว (vw)', 'num', 2, 30, 0.5],
+    ['vtCalledGap', 'ระยะห่างระหว่างคิว (px)', 'num', 0, 60, 1],
+    ['vtCalledCenter', 'จัดคิวไว้กึ่งกลางกล่อง', 'bool'],
+    ['vtCalledColor', 'สีเลขคิว', 'color'],
+    ['vtCalledChipBgOn', 'แสดงสีพื้นหลังเลขคิว', 'bool'],
+    ['vtCalledChipBg', 'สีพื้นหลังเลขคิว', 'color'],
+    ['vtCalledBg', 'สีพื้นกล่อง', 'color'],
+    ['vtCalledBorderColor', 'สีขอบคิวแต่ละใบ', 'color'],
+    ['vtCalledBorderWidth', 'ความหนาขอบคิว (px)', 'num', 0, 10, 1],
+    ['vtEmptyDashText', 'ข้อความเมื่อช่องยังไม่เรียกคิว', 'text'],
+    ['vtEmptyDashFontSize', 'ขนาดข้อความนี้ (vw)', 'num', 1, 10, 0.1],
+    ['vtEmptyDashColor', 'สีข้อความนี้', 'color']]],
+  ['② หัวข้อช่องบริการ', [
+    ['vtHeaderFontSize', 'ขนาดตัวอักษร (px)', 'num', 8, 80, 1],
+    ['vtHeaderHeight', 'ความสูง (px)', 'num', 20, 160, 1],
+    ['vtHeaderBg', 'สีพื้นหัวข้อ', 'tcolor'],
+    ['vtHeaderClr', 'สีตัวอักษรหัวข้อ', 'tcolor'],
+    ['vtChannelBorderWidth', 'กรอบรอบกล่องช่อง (px, 0 = ไม่มี)', 'num', 0, 10, 1],
+    ['vtChannelBorderColor', 'สีกรอบรอบกล่องช่อง', 'color']]],
+  ['③ เรียกแล้วไม่มา (แยกต่อช่อง)', [
+    ['vtNoShowLabel', 'หัวข้อ', 'text'],
+    ['vtNoShowDefaultHeight', 'ความสูงกล่อง (px)', 'num', 40, 400, 2],
+    ['vtNoShowMaxItems', 'จำนวนคิวที่แสดง', 'num', 1, 20, 1],
+    ['vtNoShowAutoScroll', 'เลื่อนอัตโนมัติเมื่อเกินจำนวน (แทนการตัดคิวเก่า)', 'bool'],
+    ['vtNoShowScrollSpeed', 'เวลาเลื่อนครบรอบ (วินาที)', 'num', 3, 120, 1],
+    ['vtNoShowFontSize', 'ขนาดเลขคิว (vw)', 'num', 0.5, 10, 0.1],
+    ['vtNoShowQueueColor', 'สีเลขคิว', 'color'],
+    ['vtNoShowBg', 'สีพื้นกล่อง', 'color'],
+    ['vtNoShowHeaderBg', 'สีพื้นหัวข้อ', 'color'],
+    ['vtNoShowHeaderColor', 'สีตัวอักษรหัวข้อ', 'color'],
+    ['vtNoShowHeaderFontSize', 'ขนาดตัวอักษรหัวข้อ (px)', 'num', 8, 60, 1],
+    ['vtNoShowHeaderHeight', 'ความสูงหัวข้อ (px)', 'num', 16, 100, 1],
+    ['vtNoShowItemBg', 'สีพื้นคิวแต่ละใบ', 'color'],
+    ['vtNoShowItemBorderColor', 'สีขอบคิวแต่ละใบ', 'color'],
+    ['vtNoShowItemBorderWidth', 'ความหนาขอบ (px)', 'num', 0, 10, 1]]],
+  ['④ คิวที่รอเรียก', [
+    ['vtShowWaiting', 'แสดงคิวที่รอเรียก', 'bool'],
+    ['vtWaitingLabel', 'หัวข้อ', 'text'],
+    ['vtWaitingWidth', 'ความกว้าง (px)', 'num', 120, 900, 5],
+    ['vtWaitingMaxItems', 'จำนวนคิวที่แสดง', 'num', 1, 40, 1],
+    ['vtWaitingAutoScroll', 'เลื่อนอัตโนมัติเมื่อเกินจำนวน', 'bool'],
+    ['vtWaitingScrollSpeed', 'ความเร็วเลื่อน (วินาทีต่อคิว)', 'num', 1, 20, 0.5],
+    ['vtWaitingItemHeight', 'ความสูงต่อคิว (px)', 'num', 30, 200, 1],
+    ['vtWaitingFontSize', 'ขนาดเลขคิว (vw)', 'num', 1, 15, 0.1],
+    ['vtWaitingQueueColor', 'สีเลขคิว', 'color'],
+    ['vtWaitingBg', 'สีพื้น', 'color'],
+    ['vtWaitingHeaderBg', 'สีพื้นหัวข้อ', 'color'],
+    ['vtWaitingHeaderColor', 'สีตัวอักษรหัวข้อ', 'color'],
+    ['vtWaitingHeaderFontSize', 'ขนาดตัวอักษรหัวข้อ (px)', 'num', 8, 60, 1],
+    ['vtWaitingHeaderHeight', 'ความสูงหัวข้อ (px)', 'num', 16, 100, 1]]],
+];
+const VT_TYPES = Object.fromEntries(VT_FIELDS.flatMap(([, fs]) => fs.map(f => [f[0], f])));
+function buildVtOpts() {
+  const field = ([key, label, type, min, max, step]) => {
+    if (type === 'bool') return `<div class="sf-row-inline" style="margin-bottom:10px"><label class="sf-toggle"><input type="checkbox" id="vt_${key}" onchange="onVt('${key}',this.checked)"/><span class="sf-toggle-slider"></span></label><span class="sf-toggle-label">${label}</span></div>`;
+    if (type === 'text') return `<div class="sf-row"><label class="sf-label">${label}</label><input class="sf-input" type="text" id="vt_${key}" oninput="onVt('${key}',this.value)"/></div>`;
+    if (type === 'num') return `<div class="sf-row"><label class="sf-label">${label}</label><div class="sf-slider-row">
+        <input type="range" id="vtR_${key}" min="${min}" max="${max}" step="${step}" oninput="onVt('${key}',this.value)"/>
+        <input class="sf-numval" type="number" id="vt_${key}" min="${min}" max="${max}" step="${step}" oninput="onVt('${key}',this.value)"/></div></div>`;
+    return `<div class="sf-row"><label class="sf-label">${label}</label><div class="clr-pair" id="vtP_${key}"><input type="color" id="vt_${key}" oninput="onVt('${key}',this.value)"/>
+      ${type === 'tcolor' ? `<button onclick="onVt('${key}','')">ใช้สีธีม</button>` : ''}</div></div>`;
+  };
+  document.getElementById('vtOptsBody').innerHTML = VT_FIELDS.map(([title, fs]) => `
+    <div class="vt-sec"><div class="vt-sec-title">${title}</div>${fs.map(field).join('')}
+      ${title.startsWith('③') ? '<div class="sf-label" style="margin-top:4px">แสดงกล่องไม่มาที่ช่อง (ติ๊กออก = ช่องนั้นไม่ต้องมี)</div><div class="vt-ctr-hide" id="vtNsCtrs"></div>' : ''}</div>`).join('');
+}
+function loadVtUI() {
+  if (!document.getElementById('vtOptsBody').children.length) buildVtOpts();
+  const d = getDisplayCfg();
+  for (const [key, , type] of Object.values(VT_TYPES)) {
+    const el = document.getElementById('vt_' + key);
+    if (type === 'bool') el.checked = !!d[key];
+    else if (type === 'tcolor') {
+      el.value = d[key] || cssColorToHex(getComputedStyle(document.documentElement).getPropertyValue(key === 'vtHeaderBg' ? '--hb' : '--htxt').trim().replace(/^#.*/, h => hexToRgbStr(h)));
+      document.getElementById('vtP_' + key).classList.toggle('theme', !d[key]);
+    } else el.value = d[key] ?? '';
+    const r = document.getElementById('vtR_' + key);
+    if (r) r.value = d[key];
+  }
+  const hiddenNs = d.vtNoShowHiddenCtrs || [];
+  document.getElementById('vtNsCtrs').innerHTML = getVisibleCounters().map(c =>
+    `<label><input type="checkbox" ${hiddenNs.includes(c.id) ? '' : 'checked'} onchange="toggleVtNsCtr(${c.id},this.checked)"/>${escHtml(c.name)}</label>`).join('');
+}
+function onVt(key, raw) {
+  const [, , type, min, max] = VT_TYPES[key];
+  let v = raw;
+  if (type === 'num') {
+    v = parseFloat(raw);
+    if (isNaN(v)) return;   // still typing
+    v = Math.min(max, Math.max(min, v));
+    const n = document.getElementById('vt_' + key), r = document.getElementById('vtR_' + key);
+    if (document.activeElement !== n) n.value = v;
+    if (r) r.value = v;
+  }
+  getCurrentCfg()[key] = v;
+  if (type === 'tcolor') loadVtUI();
+  saveCfg(); buildCounterGrid();
+}
+function toggleVtNsCtr(id, on) {
+  const c = getCurrentCfg();
+  const set = new Set(getDisplayCfg().vtNoShowHiddenCtrs || []);
+  if (on) set.delete(id); else set.add(id);
+  c.vtNoShowHiddenCtrs = [...set];
+  saveCfg(); buildCounterGrid();
 }
 
 // ── Call effects: entrance animation + blink (number or cell background) ──
@@ -1919,7 +2262,8 @@ function onLayoutModeChange(mode) {
   currentCfg.layoutMode = mode;
   document.getElementById('splitOptsH').style.display = mode === 'split-h' ? '' : 'none';
   document.getElementById('boardOpts').style.display  = mode === 'board' ? '' : 'none';
-  document.getElementById('colsOpts').style.display   = (mode === 'split-h' || mode === 'board') ? '' : 'none';
+  document.getElementById('vtOpts').style.display     = mode === 'vertical' ? '' : 'none';
+  document.getElementById('colsOpts').style.display   = (mode === 'split-h' || mode === 'board' || mode === 'vertical') ? '' : 'none';
   saveCfg();
   rebuildCfgList();
   buildCounterGrid();
@@ -1956,6 +2300,8 @@ function renderCounters(animate, latestCall) {
   const mode = getDisplayCfg().layoutMode || 'grid';
   if (mode === 'board') {
     renderBoard(animate, animate ? latestCall : null);
+  } else if (mode === 'vertical') {
+    renderVertical(animate, animate ? latestCall : null);
   } else if (mode === 'split-h') {
     getVisibleCounters().forEach(c => renderSplitCard(c, animate, animate ? latestCall : null));
   } else {
@@ -1966,6 +2312,7 @@ function renderCounters(animate, latestCall) {
 // ── No-show panel ─────────────────────────────────────────────────────────
 function renderNoShow() {
   const dcfg = getDisplayCfg();
+  if (dcfg.layoutMode === 'vertical') { renderVtNoShow(); return; }
   if (!dcfg.showNoShow) return;
   // only the no-shows of counters this screen shows (another room's no-shows don't belong here)
   const visIds    = new Set(getVisibleCounters().map(c => c.id));
@@ -2074,8 +2421,10 @@ function loadCfgUI() {
   if (modeEl) modeEl.checked = true;
   document.getElementById('splitOptsH').style.display = mode === 'split-h' ? '' : 'none';
   document.getElementById('boardOpts').style.display  = mode === 'board' ? '' : 'none';
-  document.getElementById('colsOpts').style.display   = (mode === 'split-h' || mode === 'board') ? '' : 'none';
+  document.getElementById('vtOpts').style.display     = mode === 'vertical' ? '' : 'none';
+  document.getElementById('colsOpts').style.display   = (mode === 'split-h' || mode === 'board' || mode === 'vertical') ? '' : 'none';
   loadNewCfgUI(currentCfg);
+  loadVtUI();
   document.getElementById('cfgSplitLblCtr').value  = currentCfg.splitLblCtr || 'ช่องบริการ';
   document.getElementById('cfgSplitLblQ').value    = currentCfg.splitLblQ   || 'หมายเลขที่เรียกเข้าบริการ';
   document.getElementById('cfgSplitHdrBg').value   = currentCfg.splitHdrBg  || '#2e7d32';
@@ -2153,7 +2502,7 @@ function rebuildCfgList() {
   const ordered = sortByOrder(allCounters, d.ctrOrder);
   // column picker only where columns exist (split-h / board with 2+ columns)
   const { n, map } = effectiveCols(d, getVisibleCounters());
-  const showCols = (mode === 'split-h' || mode === 'board') && n > 1;
+  const showCols = (mode === 'split-h' || mode === 'board' || mode === 'vertical') && n > 1;
   document.getElementById('cfgCounterList').innerHTML = ordered.map((c, i) => `
     <div class="cc-chk-item cc-chk-row">
       <label>

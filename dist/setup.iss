@@ -1,11 +1,12 @@
 ﻿[Setup]
 AppName=Queue Print Agent
-AppVersion=1.4.0
+AppVersion=1.5.0
+AppVerName=Queue Print Agent v1.5.0
 AppPublisher=Hospital Queue System
 DefaultDirName={autopf}\QueuePrintAgent
 DefaultGroupName=Queue Print Agent
 OutputDir=.
-OutputBaseFilename=QueuePrintAgent_Setup
+OutputBaseFilename=QueuePrintAgent_Setup-v1.5.0
 SetupIconFile=..\assets\icons\setup.ico
 WizardSmallImageFile=..\assets\icons\wizard-small-55.bmp,..\assets\icons\wizard-small-110.bmp
 Compression=lzma2
@@ -38,3 +39,15 @@ Filename: "{app}\QueuePrintAgent.exe"; Description: "เปิดใช้งา
 
 [UninstallRun]
 Filename: "taskkill"; Parameters: "/F /IM QueuePrintAgent.exe"; Flags: runhidden; RunOnceId: "KillAgent"
+
+[Code]
+// ติดตั้งทับรุ่นเก่า: ปิด Print Agent ที่เปิดค้างอยู่ก่อน ไม่งั้นไฟล์ .exe ถูกล็อกเขียนทับไม่ได้
+// (ค่าเครื่องพิมพ์ local-print-config.json ไม่ได้มาจากตัวติดตั้ง จึงไม่ถูกลบ/ทับ)
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+var
+  ResultCode: Integer;
+begin
+  Result := '';
+  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM QueuePrintAgent.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Sleep(1000);
+end;

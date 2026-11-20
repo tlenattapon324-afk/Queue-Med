@@ -465,7 +465,7 @@
     .issue-notice.warn{background:#fff8e1;border:1.5px solid #ffcc80;color:#8a4b00}
     .im-overlay{position:fixed;inset:0;z-index:80;background:rgba(15,42,74,.45);display:none;align-items:center;justify-content:center;padding:16px}
     .im-overlay.show{display:flex}
-    .im-box{background:#fff;border-radius:18px;width:100%;max-width:640px;max-height:92vh;overflow:auto;padding:22px 24px;
+    .im-box{background:#fff;border-radius:18px;width:100%;max-width:700px;max-height:92vh;overflow:auto;padding:22px 24px;
       box-shadow:0 20px 60px rgba(15,42,74,.35);color:#0f2a4a}
     .im-box h3{font-size:1.3rem;color:#0d3b5e;margin-bottom:14px}
     .im-opt{display:flex;gap:12px;align-items:flex-start;border:1.5px solid #d6e6f8;border-radius:12px;padding:12px 14px;margin-bottom:10px;cursor:pointer}
@@ -482,6 +482,86 @@
     .im-del{border:1px solid #fca5a5;background:#fff;color:#b91c1c;border-radius:8px;height:36px;cursor:pointer;font-size:1rem}
     .im-add{border:1.5px dashed #90bde8;background:#f8fbff;color:#1565c0;border-radius:10px;padding:8px;width:100%;cursor:pointer;font-weight:700;font-family:inherit}
     .im-hint{font-size:.82rem;color:#475569;margin-top:10px;line-height:1.6}
+    .ni-box{max-width:520px;text-align:center}
+    .ni-icon{font-size:2.6rem;line-height:1;color:#d97706;margin-bottom:6px}
+    .ni-box h3{color:#b45309}
+    .ni-pt{background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:10px 14px;color:#0f172a;font-size:1rem;line-height:1.6}
+    .ni-q{margin:14px 0 10px;color:#475569;font-weight:600}
+    .ni-types{display:grid;gap:10px}
+    .ni-types button{display:flex;align-items:center;gap:12px;border:2px solid var(--c);background:#fff;border-radius:12px;padding:12px 16px;
+      font-size:1.1rem;font-weight:800;color:#0d3b5e;cursor:pointer;font-family:inherit;text-align:left}
+    .ni-types button:hover{background:#f4f9ff}
+    .ni-types b{background:var(--c);color:#fff;border-radius:8px;min-width:44px;padding:6px 8px;text-align:center}
+    .ni-cancel{margin-top:14px;width:100%;border:1.5px solid #fca5a5;background:#fff;color:#b91c1c;border-radius:12px;padding:12px;
+      font-size:1.05rem;font-weight:800;cursor:pointer;font-family:inherit}
+    .im-row.im-pay-row{grid-template-columns:1.1fr 1.6fr .7fr}
+    .im-tag{font-weight:800;font-size:.92rem;border-radius:8px;padding:8px 10px;text-align:center}
+    .im-tag.cash{background:#fff3e0;color:#c2410c}
+    .im-tag.free{background:#e0f2f1;color:#0f766e}
+    .im-sub{font-size:.85rem;font-weight:700;color:#1e3a8a;margin:12px 0 6px}
+    .im-codes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .im-codes label{font-size:.82rem;color:#475569;display:flex;flex-direction:column;gap:4px}
+    .im-codes input,.im-search{width:100%;border:1.5px solid #bcd7f3;border-radius:8px;padding:8px 10px;font-size:1rem;font-family:inherit;color:#0f172a}
+    .im-search{margin-bottom:6px}
+    .im-edc{border:1.5px solid #d6e6f8;border-radius:10px;max-height:260px;overflow:auto;background:#fbfdff}
+    .im-edc-msg{padding:14px;color:#64748b;font-size:.9rem;text-align:center}
+    .im-edc-grp{position:sticky;top:0;background:#e8f1fc;font-weight:800;color:#0d3b5e;font-size:.85rem;padding:6px 10px;display:flex;gap:8px;align-items:center;cursor:pointer}
+    .im-edc-item{display:flex;gap:8px;align-items:center;padding:5px 10px 5px 26px;font-size:.92rem;cursor:pointer;border-top:1px solid #eef3f9}
+    .im-edc-item:has(input:checked){background:#fff7ed}
+    .im-edc-item small{color:#94a3b8;margin-left:auto;font-size:.78rem}
+    .im-edc input[type=checkbox]{width:16px;height:16px;accent-color:#c2410c;flex:none}
+    .im-picked{display:flex;flex-wrap:wrap;gap:6px;max-height:112px;overflow:auto;margin-bottom:8px;padding:8px;border-radius:10px;background:#f1f5f9}
+    .im-picked-none{color:#64748b;font-size:.85rem}
+    .im-pick-toggle{display:block;width:100%;margin:0 0 8px;padding:7px 10px;border:1.5px dashed #bcd7f3;border-radius:8px;background:#fff;color:#1e3a8a;font:inherit;font-size:.88rem;font-weight:700;text-align:left;cursor:pointer}
+    .im-pick-toggle:hover{background:#eff6ff;border-style:solid}
+    .im-pick-wrap.collapsed{display:none}
+    .im-chip{border:1px solid #c5cae9;background:#fff;color:#283593;border-radius:999px;padding:4px 10px;font:inherit;font-size:.85rem;font-weight:700;cursor:pointer}
+    .im-chip:hover{background:#fee2e2;border-color:#fca5a5;color:#b91c1c}
+    .im-tag.dept{background:#e8eaf6;color:#3949ab}
+    .im-tag.pttype{background:#cffafe;color:#0e7490}
+    .im-pt-use{display:flex;flex-direction:column;gap:6px;margin:0 0 8px;padding:8px 10px;border:1.5px solid #d6e6f8;border-radius:10px;background:#f8fbff}
+    .im-pt-use label{display:flex;gap:8px;align-items:flex-start;font-weight:700;color:#0f3a63;cursor:pointer;flex-wrap:wrap}
+    .im-pt-use label small{font-weight:500;color:#64748b}
+    .im-pt-use input[type=checkbox]{width:18px;height:18px;accent-color:#0891b2;flex:none;margin-top:2px}
+    .im-pt-use #ptBody{margin:2px 0 4px 26px}
+    #ptUnused{color:#b45309;font-weight:700}
+    input.im-tag{width:100%;min-width:0;border:1.5px dashed transparent;font-family:inherit;outline:none;cursor:text}
+    input.im-tag:hover{border-color:currentColor}
+    input.im-tag:focus{border-style:solid;border-color:currentColor;background:#fff}
+    .im-dept-on{display:flex;gap:10px;align-items:center;margin-top:14px;padding:10px 12px;border:1.5px solid #c5cae9;border-radius:10px;background:#f5f6fd;font-weight:800;color:#283593;cursor:pointer}
+    .im-dept-on input{width:20px;height:20px;accent-color:#3949ab;flex:none}
+    #deptBody{margin-top:8px}
+    #drugSplitBody,#noDrugBody{margin-top:8px}
+    #payBaseRows{border-radius:10px;transition:background .2s}
+    .im-row.im-row-off{filter:grayscale(1);opacity:.55;background:#f1f5f9;border-radius:8px;outline:1.5px dashed #cbd5e1}
+    .im-drug-for{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-weight:700;color:#7c2d12;margin:6px 0 8px}
+    .im-drug-for label{display:flex;gap:6px;align-items:center;cursor:pointer}
+    .im-drug-for input{width:18px;height:18px;accent-color:#ea580c}
+    .im-drug-for small{flex-basis:100%;font-weight:600;color:#64748b}
+    .im-off-note:empty{display:none}
+    .im-off-note{font-size:.8rem;font-weight:700;color:#64748b;padding:2px 4px 0}
+    .im-nodrug-on{border-color:#c4b5fd;background:#f5f3ff;color:#5b21b6}
+    .im-nodrug-on input{accent-color:#7c3aed}
+    .im-tag.nodrug{background:#ede9fe;color:#5b21b6}
+    .im-sel{border:1.5px solid #bcd7f3;border-radius:8px;padding:6px 8px;font-size:1rem;font-family:inherit;min-width:200px}
+    .im-drug-on{border-color:#ffcc80;background:#fff8ef;color:#9a3412}
+    .im-drug-on input{accent-color:#ea580c}
+    .im-drug-max{font-weight:700;color:#7c2d12;margin-bottom:6px}
+    .im-drug-max input{width:64px}
+    .im-drug-under{font-size:.78rem;color:#9a3412;background:#fff7ed;border:1px dashed #fdba74;border-radius:8px;padding:6px 10px;margin:-2px 0 8px;line-height:1.5}
+    .im-drug-under:empty{display:none}
+    .im-drug-under.bad{color:#b91c1c;background:#fef2f2;border-color:#fca5a5}
+    .im-drug-max input{width:70px;border:1.5px solid #bcd7f3;border-radius:8px;padding:6px 8px;font-size:1rem;font-family:inherit;text-align:center}
+    .im-reissue{display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;padding:10px 12px;border:1.5px solid #fcd34d;border-radius:10px;background:#fffbeb;cursor:pointer}
+    .im-reissue input{width:20px;height:20px;accent-color:#d97706;flex:none;margin-top:2px}
+    .im-reissue b{color:#92400e}
+    .im-reissue small{display:block;color:#78716c;font-size:.82rem;font-weight:500;margin-top:2px}
+    .dup-q{margin:12px auto 4px;display:inline-flex;flex-direction:column;align-items:center;border:2.5px solid var(--c,#d97706);border-radius:14px;padding:8px 26px}
+    .dup-q b{font-size:2.4rem;color:var(--c,#d97706);line-height:1.1}
+    .dup-q span{color:#475569;font-size:.92rem}
+    .dup-note{color:#64748b;font-size:.85rem;margin-top:10px}
+    .dup-ok{margin-top:14px;width:100%;border:none;background:#d97706;color:#fff;border-radius:12px;padding:12px;font-size:1.05rem;font-weight:800;cursor:pointer;font-family:inherit}
+    @media (max-width:560px){.im-codes{grid-template-columns:1fr}.im-row.im-pay-row{grid-template-columns:1fr 1.3fr .7fr}}
     .im-err{color:#b91c1c;font-weight:700;min-height:22px;margin-top:10px;font-size:.92rem}
     .im-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}
     .im-btns button{border-radius:10px;padding:10px 22px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit}
@@ -638,9 +718,35 @@
 </div>
 
 <!-- Issue mode settings -->
+<!-- สิทธิ/ค่าใช้จ่าย: no drugs and no services → staff picks a type or issues nothing -->
+<div class="im-overlay" id="niOverlay">
+  <div class="im-box ni-box">
+    <div class="ni-icon">⚠</div>
+    <h3>คนไข้ไม่มียาและค่าบริการ</h3>
+    <div class="ni-pt" id="niPt"></div>
+    <div class="ni-q">เลือกประเภทคิวเอง หรือกด "ยกเลิก" เพื่อไม่ออกคิว</div>
+    <div class="ni-types" id="niTypes"></div>
+    <button class="ni-cancel" onclick="cancelNoItems()">✕ ยกเลิก — ไม่ออกคิว</button>
+  </div>
+</div>
+
+<!-- ออกคิวซ้ำ ปิดอยู่: this visit already has a ticket today -->
+<div class="im-overlay" id="dupOverlay">
+  <div class="im-box ni-box">
+    <div class="ni-icon">⚠</div>
+    <h3>มีประวัติออกคิวแล้ว</h3>
+    <div class="ni-pt" id="dupPt"></div>
+    <div id="dupQ"></div>
+    <div class="dup-note">ระบบไม่ออกคิวใหม่ให้ · ถ้าต้องการออกซ้ำ เปิด "อนุญาตให้ออกคิวซ้ำ" ที่ ⚙ ออกคิว</div>
+    <button class="dup-ok" onclick="closeDup()">ตกลง</button>
+  </div>
+</div>
+
 <div class="im-overlay" id="imOverlay">
   <div class="im-box">
     <h3>⚙ การตั้งค่าการออกคิว</h3>
+    <label class="im-reissue"><input type="checkbox" id="imReissue"/>
+      <div><b>อนุญาตให้ออกคิวซ้ำ</b><small>เปิด: คนไข้ที่ออกคิวไปแล้ววันนี้ ออกคิวใหม่ได้อีก · ปิด: ขึ้นหน้าต่างเตือน "มีประวัติออกคิวแล้ว" และไม่ออกคิวให้</small></div></label>
     <label class="im-opt"><input type="radio" name="imMode" value="type" onchange="syncIssueModeUI()"/>
       <div><b>1. ออกคิวตามประเภท</b><small>ค้นหาผู้ป่วยแล้วเลือกประเภทคิวเอง (แบบที่ใช้อยู่ปัจจุบัน)</small></div></label>
     <label class="im-opt"><input type="radio" name="imMode" value="drug" onchange="syncIssueModeUI()"/>
@@ -652,6 +758,75 @@
       <div class="im-hint">• นับรายการยาไม่ซ้ำ (icode ขึ้นต้น 1) จาก opitemrece ของ VN วันนี้ — เหมือนคอลัมน์ "จำนวนยา" ในหน้าเรียกคิว<br>
         • ระบบสร้างประเภทคิวตาม Prefix ให้เอง เลขคิวจะเป็น เช่น S001, L001<br>
         • ถ้าจำนวนยาไม่อยู่ในช่วงใด (เช่น ไม่มียา หรือเกินช่วง) จะให้เลือกประเภทคิวเองแทน · ใช้กับผู้ป่วยนอก (OPD) เท่านั้น</div>
+    </div>
+    <label class="im-opt"><input type="radio" name="imMode" value="pay" onchange="syncIssueModeUI()"/>
+      <div><b>3. ออกคิวตามสิทธิ / ค่าใช้จ่าย</b><small>สแกน / กรอก QN หรือ HN แล้วระบบดูค่าใช้จ่ายของ visit วันนี้ แยกเป็นคิว "ไปการเงิน" กับ "ไม่ผ่านการเงิน" ให้ทันที</small></div></label>
+    <div class="im-rules" id="imPay">
+      <div class="im-row im-pay-row im-head"><span>ประเภทคิว</span><span>ชื่อที่แสดง</span><span>Prefix</span></div>
+      <div id="payBaseRows">
+        <div class="im-row im-pay-row" id="payCashRow"><input class="im-tag cash" id="payCashLabel" maxlength="40" title="ป้ายที่แสดงในคอลัมน์ สถานะ ของหน้าเรียกคิว — แก้ได้"/><input id="payCashName"/><input id="payCashPrefix" class="pfx" maxlength="3" oninput="this.value=this.value.toUpperCase()"/></div>
+        <div class="im-row im-pay-row" id="payFreeRow"><input class="im-tag free" id="payFreeLabel" maxlength="40" title="ป้ายที่แสดงในคอลัมน์ สถานะ ของหน้าเรียกคิว — แก้ได้"/><input id="payFreeName"/><input id="payFreePrefix" class="pfx" maxlength="3" oninput="this.value=this.value.toUpperCase()"/></div>
+        <div class="im-off-note" id="payBaseOffNote"></div>
+      </div>
+      <label class="im-dept-on im-drug-on"><input type="checkbox" id="payDrugOn" onchange="syncDrugSplitUI()"/>แยกยาน้อย / ยามาก</label>
+      <div id="drugSplitBody">
+        <div class="im-drug-max">💊 ยาน้อย = ตั้งแต่ <input type="number" id="payDrugMin" min="0" oninput="syncDrugSplitUI()"/>
+          ถึง <input type="number" id="payDrugMax" min="1" oninput="syncDrugSplitUI()"/> รายการ · ยามาก = มากกว่านั้น</div>
+        <div class="im-drug-under" id="payDrugUnder"></div>
+        <div class="im-drug-for">แยกให้คนไข้ที่
+          <label><input type="checkbox" id="payDrugCash" onchange="syncDrugSplitUI()"/>💰 ไปการเงิน</label>
+          <label><input type="checkbox" id="payDrugFree" onchange="syncDrugSplitUI()"/>✓ ไม่ผ่านการเงิน (ไม่มีค่าใช้จ่าย)</label>
+          <small>ที่ไม่ติ๊ก จะได้คิวแถวบน (F / N) แถวเดียว ไม่แยกยาน้อย / ยามาก</small></div>
+        <div class="im-row im-pay-row" id="payCashSRow"><input class="im-tag cash" id="payCashSLabel" maxlength="40" title="ป้ายที่แสดงในคอลัมน์ สถานะ ของหน้าเรียกคิว — แก้ได้"/><input id="payCashSName"/><input id="payCashSPrefix" class="pfx" maxlength="3" oninput="this.value=this.value.toUpperCase()"/></div>
+        <div class="im-row im-pay-row" id="payCashLRow"><input class="im-tag cash" id="payCashLLabel" maxlength="40" title="ป้ายที่แสดงในคอลัมน์ สถานะ ของหน้าเรียกคิว — แก้ได้"/><input id="payCashLName"/><input id="payCashLPrefix" class="pfx" maxlength="3" oninput="this.value=this.value.toUpperCase()"/></div>
+        <div class="im-row im-pay-row" id="payFreeSRow"><input class="im-tag free" id="payFreeSLabel" maxlength="40" title="ป้ายที่แสดงในคอลัมน์ สถานะ ของหน้าเรียกคิว — แก้ได้"/><input id="payFreeSName"/><input id="payFreeSPrefix" class="pfx" maxlength="3" oninput="this.value=this.value.toUpperCase()"/></div>
+        <div class="im-row im-pay-row" id="payFreeLRow"><input class="im-tag free" id="payFreeLLabel" maxlength="40" title="ป้ายที่แสดงในคอลัมน์ สถานะ ของหน้าเรียกคิว — แก้ได้"/><input id="payFreeLName"/><input id="payFreeLPrefix" class="pfx" maxlength="3" oninput="this.value=this.value.toUpperCase()"/></div>
+        <div class="im-hint">• ตรวจเงื่อนไขไปการเงิน / ไม่ผ่านการเงินก่อน แล้วนับรายการยาไม่ซ้ำ (icode ขึ้นต้น 1) ของ VN วันนี้ เพื่อเลือกคิวยาน้อยหรือยามาก<br>
+          • แถวบน (F / N) ของฝั่งที่ติ๊กแยก จะไม่ถูกใช้ออกคิว · คนไข้ห้องตรวจที่ติ๊กไว้ด้านล่าง ยังได้ Prefix ของห้องตรวจเหมือนเดิม</div>
+      </div>
+      <label class="im-dept-on im-nodrug-on"><input type="checkbox" id="payNoDrugOn" onchange="syncNoDrugUI()"/>ไม่มียา แต่ต้องไปการเงิน → ออกคิวที่ห้องการเงินเลย</label>
+      <div id="noDrugBody">
+        <div class="im-drug-max">ส่งไปห้อง <select id="payNoDrugSys" class="im-sel"></select></div>
+        <div class="im-row im-pay-row"><input class="im-tag nodrug" id="payNoDrugLabel" maxlength="40" title="ป้ายที่แสดงในคอลัมน์ สถานะ ของหน้าเรียกคิว — แก้ได้"/><input id="payNoDrugName"/><input id="payNoDrugPrefix" class="pfx" maxlength="3" oninput="this.value=this.value.toUpperCase()"/></div>
+        <div class="im-hint">• คนไข้ที่ต้องไปการเงิน (มีค่าใช้จ่ายตามรหัส paidst ที่ตั้งไว้ / สิทธิที่ติ๊กให้รูดบัตร / มีแต่ค่าบริการ) <b>และไม่มีรายการยาเลย</b> จะได้คิวนี้ในรายการรอของห้องการเงินทันที ไม่ต้องรอเรียกที่ห้องยา<br>
+          • Prefix ต้องไม่ซ้ำกับคิวของห้องนี้และของห้องการเงิน · คิวนี้จะไม่ถูกส่งต่อกลับมาห้องยา</div>
+      </div>
+      <div class="im-sub">รหัสประเภทการชำระเงิน (paidst ใน opitemrece) — ใส่ได้หลายรหัส คั่นด้วยจุลภาค</div>
+      <div class="im-codes">
+        <label>ต้องจ่ายเงิน → ไปการเงินทุกกรณี<input id="payCashCodes" placeholder="01,03"/></label>
+        <label>ลูกหนี้สิทธิ → ไม่ต้องจ่ายเงิน<input id="payDebtCodes" placeholder="02"/></label>
+      </div>
+      <div class="im-sub">สิทธิที่เลือก (เช่น ข้าราชการ) — ติ๊ก <b id="edcCount">0</b> สิทธิ</div>
+      <div class="im-pt-use">
+        <label><input type="checkbox" id="payEdcOn" onchange="syncPtUI()"/>💳 ไปการเงินทุกกรณี <small>(รูดบัตร EDC / ต้องจ่ายเงิน — ไม่ว่ามีค่าใช้จ่ายแบบไหน)</small></label>
+        <label><input type="checkbox" id="payPtOn" onchange="syncPtUI()"/>🔤 แยก Prefix ให้สิทธิที่ติ๊ก <small>(ทุกสิทธิที่ติ๊กได้ Prefix เดียวกันนี้ และไปการเงินทุกกรณี)</small></label>
+        <div class="im-row im-pay-row" id="ptBody"><input class="im-tag pttype" id="payPttypeLabel" maxlength="40" title="ป้ายที่แสดงในคอลัมน์ สถานะ ของหน้าเรียกคิว — แก้ได้"/><input id="payPtName"/><input id="payPtPrefix" class="pfx" maxlength="3" oninput="this.value=this.value.toUpperCase()"/></div>
+        <small id="ptUnused">⏸ ไม่ได้ใช้ทั้ง 2 อย่าง — สิทธิที่ติ๊กไว้จะไม่มีผลกับการออกคิว</small>
+      </div>
+      <div class="im-picked" id="edcPicked"></div>
+      <button type="button" class="im-pick-toggle" id="edcWrapBtn" onclick="togglePick('edcWrap')"></button>
+      <div class="im-pick-wrap" id="edcWrap">
+      <input id="edcSearch" class="im-search" placeholder="🔍 ค้นหาชื่อสิทธิ / รหัส / กลุ่ม (เช่น OFC)" oninput="renderEdcList()"/>
+      <div class="im-edc" id="edcList"><div class="im-edc-msg">กำลังโหลดรายการสิทธิ...</div></div>
+      </div>
+      <label class="im-dept-on"><input type="checkbox" id="payDeptOn" onchange="syncDeptUI()"/>แยก Prefix ตามห้องตรวจ</label>
+      <div id="deptBody">
+        <div class="im-row im-pay-row"><input class="im-tag dept" id="payDeptLabel" maxlength="40" title="ป้ายที่แสดงในคอลัมน์ สถานะ ของหน้าเรียกคิว — แก้ได้"/><input id="payDeptName"/><input id="payDeptPrefix" class="pfx" maxlength="3" oninput="this.value=this.value.toUpperCase()"/></div>
+        <div class="im-sub">ห้องตรวจที่จะได้ Prefix นี้ — ติ๊ก <b id="deptCount">0</b> ห้อง</div>
+        <div class="im-picked" id="deptPicked"></div>
+        <button type="button" class="im-pick-toggle" id="deptWrapBtn" onclick="togglePick('deptWrap')"></button>
+        <div class="im-pick-wrap" id="deptWrap">
+        <input id="deptSearch" class="im-search" placeholder="🔍 ค้นหาชื่อห้องตรวจ / รหัส" oninput="renderDeptList()"/>
+        <div class="im-edc" id="deptList"><div class="im-edc-msg">กำลังโหลดรายการห้องตรวจ...</div></div>
+        </div>
+        <div class="im-hint">• คนไข้ที่ห้องตรวจหลัก (ovst.main_dep) ตรงกับที่ติ๊ก จะได้เลขคิวตาม Prefix นี้<br>
+          • เงื่อนไขไปการเงิน / ไม่ผ่านการเงินยังตรวจเหมือนเดิม เพียงแต่เลขคิวเป็น Prefix ของห้องตรวจ</div>
+      </div>
+      <div class="im-hint">• <b>ไปการเงิน</b>: มีรายการที่ต้องจ่ายเงิน (รหัสช่องแรก) ที่ราคามากกว่า 0 — หรือเป็นสิทธิที่ติ๊กไว้ (ไปการเงินทุกกรณี)
+        — หรือมีรายการที่มีราคาแต่ยังไม่ระบุประเภทการชำระเงิน (กันลืมเก็บเงิน) — หรือไม่มีรายการยา (icode ขึ้นต้น 1) แต่มีค่าบริการ (icode ขึ้นต้น 3)<br>
+        • <b>ไม่มีทั้งยาและค่าบริการ</b>: ขึ้นหน้าต่างเตือน ให้เจ้าหน้าที่เลือกประเภทคิวเอง หรือยกเลิกไม่ออกคิว<br>
+        • <b>ไม่ผ่านการเงิน</b>: นอกนั้นทั้งหมด (ไม่มีค่าใช้จ่าย หรือเบิกตามสิทธิได้) — คิวนี้จะไม่ถูกส่งต่อการเงินอัตโนมัติ แต่ยังกดส่งเองได้ในหน้าประวัติ<br>
+        • สิทธิของผู้ป่วยดูจาก ovst.pttype · ใช้กับผู้ป่วยนอก (OPD) เท่านั้น</div>
     </div>
     <div class="im-err" id="imErr"></div>
     <div class="im-btns">
@@ -1032,7 +1207,13 @@ function doLookup() {
     if (!r.ok && r.status !== 200) console.warn('HTTP', r.status);
     return r.json();
   })
-  .then(d => {
+  .then(async d => {
+    if (d.success && issueMode.allowReissue !== true) {
+      // ออกคิวซ้ำ ปิดอยู่: warn before anything else is looked up or issued
+      const key = d.patient.mode === 'ipd' ? d.patient.an : d.patient.vn;
+      const c = key ? await fetch(`/api/sys/${sysId}/issued-check?vn=${encodeURIComponent(key)}`).then(x => x.json()).catch(() => null) : null;
+      if (c && c.existing) { stopScanner(); showDup(d.patient, c.existing); return; }
+    }
     if (d.success) {
       currentPatient = d.patient;
       const elName    = document.getElementById('ptName');
@@ -1060,6 +1241,8 @@ function doLookup() {
       if (!isIpdResult) loadPatientDrugs(d.patient.vn);
       if (!isIpdResult && issueMode.mode === 'drug') {
         autoIssueByDrugs(d.patient);
+      } else if (!isIpdResult && issueMode.mode === 'pay') {
+        autoIssueByPay(d.patient);
       } else if (d.patient.autoTypeId) {
         setTimeout(() => getQueue(d.patient.autoTypeId), 180);
       }
@@ -1157,25 +1340,313 @@ async function autoIssueByDrugs(p) {
   setTimeout(() => { if (currentPatient === p) getQueue(rule.typeId); }, 500);
 }
 
+// ── Issue by สิทธิ / ค่าใช้จ่าย ────────────────────────────────────────────
+async function autoIssueByPay(p) {
+  if (!p.vn) { showNotice('warn', '⚠ ไม่พบ VN ของการมาวันนี้ — กรุณาเลือกประเภทคิวเอง'); return; }
+  showNotice('wait', '⏳ กำลังตรวจค่าใช้จ่าย...');
+  let r = null;
+  try {
+    r = await fetch(`/api/sys/${sysId}/pay-route`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vn: p.vn }) }).then(x => x.json());
+  } catch (e) {}
+  if (currentPatient !== p) return;   // staff already went back / looked up someone else
+  if (!r || !r.success) { showNotice('warn', `⚠ ตรวจค่าใช้จ่ายไม่สำเร็จ${r && r.message ? ' (' + escHtml(r.message) + ')' : ''} — กรุณาเลือกประเภทคิวเอง`); return; }
+  if (r.route === 'none') { showNotice('warn', '⚠ คนไข้ไม่มียาและค่าบริการ — เลือกประเภทคิวเอง หรือยกเลิก'); openNoItems(p, r); return; }
+  if (r.noDrug) {   // ไม่มียา แต่ต้องไปการเงิน → ticket goes straight to the cashier room
+    showNotice('ok', `💰 ${escHtml(r.reason)} · ไม่มียา → <b>${escHtml(r.noDrug.name)}</b> คิว ${escHtml(r.noDrug.typeName)} (${escHtml(r.noDrug.prefix)}) — กำลังออกคิว...`);
+    setTimeout(() => { if (currentPatient === p) getQueue(null, 'cash', { noDrug: true }); }, 500);
+    return;
+  }
+  const t = queueTypes.find(x => x.id === r.typeId);
+  if (!t) { showNotice('warn', '⚠ ยังไม่ได้ตั้งค่าประเภทคิว — กรุณาเลือกประเภทคิวเอง'); return; }
+  showNotice('ok', `${r.route === 'cash' ? '💰' : '✓'} ${escHtml(r.reason)}${r.drugSize ? ` · 💊 ยา <b>${Number(r.drugCount) || 0}</b> รายการ` : ''} → <b>${escHtml(t.name)}</b> (${escHtml(t.prefix)}) — กำลังออกคิว...`);
+  setTimeout(() => { if (currentPatient === p) getQueue(t.id, r.route); }, 500);
+}
+
+function openNoItems(p, r) {
+  document.getElementById('niPt').innerHTML =
+    `<b>${escHtml(p.name || '')}</b><br>HN ${escHtml(p.hn || '-')} · QN ${escHtml(p.qn || '-')}<br>สิทธิ ${escHtml(r.pttypeName || p.pttypeName || '-')}`;
+  // the two สิทธิ types first, then any other OPD type
+  const opd = queueTypes.filter(t => (t.forMode || 'both') !== 'ipd' && !t.drugRule);
+  const btn = (t, route, label) => `<button style="--c:${t.color}" onclick="pickNoItems(${t.id}${route ? `,'${route}'` : ''})"><b>${escHtml(t.prefix)}</b>${escHtml(label)}</button>`;
+  // a patient of a ticked ห้องตรวจ keeps the room's prefix, whichever way staff send them
+  const dept = opd.find(t => t.id === r.deptTypeId);
+  const payBtns = dept
+    ? [btn(dept, 'cash', `${dept.name} · ไปการเงิน`), btn(dept, 'free', `${dept.name} · ไม่ผ่านการเงิน`)]
+    : ['cash', 'free'].flatMap(route => opd
+        .filter(t => t.payRule === route && paySizeTypeInUse(issueMode.pay, t))
+        .sort((a, b) => (a.drugSize || '') > (b.drugSize || '') ? -1 : 1))   // ยาน้อย (S) before ยามาก (L)
+      .map(t => btn(t, null, t.name));
+  // ไม่มียา → ห้องการเงิน (when set up) as the first choice
+  const pay = issueMode.pay || {};
+  const nd = issueMode.mode === 'pay' && pay.noDrugOn && pay.noDrugTypeId
+    ? `<button style="--c:#7c3aed" onclick="pickNoDrug()"><b>${escHtml(pay.noDrugPrefix || '')}</b>${escHtml(pay.noDrugName || '')} · ไปห้องการเงินเลย</button>` : '';
+  document.getElementById('niTypes').innerHTML = nd + [...payBtns, ...opd.filter(t => !t.payRule).map(t => btn(t, null, t.name))].join('');
+  document.getElementById('niOverlay').classList.add('show');
+}
+function pickNoItems(typeId, route) {
+  document.getElementById('niOverlay').classList.remove('show');
+  showNotice('', '');
+  getQueue(typeId, route);
+}
+function pickNoDrug() {
+  document.getElementById('niOverlay').classList.remove('show');
+  showNotice('', '');
+  getQueue(null, 'cash', { noDrug: true });
+}
+function cancelNoItems() {
+  document.getElementById('niOverlay').classList.remove('show');
+  backToScanner();
+  setStatus('ยกเลิกแล้ว — ไม่ได้ออกคิว', '#b45309');
+}
+
+// ── "มีประวัติออกคิวแล้ว" popup ───────────────────────────────────────────
+function showDup(p, e) {
+  p = p || {};
+  const isIpd = p.mode === 'ipd';
+  document.getElementById('dupPt').innerHTML =
+    `<b>${escHtml(p.name || '')}</b><br>HN ${escHtml(p.hn || '-')} · ${isIpd ? 'AN ' + escHtml(p.an || '-') : 'QN ' + escHtml(p.qn || '-')}`;
+  const t = queueTypes.find(x => x.id === e.typeId);
+  const color = /^#[0-9a-f]{3,8}$/i.test((t && t.color) || e.color || '') ? ((t && t.color) || e.color) : '#d97706';
+  document.getElementById('dupQ').innerHTML =
+    `<div class="dup-q" style="--c:${color}"><b>${escHtml(e.display || '')}</b>` +
+    `<span>${escHtml(e.typeName || '')} · ออกเมื่อ ${escHtml(e.issuedAt || '-')} · ${escHtml(e.status || '')}</span></div>`;
+  showNotice('', '');
+  document.getElementById('dupOverlay').classList.add('show');
+}
+function closeDup() {
+  document.getElementById('dupOverlay').classList.remove('show');
+  backToScanner();
+  setStatus('ไม่ได้ออกคิว — คนไข้มีประวัติออกคิวแล้ว', '#b45309');
+  setTimeout(() => setStatus(chkIpd.checked ? 'พร้อมรับบัตรคิว — ยิงบาร์โค้ด AN หรือกรอกข้อมูลด้านล่าง' : 'พร้อมรับบัตรคิว — ยิงบาร์โค้ด HN หรือกรอกข้อมูลด้านล่าง'), 4000);
+}
+
 // ── Issue mode settings window ────────────────────────────────────────────
+const ISSUE_MODE_LBL = { type: '📋 ตามประเภท', drug: '💊 ตามจำนวนยา', pay: '💰 ตามสิทธิ/ค่าใช้จ่าย' };
 function updateIssueModeLbl() {
   const el = document.getElementById('issueModeLbl');
-  if (el) el.textContent = issueMode.mode === 'drug' ? '💊 ตามจำนวนยา' : '📋 ตามประเภท';
+  if (el) el.textContent = ISSUE_MODE_LBL[issueMode.mode] || ISSUE_MODE_LBL.type;
 }
 let _imRules = [];
+let _pttypes = null, _edc = new Set();
+let _depts = null, _dept = new Set(), _deptView = [];
 function openIssueMode() {
   _imRules = (issueMode.rules || []).length
     ? issueMode.rules.map(r => ({ ...r }))
     : [{ name: 'ยาน้อย', min: 1, max: 3, prefix: 'S' }, { name: 'ยามาก', min: 4, max: 10, prefix: 'L' }];
-  document.querySelector(`input[name=imMode][value=${issueMode.mode === 'drug' ? 'drug' : 'type'}]`).checked = true;
+  const pay = issueMode.pay || {};
+  document.getElementById('payCashName').value   = pay.cashName   || 'ไปการเงิน';
+  document.getElementById('payCashPrefix').value = pay.cashPrefix || 'F';
+  document.getElementById('payFreeName').value   = pay.freeName   || 'ไม่ผ่านการเงิน';
+  document.getElementById('payFreePrefix').value = pay.freePrefix || 'N';
+  document.getElementById('payCashCodes').value  = (pay.cashCodes || ['01', '03']).join(',');
+  document.getElementById('payDebtCodes').value  = (pay.debtCodes || ['02']).join(',');
+  _edc = new Set(pay.edcPttypes || []);
+  document.getElementById('edcSearch').value = '';
+  setPickOpen('edcWrap', false);
+  document.getElementById('payEdcOn').checked   = pay.edcOn !== false;
+  document.getElementById('payPtOn').checked    = pay.ptOn === true;
+  document.getElementById('payPtName').value    = pay.ptName   || 'สิทธิเฉพาะ';
+  document.getElementById('payPtPrefix').value  = pay.ptPrefix || 'R';
+  syncPtUI();
+  document.getElementById('payDeptOn').checked   = pay.deptOn === true;
+  document.getElementById('payDeptName').value   = pay.deptName   || 'ห้องตรวจเฉพาะ';
+  document.getElementById('payDeptPrefix').value = pay.deptPrefix || 'D';
+  document.getElementById('deptSearch').value = '';
+  setPickOpen('deptWrap', false);
+  _dept = new Set(pay.deptCodes || []);
+  syncDeptUI();
+  document.getElementById('payDrugOn').checked = pay.drugOn === true;
+  document.getElementById('payDrugMax').value  = pay.drugMax || 3;
+  // settings saved before the minimum existed: suggest 1 (0 drugs is not ยาน้อย) — saved only when staff press บันทึก
+  document.getElementById('payDrugMin').value  = Number.isInteger(pay.drugMin) ? pay.drugMin : 1;
+  document.getElementById('payDrugCash').checked = pay.drugCash !== false;
+  document.getElementById('payDrugFree').checked = pay.drugFree !== false;
+  for (const [k, cap, name, prefix] of DRUG_SPLIT_DEF) {
+    document.getElementById(`pay${cap}Name`).value   = pay[k + 'Name']   || name;
+    document.getElementById(`pay${cap}Prefix`).value = pay[k + 'Prefix'] || prefix;
+  }
+  syncDrugSplitUI();
+  for (const k in PAY_LABEL_DEF) document.getElementById(labelId(k)).value = pay[k + 'Label'] || PAY_LABEL_DEF[k];
+  document.getElementById('payNoDrugOn').checked   = pay.noDrugOn === true;
+  document.getElementById('payNoDrugName').value   = pay.noDrugName   || 'ไม่มียา ไปการเงิน';
+  document.getElementById('payNoDrugPrefix').value = pay.noDrugPrefix || 'C';
+  syncNoDrugUI(); loadNoDrugRooms(pay.noDrugSysId);
+  document.querySelector(`input[name=imMode][value=${ISSUE_MODE_LBL[issueMode.mode] ? issueMode.mode : 'type'}]`).checked = true;
   document.getElementById('imErr').textContent = '';
+  document.getElementById('imReissue').checked = issueMode.allowReissue === true;
   renderIssueRules(); syncIssueModeUI();
   document.getElementById('imOverlay').classList.add('show');
 }
 function closeIssueMode() { document.getElementById('imOverlay').classList.remove('show'); }
 function syncIssueModeUI() {
-  const drug = document.querySelector('input[name=imMode]:checked')?.value === 'drug';
-  document.getElementById('imRules').style.display = drug ? '' : 'none';
+  const mode = document.querySelector('input[name=imMode]:checked')?.value;
+  document.getElementById('imRules').style.display = mode === 'drug' ? '' : 'none';
+  document.getElementById('imPay').style.display   = mode === 'pay'  ? '' : 'none';
+  if (mode === 'pay') { loadPttypes(); loadDepartments(); }
+}
+// role boxes (left column) — editable; shown as the tag in the call page's "สถานะ" column
+const PAY_LABEL_DEF = { cash: '💰 ไปการเงิน', free: '✓ ไม่ผ่านการเงิน', dept: '🏥 ห้องตรวจที่เลือก', pttype: '💳 สิทธิที่เลือก',
+  cashS: '💰 ไปการเงิน · ยาน้อย', cashL: '💰 ไปการเงิน · ยามาก', freeS: '✓ ไม่ผ่านการเงิน · ยาน้อย', freeL: '✓ ไม่ผ่านการเงิน · ยามาก',
+  noDrug: '🧾 ไม่มียา · ตรงไปการเงิน' };
+function syncNoDrugUI() {
+  document.getElementById('noDrugBody').style.display = document.getElementById('payNoDrugOn').checked ? '' : 'none';
+}
+// rooms this system forwards to — the "ไม่มียา" ticket can go to one of them
+async function loadNoDrugRooms(selected) {
+  const sel = document.getElementById('payNoDrugSys');
+  const list = await fetch('/api/systems').then(r => r.json()).catch(() => []);
+  const me = (list || []).find(s => s.id === Number(sysId));
+  const rooms = ((me && me.forwardTo) || []).map(id => list.find(s => s.id === id)).filter(Boolean);
+  sel.innerHTML = rooms.length
+    ? rooms.map(s => `<option value="${s.id}" ${s.id === Number(selected) ? 'selected' : ''}>${escHtml((s.icon || '') + ' ' + s.name)}</option>`).join('')
+    : '<option value="">— ระบบนี้ยังไม่ได้ตั้งค่าส่งต่อไปห้องอื่น —</option>';
+}
+const labelId = k => 'pay' + k[0].toUpperCase() + k.slice(1) + 'Label';
+// แยกยาน้อย / ยามาก in "ตามสิทธิ": [settings key, input id part, default name, default prefix]
+const DRUG_SPLIT_DEF = [['cashS', 'CashS', 'ไปการเงิน ยาน้อย', 'FS'], ['cashL', 'CashL', 'ไปการเงิน ยามาก', 'FL'],
+                        ['freeS', 'FreeS', 'ไม่ผ่านการเงิน ยาน้อย', 'NS'], ['freeL', 'FreeL', 'ไม่ผ่านการเงิน ยามาก', 'NL']];
+// is แยกยาน้อย / ยามาก in force for this money route ('cash' | 'free')? older settings: both routes
+// is this ไปการเงิน / ไม่ผ่านการเงิน type handed out? split on → ยาน้อย / ยามาก (+ the single queue when there's a
+// ยาน้อย minimum above 0, for visits under it) · split off → the single queue only
+function paySizeTypeInUse(pay, t) {
+  return paySplit(pay, t.payRule) ? (!!t.drugSize || (Number((pay || {}).drugMin) || 0) > 0) : !t.drugSize;
+}
+function paySplit(pay, route) {
+  return !!pay && pay.drugOn === true && pay[route === 'cash' ? 'drugCash' : 'drugFree'] !== false;
+}
+function syncDrugSplitUI() {
+  const on = document.getElementById('payDrugOn').checked;
+  const cash = document.getElementById('payDrugCash').checked, free = document.getElementById('payDrugFree').checked;
+  document.getElementById('drugSplitBody').style.display = on ? '' : 'none';
+  // the size rows of an unticked route are hidden; its F / N row above stays in use
+  for (const id of ['payCashSRow', 'payCashLRow']) document.getElementById(id).style.display = cash ? '' : 'none';
+  for (const id of ['payFreeSRow', 'payFreeLRow']) document.getElementById(id).style.display = free ? '' : 'none';
+  // with a ยาน้อย minimum above 0, visits with fewer drugs (e.g. 0) still get the route's single queue — so it stays in use
+  const min = Number(document.getElementById('payDrugMin').value) || 0;
+  const max = Number(document.getElementById('payDrugMax').value) || 0;
+  const baseUsed = min > 0;
+  document.getElementById('payCashRow').classList.toggle('im-row-off', on && cash && !baseUsed);
+  document.getElementById('payFreeRow').classList.toggle('im-row-off', on && free && !baseUsed);
+  const off = [on && cash && 'ไปการเงิน', on && free && 'ไม่ผ่านการเงิน'].filter(Boolean);
+  document.getElementById('payBaseOffNote').textContent = !off.length ? ''
+    : baseUsed ? `ℹ แถว ${off.join(' / ')} ใช้กับคนไข้ที่มียาน้อยกว่า ${min} รายการ (ไม่นับเป็นยาน้อย)`
+    : `⏸ แถว ${off.join(' / ')} ไม่ได้ใช้ออกคิว ขณะแยกยาน้อย / ยามาก — ระบบจะกลับมาใช้เมื่อปิด`;
+  const under = document.getElementById('payDrugUnder');
+  under.className = 'im-drug-under' + (min > max && max ? ' bad' : '');
+  under.textContent = min > max && max ? '⚠ "ตั้งแต่" ต้องไม่มากกว่า "ถึง"'
+    : min > 0 ? `ยาน้อย ${min}–${max} รายการ · ยามาก ${max + 1} รายการขึ้นไป · ยา 0${min > 1 ? '–' + (min - 1) : ''} รายการ ไม่แยก → ใช้คิวแถวบน (ไปการเงิน / ไม่ผ่านการเงิน)`
+    : `ยาน้อย 0–${max} รายการ (นับคนไข้ที่ไม่มียาเป็นยาน้อยด้วย) · ยามาก ${max + 1} รายการขึ้นไป`;
+}
+function syncPtUI() {
+  const edcBox = document.getElementById('payEdcOn'), pt = document.getElementById('payPtOn').checked;
+  // แยก Prefix → these สิทธิ always go to การเงิน, so "ไปการเงินทุกกรณี" is on and locked
+  if (pt) edcBox.checked = true;
+  edcBox.disabled = pt;
+  const edc = edcBox.checked;
+  document.getElementById('ptBody').style.display = pt ? '' : 'none';
+  document.getElementById('ptUnused').style.display = edc || pt ? 'none' : '';
+}
+function syncDeptUI() {
+  document.getElementById('deptBody').style.display = document.getElementById('payDeptOn').checked ? '' : 'none';
+}
+async function loadDepartments() {
+  if (_depts) return renderDeptList();
+  renderDeptList();   // the saved ticks show while the names load
+  const box = document.getElementById('deptList');
+  box.innerHTML = '<div class="im-edc-msg">กำลังโหลดรายการห้องตรวจ...</div>';
+  const r = await fetch(`/api/sys/${sysId}/departments`).then(x => x.json()).catch(() => ({ success: false, message: 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้' }));
+  if (!r.success) { box.innerHTML = `<div class="im-edc-msg">⚠ โหลดรายการห้องตรวจไม่สำเร็จ — ${escHtml(r.message || '')}</div>`; return; }
+  _depts = r.departments;
+  renderDeptList();
+}
+function renderDeptList() {
+  renderDeptPicked();
+  document.getElementById('deptCount').textContent = _dept.size;
+  if (!_depts) return;
+  const q = document.getElementById('deptSearch').value.trim().toLowerCase();
+  _deptView = _depts.filter(d => !q || `${d.code} ${d.name}`.toLowerCase().includes(q));
+  document.getElementById('deptList').innerHTML = _deptView.length
+    ? _deptView.map((d, i) => `<label class="im-edc-item"><input type="checkbox" ${_dept.has(d.code) ? 'checked' : ''} onchange="tickDept(${i}, this.checked)"/>${escHtml(d.name)}<small>${escHtml(d.code)}</small></label>`).join('')
+    : '<div class="im-edc-msg">ไม่พบห้องตรวจที่ค้นหา</div>';
+}
+function tickDept(i, on) {
+  const d = _deptView[i];
+  if (d) on ? _dept.add(d.code) : _dept.delete(d.code);
+  renderDeptPicked();
+  document.getElementById('deptCount').textContent = _dept.size;
+}
+async function loadPttypes() {
+  if (_pttypes) return renderEdcList();
+  renderEdcPicked();
+  const box = document.getElementById('edcList');
+  box.innerHTML = '<div class="im-edc-msg">กำลังโหลดรายการสิทธิ...</div>';
+  const r = await fetch(`/api/sys/${sysId}/pttypes`).then(x => x.json()).catch(() => ({ success: false, message: 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้' }));
+  if (!r.success) { box.innerHTML = `<div class="im-edc-msg">⚠ โหลดรายการสิทธิไม่สำเร็จ — ${escHtml(r.message || '')}</div>`; return; }
+  _pttypes = r.pttypes;
+  // first setup: suggest ข้าราชการ (hipdata OFC)
+  if (!(issueMode.pay || {}).edcPttypes) _pttypes.filter(p => p.hipdata.toUpperCase() === 'OFC').forEach(p => _edc.add(p.code));
+  renderEdcList();
+}
+// summary of what is ticked; pressing a name unticks it
+function pickedHtml(items, untick) {
+  return items.length
+    ? items.map((x, i) => `<button type="button" class="im-chip" title="กดเพื่อเอาออก" onclick="${untick}(${i})">${escHtml(x.label)} ✕</button>`).join('')
+    : '<span class="im-picked-none">ยังไม่ได้ติ๊ก</span>';
+}
+let _edcPicked = [], _deptPicked = [];
+function renderEdcPicked() {
+  _edcPicked = [..._edc].sort().map(code => {
+    const p = (_pttypes || []).find(x => x.code === code);
+    return { code, label: p ? `${p.name} (${code})` : `รหัส ${code}` };
+  });
+  document.getElementById('edcPicked').innerHTML = pickedHtml(_edcPicked, 'untickEdc');
+}
+function untickEdc(i) {
+  if (_edcPicked[i]) _edc.delete(_edcPicked[i].code);
+  renderEdcList();
+}
+function renderDeptPicked() {
+  _deptPicked = [..._dept].sort().map(code => {
+    const d = (_depts || []).find(x => x.code === code);
+    return { code, label: d ? d.name : `รหัส ${code}` };
+  });
+  document.getElementById('deptPicked').innerHTML = pickedHtml(_deptPicked, 'untickDept');
+}
+function untickDept(i) {
+  if (_deptPicked[i]) _dept.delete(_deptPicked[i].code);
+  renderDeptList();
+}
+function renderEdcList() {
+  renderEdcPicked();
+  document.getElementById('edcCount').textContent = _edc.size;
+  if (!_pttypes) return;
+  const q = document.getElementById('edcSearch').value.trim().toLowerCase();
+  const list = _pttypes.filter(p => !q || `${p.code} ${p.name} ${p.hipdata}`.toLowerCase().includes(q));
+  if (!list.length) { document.getElementById('edcList').innerHTML = '<div class="im-edc-msg">ไม่พบสิทธิที่ค้นหา</div>'; return; }
+  const groups = {};
+  list.forEach(p => (groups[p.hipdata || '(ไม่ระบุกลุ่ม)'] = groups[p.hipdata || '(ไม่ระบุกลุ่ม)'] || []).push(p));
+  _edcView = [];   // each checkbox ticks the codes at its index
+  const box = (codes, checked) => `<input type="checkbox" ${checked ? 'checked' : ''} onchange="tickEdc(${_edcView.push(codes) - 1}, this.checked)"/>`;
+  document.getElementById('edcList').innerHTML = Object.entries(groups).map(([g, ps]) =>
+    `<label class="im-edc-grp">${box(ps.map(p => p.code), ps.every(p => _edc.has(p.code)))}${escHtml(g)} <small>(${ps.length})</small></label>` +
+    ps.map(p => `<label class="im-edc-item">${box([p.code], _edc.has(p.code))}${escHtml(p.name)}<small>${escHtml(p.code)}</small></label>`).join('')
+  ).join('');
+}
+// the long สิทธิ / ห้องตรวจ lists fold away — the ticked chips above them stay visible
+function setPickOpen(id, open) {
+  document.getElementById(id).classList.toggle('collapsed', !open);
+  document.getElementById(id + 'Btn').textContent = open ? '▾ ย่อรายการ' : (id === 'edcWrap' ? '▸ แสดงรายการสิทธิทั้งหมด เพื่อติ๊กเพิ่ม' : '▸ แสดงรายการห้องตรวจทั้งหมด เพื่อติ๊กเพิ่ม');
+}
+function togglePick(id) {
+  const open = document.getElementById(id).classList.contains('collapsed');
+  setPickOpen(id, open);
+  if (open) document.getElementById(id === 'edcWrap' ? 'edcSearch' : 'deptSearch').focus();
+}
+let _edcView = [];
+function tickEdc(i, on) {
+  (_edcView[i] || []).forEach(c => on ? _edc.add(c) : _edc.delete(c));
+  renderEdcList();
 }
 function renderIssueRules() {
   document.getElementById('imRows').innerHTML = _imRules.map((r, i) => `
@@ -1199,12 +1670,29 @@ async function saveIssueMode() {
   err.textContent = '';
   // switching back to "ตามประเภท" keeps the rules, so turning drug mode on again restores them
   const rules = mode === 'drug' ? _imRules : (issueMode.rules || []);
+  const v = id => document.getElementById(id).value;
+  // the สิทธิ list didn't load (database down) → keep the ticks already saved
+  const pay = mode === 'pay' ? {
+    cashName: v('payCashName'), cashPrefix: v('payCashPrefix'), freeName: v('payFreeName'), freePrefix: v('payFreePrefix'),
+    cashCodes: v('payCashCodes'), debtCodes: v('payDebtCodes'),
+    edcPttypes: _pttypes ? [..._edc] : ((issueMode.pay || {}).edcPttypes || []),
+    deptOn: document.getElementById('payDeptOn').checked, deptName: v('payDeptName'), deptPrefix: v('payDeptPrefix'), deptCodes: [..._dept],
+    edcOn: document.getElementById('payEdcOn').checked,
+    ptOn: document.getElementById('payPtOn').checked, ptName: v('payPtName'), ptPrefix: v('payPtPrefix'),
+    drugOn: document.getElementById('payDrugOn').checked, drugMax: Number(v('payDrugMax')), drugMin: Number(v('payDrugMin')),
+    drugCash: document.getElementById('payDrugCash').checked, drugFree: document.getElementById('payDrugFree').checked,
+    ...Object.fromEntries(DRUG_SPLIT_DEF.flatMap(([k, cap]) => [[k + 'Name', v(`pay${cap}Name`)], [k + 'Prefix', v(`pay${cap}Prefix`)]])),
+    ...Object.fromEntries(Object.keys(PAY_LABEL_DEF).map(k => [k + 'Label', v(labelId(k)).trim() || PAY_LABEL_DEF[k]])),
+    noDrugOn: document.getElementById('payNoDrugOn').checked, noDrugSysId: Number(v('payNoDrugSys')) || null,
+    noDrugName: v('payNoDrugName'), noDrugPrefix: v('payNoDrugPrefix'),
+  } : issueMode.pay;
   const r = await fetch(`/api/sys/${sysId}/issue-mode`, { method: 'PUT', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ mode, rules: rules.map(x => ({ ...x, min: Number(x.min), max: Number(x.max) })) }) })
+    body: JSON.stringify({ mode, rules: rules.map(x => ({ ...x, min: Number(x.min), max: Number(x.max) })), pay,
+      allowReissue: document.getElementById('imReissue').checked }) })
     .then(x => x.json()).catch(() => ({ success: false, message: 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้' }));
   if (!r.success) { err.textContent = '✗ ' + (r.message || 'บันทึกไม่สำเร็จ'); return; }
   issueMode = r.issueMode; updateIssueModeLbl(); renderCards(); closeIssueMode();
-  setStatus(mode === 'drug' ? '✓ เปลี่ยนเป็น "ออกคิวตามจำนวนยา" แล้ว' : '✓ เปลี่ยนเป็น "ออกคิวตามประเภท" แล้ว', '#15803d');
+  setStatus(`✓ เปลี่ยนเป็น "ออกคิว${ISSUE_MODE_LBL[mode].replace(/^\S+ /, '')}" แล้ว`, '#15803d');
 }
 
 // ── Steps ─────────────────────────────────────────────────────────────────
@@ -1240,9 +1728,12 @@ function backToScanner() {
 function renderCards() {
   const grid = document.getElementById('cardsGrid');
   const isIpd = chkIpd.checked;
-  // the cards follow the issue mode: "ตามประเภท" → ordinary types only, "ตามจำนวนยา" → the drug-rule types
-  // (if the chosen mode has no types of its kind, show them all rather than an empty screen)
-  const byIssueMode = queueTypes.filter(t => issueMode.mode === 'drug' ? !!t.drugRule : !t.drugRule);
+  // the cards follow the issue mode: "ตามประเภท" → ordinary types only, "ตามจำนวนยา" → the drug-rule types,
+  // "ตามสิทธิ" → ไปการเงิน / ไม่ผ่านการเงิน (if the chosen mode has no types of its kind, show them all)
+  const byIssueMode = queueTypes.filter(t => issueMode.mode === 'drug' ? !!t.drugRule
+    : issueMode.mode === 'pay' ? !!t.payRule && (t.payRule === 'dept' ? issueMode.pay?.deptOn === true
+      : t.payRule === 'pttype' ? issueMode.pay?.ptOn === true : paySizeTypeInUse(issueMode.pay, t))
+    : !t.drugRule && !t.payRule);
   const filteredTypes = (byIssueMode.length ? byIssueMode : queueTypes).filter(t => {
     const m = t.forMode || 'both';
     return isIpd ? (m === 'ipd' || m === 'both') : (m === 'opd' || m === 'both');
@@ -1389,12 +1880,14 @@ async function browserPrint(data) {
 }
 
 // ── Issue ticket ──────────────────────────────────────────────────────────
-function getQueue(typeId) {
+function getQueue(typeId, payRoute, extra) {
   const isIpdQ = chkIpd.checked;
   fetch(`/api/sys/${sysId}/get-serial`, {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({
+      ...(extra || {}),
       typeId,
+      payRoute:    payRoute                    || null,
       hn:          currentPatient?.hn          || null,
       qn:          currentPatient?.qn          || null,
       vn:          currentPatient?.vn          || null,
@@ -1406,11 +1899,12 @@ function getQueue(typeId) {
       an:          isIpdQ ? (currentPatient?.an || null) : null,
     })
   }).then(r => r.json()).then(d => {
+    if (d.alreadyIssued) { showDup(currentPatient, d.existing); return; }
     if (!d.success) { setStatus('✗ ' + (d.message || 'เกิดข้อผิดพลาด'), '#c62828'); setTimeout(() => setStatus('กดปุ่มด้านล่างเพื่อเริ่มสแกน'), 3000); showStep('scanner'); return; }
     const t = d.ticket;
     doPrint(t);
     backToScanner();
-    setStatus(`✓ ออกคิว ${t.display} — ${t.typeName}`, '#15803d');
+    setStatus(`✓ ออกคิว ${t.display} — ${t.typeName}${d.toSys ? ' · ไปที่ ' + d.toSys.name : ''}`, '#15803d');
     setTimeout(() => setStatus(chkIpd.checked ? 'พร้อมรับบัตรคิว — ยิงบาร์โค้ด AN หรือกรอกข้อมูลด้านล่าง' : 'พร้อมรับบัตรคิว — ยิงบาร์โค้ด HN หรือกรอกข้อมูลด้านล่าง'), 4000);
   }).catch(() => {
     setStatus('✗ เกิดข้อผิดพลาดในการออกคิว', '#c62828');

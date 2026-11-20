@@ -8,7 +8,8 @@ const os   = require('os');
 const path = require('path');
 const { exec } = require('child_process');
 
-const DEFAULT_ORDER = ['header','patientName','hnQn','pttype','queueType','queueNum','dateTime','footer'];
+// same as public/slip-render.js — without 'barcode' here a slip with no saved layout printed no barcode
+const DEFAULT_ORDER = ['header','patientName','hnQn','pttype','queueType','queueNum','barcode','dateTime','footer'];
 
 // Default per-section style — matches the original fixed look
 const STYLE_DEFAULTS = {
