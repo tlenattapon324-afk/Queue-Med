@@ -158,6 +158,15 @@
     .local-print-note{display:none}
     .pd-custom-size{display:none;margin-top:10px}
     .pd-custom-size.show{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .pd-shift{margin-top:12px;padding:10px 12px;border:1px dashed #b3c6e8;border-radius:10px;background:#f8fbff;display:flex;flex-direction:column;gap:8px}
+    .pd-shift-row{display:flex;align-items:center;gap:6px}
+    .pd-shift-row label{flex:1;font-size:.82rem;font-weight:700;color:#1e3a8a}
+    .pd-shift-row button{width:34px;height:32px;border:1px solid #b3c6e8;background:#fff;border-radius:8px;cursor:pointer;font-size:.85rem;color:#1a6ba8}
+    .pd-shift-row button:hover{background:#e0edff}
+    .pd-shift-row input{width:64px;text-align:center;border:1px solid #b3c6e8;border-radius:8px;padding:5px;font:inherit}
+    .pd-shift-row span{font-size:.78rem;color:#64748b}
+    .pd-shift-reset{align-self:flex-start;border:1px solid #cbd5e1;background:#fff;border-radius:8px;padding:4px 10px;font:inherit;font-size:.8rem;cursor:pointer}
+    .pd-shift small{color:#64748b;font-size:.75rem;line-height:1.5}
 
     /* Right preview */
     .pd-right{position:sticky;top:20px;display:flex;flex-direction:column;gap:10px}
@@ -564,7 +573,7 @@
         </div>
         <div class="field prefix-f">
           <label>Prefix</label>
-          <input type="text" id="tPrefix" placeholder="A" maxlength="3"
+          <input type="text" id="tPrefix" placeholder="A หรือ 1 -" maxlength="5"
             style="text-transform:uppercase;text-align:center;font-size:1.2rem;font-weight:700"/>
           <label style="display:flex;align-items:center;gap:5px;margin-top:7px;cursor:pointer;font-size:.75rem;color:#1e3a8a;white-space:nowrap">
             <input type="checkbox" id="tNoPrefix" onchange="onNoPrefixChange('tPrefix','tNoPrefix')" style="accent-color:#ffa726;width:14px;height:14px"/>
@@ -633,6 +642,19 @@
               <input type="number" id="pdCustomW" value="80" min="40" max="300" oninput="updatePreview()"/></div>
             <div class="pd-field"><label>ความสูง (mm) — เว้นว่างสำหรับอัตโนมัติ</label>
               <input type="number" id="pdCustomH" placeholder="auto" min="50" max="1000" oninput="updatePreview()"/></div>
+          </div>
+          <!-- shift the whole slip — for a printer that cuts off one side -->
+          <div class="pd-shift">
+            <div class="pd-shift-row"><label>↔ เลื่อนซ้าย / ขวา</label>
+              <button type="button" onclick="nudgeSlip('X',-1)" title="เลื่อนไปทางซ้าย 1 mm">◀</button>
+              <input type="number" id="pdOffsetX" value="0" min="-20" max="20" step="0.5" oninput="updatePreview()"/><span>mm</span>
+              <button type="button" onclick="nudgeSlip('X',1)" title="เลื่อนไปทางขวา 1 mm">▶</button></div>
+            <div class="pd-shift-row"><label>↕ เลื่อนขึ้น / ลง</label>
+              <button type="button" onclick="nudgeSlip('Y',-1)" title="เลื่อนขึ้น 1 mm">▲</button>
+              <input type="number" id="pdOffsetY" value="0" min="-20" max="20" step="0.5" oninput="updatePreview()"/><span>mm</span>
+              <button type="button" onclick="nudgeSlip('Y',1)" title="เลื่อนลง 1 mm">▼</button></div>
+            <button type="button" class="pd-shift-reset" onclick="nudgeSlip('reset')">↺ กลับกึ่งกลาง</button>
+            <small>ขวาโดนตัด → เลื่อนซ้าย (ค่าติดลบ) · ซ้ายโดนตัด → เลื่อนขวา · มีผลทั้งพิมพ์ผ่าน Server, Print Agent และเบราว์เซอร์</small>
           </div>
         </div>
 
@@ -1239,7 +1261,7 @@
       <div class="field" style="width:100%"><label>ชื่อ</label><input type="text" id="etName" maxlength="30"/></div>
       <div class="field" style="width:100%">
         <label>Prefix</label>
-        <input type="text" id="etPrefix" maxlength="3" style="text-transform:uppercase;font-size:1.2rem;font-weight:700"/>
+        <input type="text" id="etPrefix" maxlength="5" style="text-transform:uppercase;font-size:1.2rem;font-weight:700"/>
         <label style="display:flex;align-items:center;gap:5px;margin-top:7px;cursor:pointer;font-size:.75rem;color:#1e3a8a">
           <input type="checkbox" id="etNoPrefix" onchange="onNoPrefixChange('etPrefix','etNoPrefix')" style="accent-color:#ffa726;width:14px;height:14px"/>
           ไม่ใช้ Prefix (ออกเลขล้วน เช่น 001, 002)
@@ -1702,6 +1724,8 @@ function applyPrintCfgToForm(cfg) {
   setPaperSize(cfg.paperSize || '80mm', null, false);
   if (cfg.customWidth)  document.getElementById('pdCustomW').value = cfg.customWidth;
   if (cfg.customHeight) document.getElementById('pdCustomH').value = cfg.customHeight;
+  document.getElementById('pdOffsetX').value = Number(cfg.offsetX) || 0;
+  document.getElementById('pdOffsetY').value = Number(cfg.offsetY) || 0;
   // Printer
   const pSel = document.getElementById('pdPrinter');
   if (cfg.printerName) {
@@ -1814,11 +1838,20 @@ function setRange(id, v, unit) {
   document.getElementById(id + 'V').textContent = v + unit;
 }
 
+// ◀ ▶ ▲ ▼ — shift the whole slip 1 mm at a time (−20…20)
+function nudgeSlip(axis, step) {
+  const set = (id, v) => { document.getElementById(id).value = Math.max(-20, Math.min(20, v)); };
+  if (axis === 'reset') { set('pdOffsetX', 0); set('pdOffsetY', 0); }
+  else { const id = 'pdOffset' + axis; set(id, (Number(document.getElementById(id).value) || 0) + step); }
+  updatePreview();
+}
 function collectPrintCfg() {
   return {
     paperSize:        pdCurrentSize,
     customWidth:      document.getElementById('pdCustomW').value,
     customHeight:     document.getElementById('pdCustomH').value,
+    offsetX:          Number(document.getElementById('pdOffsetX').value) || 0,
+    offsetY:          Number(document.getElementById('pdOffsetY').value) || 0,
     printerName:      document.getElementById('pdPrinter').value,
     showHeader:       document.getElementById('pdShowHeader').checked,
     headerName:       document.getElementById('pdHeaderName').value.trim(),

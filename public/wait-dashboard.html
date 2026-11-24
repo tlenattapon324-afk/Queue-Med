@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <script src="/vendor/api-token.js"></script>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <link rel="icon" href="/favicon.ico" sizes="any"/>
+  <title>Dashboard ระยะเวลารอคอย</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --paper:#f4f1ea; --tile:#fff; --ink:#1b2333; --muted:#5d667a; --line:#e7e1d6;
+      --accent:#4353d6; --accent-soft:#e9ebfc; --accent-ink:#2a37a8;
+      --mint:#ddf3e8; --mint-ink:#1d7a52; --sky:#e0eefb; --sky-ink:#1f5f9e; --butter:#fbf1d2; --butter-ink:#8a6100;
+      --coral:#e8603c; --coral-soft:#fde8df; --lav:#ece8fb; --lav-ink:#5a3fb5; --red:#dc2626;
+      --r:22px; --shadow:0 1px 0 rgba(27,35,51,.04),0 10px 28px -14px rgba(27,35,51,.22);
+    }
+    body{font-family:'Kanit','Segoe UI',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;
+      background-image:radial-gradient(circle at 1px 1px,rgba(27,35,51,.06) 1px,transparent 0);background-size:22px 22px}
+    header{background:rgba(255,255,255,.92);border-bottom:1px solid var(--line);padding:0 22px;height:60px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:10}
+    header a.back{color:var(--ink);text-decoration:none;background:#f4f1ea;border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-weight:500}
+    header a.back:hover{background:var(--ink);color:#fff}
+    header h1{font-size:1.25rem;font-weight:600}
+    header .room{color:var(--muted);font-weight:400}
+    main{max-width:1480px;margin:0 auto;padding:18px;display:grid;gap:14px}
+    .tile{background:var(--tile);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:18px 20px;min-width:0}
+    .tile-h{font-size:.82rem;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+    .tile-h::before{content:'';width:8px;height:8px;border-radius:3px;background:currentColor;opacity:.55}
+
+    /* filters — one row above everything */
+    .filters{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:center}
+    .f-group{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .f-group label{font-size:.9rem;color:var(--muted);font-weight:500}
+    input[type=date]{font:inherit;border:1.5px solid var(--line);border-radius:12px;padding:7px 10px;background:#fff;color:var(--ink)}
+    input[type=date]:focus{outline:none;border-color:var(--accent)}
+    .chip{font:inherit;font-size:.9rem;border:1.5px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:5px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+    .chip:hover{border-color:var(--accent)}
+    .chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+    .chip .pf{min-width:22px;height:22px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;padding:0 4px}
+    .types{display:flex;flex-wrap:wrap;gap:8px}
+    .btn{font:inherit;font-weight:600;border:none;border-radius:14px;padding:10px 18px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+    .btn-load{background:var(--ink);color:#fff}
+    .btn-xlsx{background:#1d7a52;color:#fff}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+    .f-actions{margin-left:auto;display:flex;gap:10px}
+    .msg{font-size:.92rem;color:var(--muted)}
+    .msg.err{color:var(--red);font-weight:600}
+
+    /* KPI tiles */
+    .kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px}
+    .kpi{border-radius:var(--r);padding:16px 18px;display:flex;flex-direction:column;gap:4px;border:1px solid transparent}
+    .kpi span{font-size:.88rem;font-weight:500;opacity:.9}
+    .kpi b{font-size:2.3rem;font-weight:700;line-height:1.05;color:var(--ink);font-variant-numeric:tabular-nums}
+    .kpi b i{font-style:normal;font-size:1rem;font-weight:500;color:var(--muted);margin-left:4px}
+    .kpi small{font-size:.8rem;color:var(--muted)}
+    .k1{background:var(--ink);color:#fff}.k1 b,.k1 b i,.k1 small{color:#fff}
+    .k2{background:var(--mint);color:var(--mint-ink)}
+    .k3{background:var(--sky);color:var(--sky-ink)}
+    .k4{background:var(--lav);color:var(--lav-ink)}
+    .k5{background:var(--butter);color:var(--butter-ink)}
+    .k6{background:var(--coral-soft);color:#9a3412}
+
+    /* flow strip: ออกคิว → ตรวจยา → จ่ายยา */
+    .flow{display:flex;align-items:stretch;gap:0;flex-wrap:wrap}
+    .flow .st{flex:1;min-width:150px;text-align:center;padding:10px}
+    .flow .st b{display:block;font-size:1.05rem}
+    .flow .st small{color:var(--muted)}
+    .flow .ar{flex:1.3;min-width:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+    .flow .ar .line{width:100%;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--line),var(--accent),var(--line))}
+    .flow .ar b{font-size:1.5rem;color:var(--accent-ink);font-variant-numeric:tabular-nums}
+    .flow .ar small{color:var(--muted);font-size:.8rem}
+
+    .flow.rx .ar .line{background:linear-gradient(90deg,var(--line),#1d7a52,var(--line))}
+    .flow.rx .ar b{color:var(--mint-ink)}
+    .flow.rx .st b{font-size:.98rem}
+    .rx-note{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+    .rx-note span{background:var(--mint);color:var(--mint-ink);border-radius:999px;padding:4px 12px;font-size:.88rem}
+    .rx-note span b{color:var(--ink);font-variant-numeric:tabular-nums}
+    td.rx{color:#1d7a52}
+    td.oth{color:#1565c0;background:#f3f8ff}
+    .xbtn{margin-left:auto;font:inherit;font-size:.78rem;font-weight:600;letter-spacing:0;text-transform:none;border:1px solid #b9e3cd;background:var(--mint);color:var(--mint-ink);border-radius:999px;padding:3px 12px;cursor:pointer;white-space:nowrap}
+    .xbtn + .xbtn{margin-left:0}
+    .xbtn:hover{background:#1d7a52;border-color:#1d7a52;color:#fff}
+    .xbtn.png{background:var(--sky);border-color:#bcd7f1;color:var(--sky-ink)}
+    .xbtn.png:hover{background:#1f5f9e;border-color:#1f5f9e;color:#fff}
+    .xbtn:disabled{opacity:.5;cursor:wait}
+    .grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+    /* charts */
+    .chart{position:relative}
+    .chart svg{display:block;width:100%;height:230px}
+    .chart .bar{fill:var(--accent)}
+    .chart.wait .bar{fill:#e0702f}
+    .chart .bar:hover,.chart .hit:hover + .bar{opacity:.8}
+    .chart .hit{fill:transparent;cursor:default}
+    .chart text{font-family:inherit;font-size:11px;fill:var(--muted)}
+    .chart .grid{stroke:#ece7dd;stroke-width:1}
+    .chart .lbl{fill:var(--ink);font-size:11px;font-weight:600}
+    .tip{position:fixed;pointer-events:none;background:var(--ink);color:#fff;border-radius:10px;padding:7px 11px;font-size:.85rem;line-height:1.45;z-index:50;display:none;box-shadow:0 8px 20px rgba(0,0,0,.25)}
+    .empty{color:var(--muted);text-align:center;padding:40px 10px}
+
+    /* tables */
+    table{width:100%;border-collapse:collapse;font-size:.92rem}
+    th small{font-weight:500;font-size:.74rem;opacity:.8}
+    th{font-weight:600;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1.5px solid var(--line);white-space:nowrap;background:#fff;position:sticky;top:0}
+    td{padding:8px 10px;border-bottom:1px solid #f0ece4;white-space:nowrap}
+    td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+    tr.total td{font-weight:700;border-top:1.5px solid var(--line)}
+    .pf{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:24px;border-radius:8px;font-weight:700;font-size:.82rem;padding:0 5px;margin-right:6px}
+    .mini{display:inline-block;height:8px;border-radius:4px;background:#e0702f;vertical-align:middle;margin-left:8px}
+    .slow{color:var(--red);font-weight:700}
+    .detail-wrap{max-height:520px;overflow:auto;border-radius:12px}
+    .detail-tools{display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+    .detail-tools input{font:inherit;border:1.5px solid var(--line);border-radius:12px;padding:7px 12px;min-width:260px}
+    .detail-tools input:focus{outline:none;border-color:var(--accent)}
+    .st-tag{font-size:.8rem;border-radius:999px;padding:2px 10px;background:#f1eee7}
+    .st-tag.called{background:var(--mint);color:var(--mint-ink)}
+    .st-tag.waiting{background:var(--butter);color:var(--butter-ink)}
+    .st-tag.noshow{background:#fee2e2;color:#b91c1c}
+
+    /* admin: SQL viewer */
+    .sql-btn{margin-left:auto;font:inherit;font-size:.8rem;border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:4px 12px;cursor:pointer}
+    .sql-btn:hover{color:var(--ink);border-color:var(--ink)}
+    .sql-ov{position:fixed;inset:0;background:rgba(27,35,51,.5);backdrop-filter:blur(4px);z-index:60;display:none;align-items:center;justify-content:center;padding:16px}
+    .sql-ov.show{display:flex}
+    .sql-box{background:#fff;border-radius:22px;width:100%;max-width:1000px;max-height:90vh;overflow:auto;padding:18px 22px;box-shadow:0 30px 70px -20px rgba(0,0,0,.5)}
+    .sql-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;font-size:1.1rem}
+    .sql-x{border:none;background:#f4f1ea;border-radius:50%;width:34px;height:34px;cursor:pointer;font-size:1rem}
+    .sql-src{background:var(--sky);color:var(--sky-ink);border-radius:14px;padding:12px 16px;line-height:1.7;font-size:.92rem;margin-bottom:14px}
+    .sql-src b{color:var(--ink)}
+    .sql-q{border:1px solid var(--line);border-radius:14px;margin-bottom:12px;overflow:hidden}
+    .sql-q-h{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:10px 14px;background:#faf8f4;border-bottom:1px solid var(--line)}
+    .sql-q-h b{flex:1;min-width:220px}
+    .sql-q-h span{font-size:.82rem;color:var(--muted)}
+    .sql-q pre{margin:0;padding:12px 14px;background:#1b2333;color:#e6edf7;font:13px/1.55 Consolas,"Courier New",monospace;white-space:pre-wrap;word-break:break-word}
+    .sql-q .params{padding:8px 14px;font:12.5px/1.5 Consolas,monospace;color:var(--muted);word-break:break-all}
+    .sql-copy{font:inherit;font-size:.8rem;border:1px solid var(--line);background:#fff;border-radius:999px;padding:3px 12px;cursor:pointer}
+    .sql-copy:hover{background:var(--ink);color:#fff}
+    @media (max-width:1100px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.grid2{grid-template-columns:1fr}}
+    @media (max-width:640px){main{padding:12px}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.f-actions{margin-left:0}}
+  </style>
+</head>
+<body>
+<header>
+  <a class="back" id="backLink" href="#">← หน้าเรียกคิว</a>
+  <h1>📊 Dashboard ระยะเวลารอคอย <span class="room" id="roomName"></span></h1>
+  <button class="sql-btn" id="btnSql" title="ดูคำสั่ง SQL และที่มาของข้อมูล (สำหรับผู้ดูแลระบบ)">🔎 SQL / ที่มาข้อมูล</button>
+</header>
+
+<!-- admin: the queries behind the numbers -->
+<div class="sql-ov" id="sqlOv">
+  <div class="sql-box">
+    <div class="sql-head"><b>🔎 ที่มาของข้อมูล · คำสั่ง SQL</b><button class="sql-x" id="sqlClose">✕</button></div>
+    <div id="sqlBody"></div>
+  </div>
+</div>
+
+<main>
+  <!-- filters -->
+  <section class="tile">
+    <div class="filters">
+      <div class="f-group">
+        <label>ช่วงวันที่</label>
+        <input type="date" id="dFrom"/> <span class="msg">ถึง</span> <input type="date" id="dTo"/>
+      </div>
+      <div class="f-group" id="quick">
+        <button class="chip" data-q="today">วันนี้</button>
+        <button class="chip" data-q="yesterday">เมื่อวาน</button>
+        <button class="chip" data-q="7">7 วัน</button>
+        <button class="chip" data-q="30">30 วัน</button>
+        <button class="chip" data-q="month">เดือนนี้</button>
+      </div>
+      <div class="f-actions">
+        <button class="btn btn-load" id="btnLoad">⟳ แสดงข้อมูล</button>
+        <button class="btn btn-xlsx" id="btnXlsx">⬇ Export Excel</button>
+      </div>
+    </div>
+    <div class="filters" style="margin-top:12px">
+      <div class="f-group"><label>ประเภทคิว</label></div>
+      <div class="types" id="typeChips"></div>
+    </div>
+    <div class="msg" id="msg" style="margin-top:10px"></div>
+  </section>
+
+  <!-- KPIs -->
+  <section class="kpis" id="kpis"></section>
+
+  <!-- the three steps and the time between them -->
+  <section class="tile">
+    <div class="tile-h">ขั้นตอน · ค่าเฉลี่ยรอตรวจยา / รอจ่ายยา (เวลาจาก HOSxP)<button class="xbtn" onclick="exSummary()" title="ตัวเลขสรุปด้านบน + ขั้นตอนนี้ เป็น Excel">⬇ Excel</button></div>
+    <div class="flow" id="flow"></div>
+  </section>
+
+  <!-- HOSxP pharmacy steps (rx_dispenser_detail · rx_dispenser_type 1–4) -->
+  <section class="tile">
+    <div class="tile-h">ขั้นตอนห้องยาใน HOSxP · ค่าเฉลี่ยระหว่างขั้น (rx_dispenser_type)<button class="xbtn" onclick="exRx()" title="ตารางขั้นตอนห้องยา HOSxP เป็น Excel">⬇ Excel</button></div>
+    <div class="flow rx" id="rxFlow"></div>
+    <div class="rx-note" id="rxNote"></div>
+    <div style="overflow:auto;margin-top:12px"><table id="rxByType"></table></div>
+  </section>
+
+  <section class="grid2">
+    <div class="tile">
+      <div class="tile-h">จำนวนคิวตามชั่วโมงที่ออกคิว<button class="xbtn png" onclick="chartPng('chCount','จำนวนคิวตามชั่วโมงที่ออกคิว')" title="บันทึกกราฟเป็นรูป PNG">🖼 รูปภาพ</button><button class="xbtn" onclick="exHours()" title="ข้อมูลรายชั่วโมงเป็น Excel">⬇ Excel</button></div>
+      <div class="chart" id="chCount"></div>
+    </div>
+    <div class="tile">
+      <div class="tile-h">ระยะเวลารอเฉลี่ย (ออกคิว → จ่ายยา) ตามชั่วโมง · นาที<button class="xbtn png" onclick="chartPng('chWait','ระยะเวลารอเฉลี่ย (ออกคิว → เรียกจ่ายยา) ตามชั่วโมง · นาที')" title="บันทึกกราฟเป็นรูป PNG">🖼 รูปภาพ</button><button class="xbtn" onclick="exHours()" title="ข้อมูลรายชั่วโมงเป็น Excel">⬇ Excel</button></div>
+      <div class="chart wait" id="chWait"></div>
+    </div>
+  </section>
+
+  <section class="tile">
+    <div class="tile-h">สรุปตามประเภทคิว<button class="xbtn" onclick="exByType()" title="ตารางสรุปตามประเภทคิวเป็น Excel">⬇ Excel</button></div>
+    <div style="overflow:auto"><table id="byType"></table></div>
+  </section>
+
+  <section class="tile">
+    <div class="tile-h">รายละเอียดรายคิว<button class="xbtn" onclick="exDetail()" title="รายละเอียดรายคิว (ตามคำค้นหา · ครบทุกคิว) เป็น Excel">⬇ Excel</button></div>
+    <div class="detail-tools">
+      <input id="search" placeholder="🔍 ค้นหาเลขคิว / HN / ชื่อ"/>
+      <span class="msg" id="detailCount"></span>
+    </div>
+    <div class="detail-wrap"><table id="detail"></table></div>
+  </section>
+</main>
+<div class="tip" id="tip"></div>
+
+<script>
+const sysId = new URLSearchParams(location.search).get('sys');
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const pad = n => String(n).padStart(2, '0');
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const fmtMin = v => v == null ? '–' : v >= 60 ? `${Math.floor(v / 60)} ชม. ${Math.round(v % 60)} น.` : `${Math.round(v * 10) / 10}`;
+const avg = a => { const v = a.filter(x => x != null); return v.length ? v.reduce((s, x) => s + x, 0) / v.length : null; };
+const SLOW = 60;   // นาที — highlighted as a long wait
+function inkOn(hex) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(String(hex || '').trim()); if (!m) return '#fff';
+  const n = parseInt(m[1], 16), ch = v => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; };
+  return .2126 * ch(n >> 16 & 255) + .7152 * ch(n >> 8 & 255) + .0722 * ch(n & 255) > .4 ? '#1b2333' : '#fff';
+}
+
+let data = null, picked = new Set(), sysTypes = [];
+let isAdmin = false;
+try { isAdmin = !!sessionStorage.getItem('authToken') && !sessionStorage.getItem('currentDepcode'); } catch (e) {}
+// always available (small, top right): the SQL holds no passwords or patient data — only table / column names
+$('btnSql').hidden = false;
+$('btnSql').onclick = showSql;
+$('sqlClose').onclick = () => $('sqlOv').classList.remove('show');
+$('sqlOv').onclick = e => { if (e.target.id === 'sqlOv') $('sqlOv').classList.remove('show'); };
+// the SQL with its values filled in — ready to paste into a database tool
+function sqlWithValues(q) { let i = 0; return q.sql.replace(/\?/g, () => { const v = q.params[i++]; return typeof v === 'number' ? String(v) : "'" + String(v).replace(/'/g, "''") + "'"; }); }
+function showSql() {
+  const qs = (data && data.queries) || [];
+  const src = `<div class="sql-src"><b>ที่มาของแต่ละช่อง</b><br>` +
+    `• <b>ออกคิว</b> = app_queue_opd.issued_at (บันทึกตอนออกคิว) · <b>จ่ายยา</b> = app_queue_opd.called_at (เวลาเรียกคิวล่าสุดที่ห้องนี้)<br>` +
+    `• <b>ตรวจยา</b> = เวลาตรวจยาครั้งแรกของ VN ใน HOSxP: MIN(rx_dispenser_detail.rx_dispenser_datetime) ที่ rx_dispenser_type_id = 3<br>` +
+    `• <b>ขั้นตอนห้องยาใน HOSxP</b> = MIN(rx_dispenser_datetime) ของ VN แยกตาม rx_dispenser_type: 1 บันทึกใบสั่งยา · 2 จัดยา · 3 ตรวจสอบยา · 4 จ่ายยา (ชื่อเจ้าหน้าที่ = staff — ชี้เมาส์ที่เวลาในตารางรายคิว)<br>` +
+    `• <b>รอตรวจยา</b> = ตรวจยา − บันทึกใบสั่งยา · <b>รอจ่ายยา</b> = จ่ายยา − ตรวจยา (ทั้งสองค่าใช้เวลาจาก HOSxP · ว่างถ้าขั้นใดไม่ได้บันทึก) · <b>รวม</b> = เรียกจ่ายยา − ออกคิว (เวลาจากระบบคิว) · หน่วยนาที · ค่าเฉลี่ยไม่นับคิวที่ว่าง<br>` +
+    `• วันนี้: เวลาเรียกใช้บันทึกการเรียกของโปรแกรม (ข้อ 3) แทน called_at ถ้ามี · กรองประเภทคิวทำหลังดึงข้อมูล (type_id) · ฐานข้อมูล: ${esc(data && data.dbType || '-')}</div>`;
+  $('sqlBody').innerHTML = src + (qs.length ? qs.map((q, i) => {
+    const p = q.params.length > 12 ? q.params.slice(0, 12).map(String).join(', ') + ` … และอีก ${q.params.length - 12} ค่า` : q.params.map(String).join(', ');
+    return `<div class="sql-q"><div class="sql-q-h"><b>${esc(q.title)}</b><span>${q.rows.toLocaleString()} แถว · ${q.ms} ms</span>` +
+      (q.params.length ? `<button class="sql-copy" data-i="${i}">📋 คัดลอก SQL พร้อมค่า</button>` : '') + `</div>` +
+      `<pre>${esc(q.sql)}</pre>` + (q.params.length ? `<div class="params">ค่า ? ตามลำดับ: ${esc(p)}</div>` : '') + `</div>`;
+  }).join('') : '<div class="empty">กด แสดงข้อมูล ก่อน</div>');
+  $('sqlBody').querySelectorAll('.sql-copy').forEach(b => b.onclick = async () => {
+    const t = sqlWithValues(qs[b.dataset.i]);
+    try { await navigator.clipboard.writeText(t); } catch (e) { const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
+    b.textContent = '✓ คัดลอกแล้ว'; setTimeout(() => b.textContent = '📋 คัดลอก SQL พร้อมค่า', 1500);
+  });
+  $('sqlOv').classList.add('show');
+}
+$('backLink').href = `/cashier.html?sys=${sysId}`;
+
+// ── filters ──
+function setRange(q) {
+  const t = new Date(); let a = new Date(t), b = new Date(t);
+  if (q === 'yesterday') { a.setDate(a.getDate() - 1); b = new Date(a); }
+  else if (q === '7') a.setDate(a.getDate() - 6);
+  else if (q === '30') a.setDate(a.getDate() - 29);
+  else if (q === 'month') a = new Date(t.getFullYear(), t.getMonth(), 1);
+  $('dFrom').value = ymd(a); $('dTo').value = ymd(b);
+  document.querySelectorAll('#quick .chip').forEach(c => c.classList.toggle('on', c.dataset.q === q));
+  load();
+}
+document.querySelectorAll('#quick .chip').forEach(c => c.onclick = () => setRange(c.dataset.q));
+['dFrom', 'dTo'].forEach(id => $(id).onchange = () => document.querySelectorAll('#quick .chip').forEach(c => c.classList.remove('on')));
+$('btnLoad').onclick = load;
+$('btnXlsx').onclick = exportXlsx;
+$('search').oninput = renderDetail;
+
+function typeQuery() { return picked.size ? `&types=${[...picked].join(',')}` : ''; }
+function renderTypeChips() {
+  const types = (data && data.types) || [];
+  const chip = (id, label, pf, color) => `<button class="chip${(id === 0 ? !picked.size : picked.has(id)) ? ' on' : ''}" data-id="${id}">` +
+    (pf ? `<span class="pf" style="background:${color || '#4353d6'};color:${inkOn(color || '#4353d6')}">${esc(pf)}</span>` : '') + `${esc(label)}</button>`;
+  $('typeChips').innerHTML = chip(0, 'ทั้งหมด') + types
+    .sort((a, b) => String(a.prefix).localeCompare(String(b.prefix), 'th', { numeric: true }))
+    .map(t => chip(t.id, t.name, t.prefix, t.color)).join('') || '<span class="msg">ยังไม่มีข้อมูลในช่วงนี้</span>';
+  $('typeChips').querySelectorAll('.chip').forEach(c => c.onclick = () => {
+    const id = Number(c.dataset.id);
+    if (!id) picked.clear(); else picked.has(id) ? picked.delete(id) : picked.add(id);
+    renderTypeChips(); render();
+  });
+}
+
+// ── data ──
+async function load() {
+  const from = $('dFrom').value, to = $('dTo').value;
+  $('msg').className = 'msg'; $('msg').textContent = '⏳ กำลังดึงข้อมูล...';
+  $('btnLoad').disabled = true;
+  try {
+    const r = await fetch(`/api/sys/${sysId}/wait-report?from=${from}&to=${to}`).then(x => x.json());
+    if (!r.success) throw new Error(r.message || 'ดึงข้อมูลไม่สำเร็จ');
+    data = r;
+    // keep only picks that still exist in this range
+    picked = new Set([...picked].filter(id => r.types.some(t => t.id === id)));
+    renderTypeChips(); render();
+    $('msg').textContent = `ข้อมูล ${from === to ? from : from + ' ถึง ' + to} · ${r.rows.length.toLocaleString()} คิว`;
+  } catch (e) {
+    $('msg').className = 'msg err'; $('msg').textContent = '✗ ' + e.message;
+  } finally { $('btnLoad').disabled = false; }
+}
+function rowsNow() { return !data ? [] : picked.size ? data.rows.filter(r => picked.has(r.typeId)) : data.rows; }
+
+async function exportXlsx() {
+  const from = $('dFrom').value, to = $('dTo').value;
+  $('btnXlsx').disabled = true; $('btnXlsx').textContent = '⏳ กำลังสร้างไฟล์...';
+  try {
+    const res = await fetch(`/api/sys/${sysId}/wait-report?from=${from}&to=${to}${typeQuery()}&format=xlsx`);
+    if (!res.ok || !(res.headers.get('content-type') || '').includes('spreadsheet')) {
+      const j = await res.json().catch(() => ({})); throw new Error(j.message || 'สร้างไฟล์ไม่สำเร็จ');
+    }
+    const blob = await res.blob(), a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = `ระยะเวลารอคอย_${from}_${to}.xlsx`;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  } catch (e) {
+    $('msg').className = 'msg err'; $('msg').textContent = '✗ ' + e.message;
+  } finally { $('btnXlsx').disabled = false; $('btnXlsx').textContent = '⬇ Export Excel'; }
+}
+
+// ── render ──
+function render() {
+  const rows = rowsNow();
+  const done = rows.filter(r => r.calledTs), chk = rows.filter(r => r.checkedTs);
+  const aC = avg(rows.map(r => r.waitCheck)), aD = avg(rows.map(r => r.waitDispense)), aT = avg(rows.map(r => r.waitTotal));
+  const totals = rows.map(r => r.waitTotal).filter(v => v != null);
+  const maxT = totals.length ? Math.max(...totals) : null;
+  const within = totals.length ? Math.round(totals.filter(v => v <= 30).length / totals.length * 100) : null;
+  const kpi = (cls, lbl, val, unit, sub) => `<div class="kpi ${cls}"><span>${lbl}</span><b>${val}${unit ? `<i>${unit}</i>` : ''}</b>${sub ? `<small>${sub}</small>` : ''}</div>`;
+  const mins = v => v == null ? '–' : v >= 60 ? fmtMin(v) : Math.round(v * 10) / 10;
+  const unit = v => v == null || v >= 60 ? '' : 'นาที';
+  $('kpis').innerHTML =
+    kpi('k1', '🎫 จำนวนคิว', rows.length.toLocaleString(), 'คิว', `จ่ายยาแล้ว ${done.length.toLocaleString()} · ตรวจยาแล้ว ${chk.length.toLocaleString()}`) +
+    kpi('k3', '🔍 เฉลี่ยรอตรวจยา', mins(aC), unit(aC), 'บันทึกใบสั่งยา → ตรวจยา (HOSxP)') +
+    kpi('k4', '💊 เฉลี่ยรอจ่ายยา', mins(aD), unit(aD), 'ตรวจยา → จ่ายยา (HOSxP)') +
+    kpi('k5', '⏱ เฉลี่ยรวม', mins(aT), unit(aT), 'ออกคิว → เรียกจ่ายยา (คิว)') +
+    kpi('k6', '🐢 นานสุด', mins(maxT), unit(maxT), 'ออกคิว → เรียกจ่ายยา (คิว)') +
+    kpi('k2', '✅ จ่ายยาภายใน 30 นาที', within == null ? '–' : within, within == null ? '' : '%', `จาก ${totals.length.toLocaleString()} คิวที่จ่ายแล้ว`);
+  $('flow').innerHTML =
+    `<div class="st">📝<b>บันทึกใบสั่งยา</b><small>${rows.filter(r => r.rxRecordTs).length.toLocaleString()} คิว · HOSxP</small></div>` +
+    `<div class="ar"><b>${fmtMin(aC)}${aC != null && aC < 60 ? ' <small>นาที</small>' : ''}</b><div class="line"></div><small>รอตรวจยา</small></div>` +
+    `<div class="st">🔍<b>ตรวจยา</b><small>${chk.length.toLocaleString()} คิว · HOSxP</small></div>` +
+    `<div class="ar"><b>${fmtMin(aD)}${aD != null && aD < 60 ? ' <small>นาที</small>' : ''}</b><div class="line"></div><small>รอจ่ายยา</small></div>` +
+    `<div class="st">💊<b>จ่ายยา</b><small>${rows.filter(r => r.rxDispenseTs).length.toLocaleString()} คิว · HOSxP</small></div>`;
+  renderRxSteps(rows);
+  renderCharts(rows);
+  renderByType(rows);
+  renderDetail();
+}
+
+// two single-series bar charts (count / average wait) by hour issued — one measure per chart, no dual axis
+function renderCharts(rows) {
+  const hours = {};
+  rows.forEach(r => { if (!r.issuedTs) return; const h = new Date(r.issuedTs).getHours(); (hours[h] = hours[h] || []).push(r); });
+  const hs = Object.keys(hours).map(Number).sort((a, b) => a - b);
+  if (!hs.length) { $('chCount').innerHTML = $('chWait').innerHTML = '<div class="empty">ไม่มีข้อมูล</div>'; return; }
+  const range = []; for (let h = hs[0]; h <= hs[hs.length - 1]; h++) range.push(h);
+  barChart($('chCount'), range.map(h => ({ label: `${pad(h)}:00`, v: (hours[h] || []).length,
+    tip: `<b>${pad(h)}:00–${pad(h)}:59</b><br>ออกคิว ${(hours[h] || []).length} คิว` })), v => String(v));
+  barChart($('chWait'), range.map(h => { const a = avg((hours[h] || []).map(r => r.waitTotal));
+    return { label: `${pad(h)}:00`, v: a == null ? 0 : Math.round(a * 10) / 10,
+      tip: `<b>${pad(h)}:00–${pad(h)}:59</b><br>รอเฉลี่ย ${a == null ? '–' : fmtMin(a) + (a < 60 ? ' นาที' : '')}<br>${(hours[h] || []).filter(r => r.waitTotal != null).length} คิวที่จ่ายแล้ว` }; }), v => String(Math.round(v)));
+}
+function barChart(el, pts, fmt) {
+  const W = 640, H = 230, L = 34, R = 8, T = 18, B = 26;
+  const max = Math.max(1, ...pts.map(p => p.v));
+  const step = niceStep(max), top = Math.ceil(max / step) * step;
+  const bw = (W - L - R) / pts.length, gap = Math.min(10, bw * .3);
+  const y = v => T + (H - T - B) * (1 - v / top);
+  let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img">`;
+  for (let v = 0; v <= top; v += step) s += `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 6}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+  const labelEvery = Math.ceil(pts.length / 12);
+  pts.forEach((p, i) => {
+    const x = L + i * bw + gap / 2, w = bw - gap, yy = y(p.v), h = Math.max(0, H - B - yy);
+    const r = Math.min(4, w / 2, h);
+    // rounded data end, square at the baseline
+    if (h > 0) s += `<path class="bar" d="M${x},${H - B} V${yy + r} Q${x},${yy} ${x + r},${yy} H${x + w - r} Q${x + w},${yy} ${x + w},${yy + r} V${H - B} Z"/>`;
+    if (p.v && pts.length <= 16) s += `<text class="lbl" x="${x + w / 2}" y="${yy - 5}" text-anchor="middle">${fmt(p.v)}</text>`;
+    if (i % labelEvery === 0) s += `<text x="${x + w / 2}" y="${H - 8}" text-anchor="middle">${p.label}</text>`;
+    s += `<rect class="hit" x="${L + i * bw}" y="${T}" width="${bw}" height="${H - T - B}" data-i="${i}"/>`;
+  });
+  el.innerHTML = s + '</svg>';
+  el.querySelectorAll('.hit').forEach(h => {
+    h.onmousemove = e => { const t = $('tip'); t.innerHTML = pts[h.dataset.i].tip; t.style.display = 'block';
+      t.style.left = Math.min(e.clientX + 14, innerWidth - t.offsetWidth - 8) + 'px'; t.style.top = (e.clientY + 14) + 'px'; };
+    h.onmouseleave = () => { $('tip').style.display = 'none'; };
+  });
+}
+function niceStep(max) { const raw = max / 4, p = 10 ** Math.floor(Math.log10(raw)), n = raw / p; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * p; }
+
+// HOSxP pharmacy steps: 1 บันทึกใบสั่งยา → 2 จัดยา → 3 ตรวจสอบยา → 4 จ่ายยา (a step not stamped is left out of its average)
+function renderRxSteps(rows) {
+  const n = k => rows.filter(r => r[k]).length.toLocaleString();
+  const seg = (k, lbl) => { const a = avg(rows.map(r => r[k]));
+    return `<div class="ar"><b>${fmtMin(a)}${a != null && a < 60 ? ' <small>นาที</small>' : ''}</b><div class="line"></div><small>${lbl}</small></div>`; };
+  $('rxFlow').innerHTML =
+    `<div class="st">📝<b>บันทึกใบสั่งยา</b><small>${n('rxRecordTs')} คิว</small></div>` + seg('mRecPrep', 'บันทึก → จัดยา') +
+    `<div class="st">🧺<b>จัดยา</b><small>${n('rxPrepareTs')} คิว</small></div>` + seg('mPrepCheck', 'จัดยา → ตรวจสอบ') +
+    `<div class="st">🔍<b>ตรวจสอบยา</b><small>${n('rxCheckTs')} คิว</small></div>` + seg('mCheckDisp', 'ตรวจสอบ → จ่ายยา') +
+    `<div class="st">💊<b>จ่ายยา</b><small>${n('rxDispenseTs')} คิว</small></div>`;
+  const pill = (lbl, k) => { const a = avg(rows.map(r => r[k])); return `<span>${lbl} เฉลี่ย <b>${fmtMin(a)}</b>${a != null && a < 60 ? ' นาที' : ''}</span>`; };
+  $('rxNote').innerHTML = pill('บันทึกใบสั่งยา → ตรวจสอบ', 'mRecCheck') + pill('บันทึกใบสั่งยา → จ่ายยา', 'mRecDisp') +
+    `<span style="background:#f1eee7;color:var(--muted)">ไม่ได้บันทึกขั้นจัดยา ${(rows.filter(r => r.rxRecordTs && !r.rxPrepareTs).length).toLocaleString()} คิว (ไม่นับในค่าเฉลี่ยช่วงนั้น)</span>`;
+  const groups = new Map();
+  rows.forEach(r => { const g = groups.get(r.typeId) || { name: r.typeName, prefix: r.prefix, list: [] }; g.list.push(r); groups.set(r.typeId, g); });
+  const color = id => ((data.types || []).find(t => t.id === id) || {}).color || '#4353d6';
+  const list = [...groups.entries()].sort((a, b) => String(a[1].prefix).localeCompare(String(b[1].prefix), 'th', { numeric: true }));
+  const row = (cls, head, l) => `<tr class="${cls}"><td>${head}</td>` +
+    ['rxRecordTs', 'rxPrepareTs', 'rxCheckTs', 'rxDispenseTs'].map(k => `<td class="n">${l.filter(r => r[k]).length}</td>`).join('') +
+    ['mRecPrep', 'mPrepCheck', 'mCheckDisp', 'mRecCheck', 'mRecDisp'].map(k => { const a = avg(l.map(r => r[k]));
+      return `<td class="n${a != null && a > SLOW ? ' slow' : ''}">${fmtMin(a)}</td>`; }).join('') + '</tr>';
+  $('rxByType').innerHTML = `<thead><tr><th>ประเภทคิว</th><th class="n">บันทึกใบสั่งยา</th><th class="n">จัดยา</th><th class="n">ตรวจสอบ</th><th class="n">จ่ายยา</th>` +
+    `<th class="n">บันทึก → จัดยา</th><th class="n">จัดยา → ตรวจสอบ</th><th class="n">ตรวจสอบ → จ่ายยา</th><th class="n">บันทึก → ตรวจสอบ</th><th class="n">บันทึก → จ่ายยา (นาที)</th></tr></thead><tbody>` +
+    (list.length ? list.map(([id, g]) => row('', `<span class="pf" style="background:${color(id)};color:${inkOn(color(id))}">${esc(g.prefix)}</span>${esc(g.name)}`, g.list)).join('') +
+      row('total', 'รวมทั้งหมด', rows) : '<tr><td colspan="10" class="empty">ไม่มีข้อมูล</td></tr>') + '</tbody>';
+}
+
+function renderByType(rows) {
+  const groups = new Map();
+  rows.forEach(r => { const g = groups.get(r.typeId) || { name: r.typeName, prefix: r.prefix, list: [] }; g.list.push(r); groups.set(r.typeId, g); });
+  const color = id => ((data.types || []).find(t => t.id === id) || {}).color || '#4353d6';
+  const list = [...groups.entries()].sort((a, b) => String(a[1].prefix).localeCompare(String(b[1].prefix), 'th', { numeric: true }));
+  const maxAvg = Math.max(1, ...list.map(([, g]) => avg(g.list.map(r => r.waitTotal)) || 0));
+  const row = (cls, head, l) => { const a = avg(l.map(r => r.waitTotal)), tot = l.map(r => r.waitTotal).filter(v => v != null);
+    return `<tr class="${cls}"><td>${head}</td><td class="n">${l.length}</td><td class="n">${l.filter(r => r.checkedTs).length}</td><td class="n">${l.filter(r => r.calledTs).length}</td>` +
+      `<td class="n">${fmtMin(avg(l.map(r => r.waitCheck)))}</td><td class="n">${fmtMin(avg(l.map(r => r.waitDispense)))}</td>` +
+      `<td class="n${a != null && a > SLOW ? ' slow' : ''}">${fmtMin(a)}${cls ? '' : `<span class="mini" style="width:${a == null ? 0 : Math.round(a / maxAvg * 80)}px"></span>`}</td>` +
+      `<td class="n">${tot.length ? fmtMin(Math.max(...tot)) : '–'}</td></tr>`; };
+  $('byType').innerHTML = `<thead><tr><th>ประเภทคิว</th><th class="n">จำนวนคิว</th><th class="n">ตรวจยาแล้ว<br><small>(HOSxP)</small></th><th class="n">เรียกจ่ายยาแล้ว<br><small>(คิว)</small></th>` +
+    `<th class="n">เฉลี่ยรอตรวจยา (นาที)<br><small>(บันทึก→ตรวจ HOSxP)</small></th><th class="n">เฉลี่ยรอจ่ายยา (นาที)<br><small>(ตรวจ→จ่าย HOSxP)</small></th><th class="n">เฉลี่ยรวม (นาที)<br><small>(ออกคิว→เรียก คิว)</small></th><th class="n">นานสุด (นาที)<br><small>(ออกคิว→เรียก คิว)</small></th></tr></thead><tbody>` +
+    (list.length ? list.map(([id, g]) => row('', `<span class="pf" style="background:${color(id)};color:${inkOn(color(id))}">${esc(g.prefix)}</span>${esc(g.name)}`, g.list)).join('') +
+      row('total', 'รวมทั้งหมด', rows) : '<tr><td colspan="8" class="empty">ไม่มีข้อมูล</td></tr>') + '</tbody>';
+}
+
+function renderDetail() {
+  const q = $('search').value.trim().toLowerCase();
+  const rows = rowsNow().filter(r => !q || `${r.display} ${r.hn} ${r.qn} ${r.name}`.toLowerCase().includes(q));
+  const color = id => ((data && data.types) || []).find(t => t.id === id)?.color || '#4353d6';
+  const ST = { waiting: 'รอ', called: 'เรียกแล้ว', noshow: 'ไม่มา' };
+  const shown = rows.slice(0, 1000);
+  $('detailCount').textContent = `${rows.length.toLocaleString()} คิว${rows.length > shown.length ? ' · แสดง 1,000 คิวแรก (Export Excel ได้ครบ)' : ''}`;
+  $('detail').innerHTML = `<thead><tr><th>วันที่</th><th>เลขคิว</th><th>ประเภท</th><th>HN</th><th>QN</th><th>ชื่อผู้รับบริการ</th>` +
+    `<th>ออกคิว<br><small>(คิว)</small></th><th>บันทึกใบสั่งยา<br><small>(HOSxP)</small></th><th>จัดยา<br><small>(HOSxP)</small></th><th>ตรวจยา<br><small>(HOSxP)</small></th>` +
+    `<th>จ่ายยา<br><small>(HOSxP)</small></th>` +
+    `<th title="เวลาที่ห้องนี้เรียกคิวนี้ครั้งแรก">เรียกครั้งแรก<br><small>(คิว)</small></th>` +
+    `<th class="oth" title="เวลาที่คิว (VN เดียวกัน) ถูกส่งไปถึง${esc(OTHER())}">${esc(OTHER())} รับคิว<br><small>(คิว)</small></th>` +
+    `<th class="oth" title="เวลาที่${esc(OTHER())}เรียกคิวนี้ครั้งแรก">${esc(OTHER())} เรียก<br><small>(คิว)</small></th>` +
+    `<th title="เวลาที่ห้องนี้เรียกคิวนี้ครั้งล่าสุด">เรียกจ่ายยา<br><small>(คิว ล่าสุด)</small></th>` +
+    `<th class="n" title="ตรวจยา (HOSxP) − บันทึกใบสั่งยา (HOSxP)">รอตรวจ<br><small>(บันทึก→ตรวจ HOSxP)</small></th>` +
+    `<th class="n" title="จ่ายยา (HOSxP) − ตรวจยา (HOSxP)">รอจ่าย<br><small>(ตรวจ→จ่าย HOSxP)</small></th>` +
+    `<th class="n" title="เรียกจ่ายยา (คิว) − ออกคิว (คิว)">รวม นาที<br><small>(ออกคิว→เรียก)</small></th><th>สถานะ</th></tr></thead><tbody>` +
+    (shown.map(r => { const by = i => r.rxStaff && r.rxStaff[i] ? ` title="${esc(r.rxStaff[i])}"` : '';
+      return `<tr><td>${esc(r.date)}</td><td><span class="pf" style="background:${color(r.typeId)};color:${inkOn(color(r.typeId))}">${esc(r.display)}</span></td>` +
+      `<td>${esc(r.typeName)}</td><td>${esc(r.hn)}</td><td>${esc(r.qn)}</td><td>${esc(r.name)}</td><td>${esc(r.issued)}</td>` +
+      `<td class="rx"${by(0)}>${esc(r.rxRecord) || '–'}</td><td class="rx"${by(1)}>${esc(r.rxPrepare) || '–'}</td><td class="rx"${by(2)}>${esc(r.rxCheck) || '–'}</td>` +
+      `<td class="rx"${by(3)}>${esc(r.rxDispense) || '–'}</td><td>${esc(r.call1) || '–'}</td>` +
+      `<td class="oth">${esc(r.otherIn) || '–'}</td><td class="oth">${esc(r.otherCall) || '–'}</td><td>${esc(r.called) || '–'}</td>` +
+      `<td class="n">${fmtMin(r.waitCheck)}</td><td class="n">${fmtMin(r.waitDispense)}</td><td class="n${r.waitTotal > SLOW ? ' slow' : ''}">${fmtMin(r.waitTotal)}</td>` +
+      `<td><span class="st-tag ${esc(r.status)}">${esc(ST[r.status] || r.status)}</span></td></tr>`; }).join('') ||
+      '<tr><td colspan="19" class="empty">ไม่มีข้อมูล</td></tr>') + '</tbody>';
+}
+// การเงิน (for a pharmacy) / ห้องยา (for a cashier) — the room the same VN was sent to
+function OTHER() { return (data && data.otherLabel) || 'การเงิน'; }
+
+// ══ export each tile: tables → Excel (styled by the server), charts → PNG ══
+const r1 = v => v == null ? '' : Math.round(v * 10) / 10;
+function exSub() {
+  const f = $('dFrom').value, t = $('dTo').value, room = $('roomName').textContent.replace(/^·\s*/, '');
+  const types = picked.size ? ' · เฉพาะประเภท: ' + (data.types || []).filter(x => picked.has(x.id)).map(x => `${x.prefix} ${x.name}`).join(', ') : ' · ทุกประเภทคิว';
+  const now = new Date();
+  return `${room} · ${f === t ? 'วันที่ ' + f : f + ' ถึง ' + t}${types} · ออกรายงาน ${ymd(now)} ${pad(now.getHours())}:${pad(now.getMinutes())} น.`;
+}
+function exName(what) { const f = $('dFrom').value, t = $('dTo').value; return `${what}_${f === t ? f : f + '_' + t}`; }
+function saveBlob(blob, name) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+async function sendXlsx(what, sheet) {
+  if (!data) { $('msg').className = 'msg err'; $('msg').textContent = '✗ กด แสดงข้อมูล ก่อน'; return; }
+  const btn = document.activeElement && document.activeElement.classList.contains('xbtn') ? document.activeElement : null;
+  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+  try {
+    const res = await fetch(`/api/sys/${sysId}/xlsx`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename: exName(what), sheets: [{ name: what, sub: exSub(), ...sheet }] }) });
+    if (!res.ok || !(res.headers.get('content-type') || '').includes('spreadsheet')) {
+      const j = await res.json().catch(() => ({})); throw new Error(j.message || 'สร้างไฟล์ไม่สำเร็จ');
+    }
+    saveBlob(await res.blob(), exName(what) + '.xlsx');
+  } catch (e) { $('msg').className = 'msg err'; $('msg').textContent = '✗ ' + e.message; }
+  finally { if (btn) { btn.disabled = false; btn.textContent = '⬇ Excel'; } }
+}
+// per queue type (sorted like the page) + a total row last
+function typeGroups(rows) {
+  const g = new Map();
+  rows.forEach(r => { const x = g.get(r.typeId) || { label: r.prefix ? `${r.prefix} ${r.typeName}` : r.typeName, prefix: r.prefix, list: [] }; x.list.push(r); g.set(r.typeId, x); });
+  return [...[...g.values()].sort((a, b) => String(a.prefix).localeCompare(String(b.prefix), 'th', { numeric: true })), { label: 'รวมทั้งหมด', list: rows }];
+}
+function exSummary() {
+  const rows = rowsNow(), tot = rows.map(r => r.waitTotal).filter(v => v != null);
+  const within = tot.length ? Math.round(tot.filter(v => v <= 30).length / tot.length * 100) : '';
+  sendXlsx('สรุปและขั้นตอน', { title: 'สรุประยะเวลารอคอย', widths: [40, 16, 12, 48], center: [1, 2],
+    header: ['รายการ', 'ค่า', 'หน่วย', 'ที่มา / สูตร'],
+    rows: [
+      ['จำนวนคิว', rows.length, 'คิว', 'ระบบคิว (ออกคิว)'],
+      ['บันทึกใบสั่งยาแล้ว', rows.filter(r => r.rxRecordTs).length, 'คิว', 'HOSxP rx_dispenser_type 1'],
+      ['ตรวจยาแล้ว', rows.filter(r => r.checkedTs).length, 'คิว', 'HOSxP rx_dispenser_type 3'],
+      ['จ่ายยาแล้ว', rows.filter(r => r.rxDispenseTs).length, 'คิว', 'HOSxP rx_dispenser_type 4'],
+      ['เรียกจ่ายยาแล้ว', rows.filter(r => r.calledTs).length, 'คิว', 'ระบบคิว (เรียกคิว)'],
+      ['เฉลี่ยรอตรวจยา', r1(avg(rows.map(r => r.waitCheck))), 'นาที', 'บันทึกใบสั่งยา → ตรวจยา (HOSxP)'],
+      ['เฉลี่ยรอจ่ายยา', r1(avg(rows.map(r => r.waitDispense))), 'นาที', 'ตรวจยา → จ่ายยา (HOSxP)'],
+      ['เฉลี่ยรวม', r1(avg(tot)), 'นาที', 'ออกคิว → เรียกจ่ายยา (คิว)'],
+      ['นานสุด', tot.length ? r1(Math.max(...tot)) : '', 'นาที', 'ออกคิว → เรียกจ่ายยา (คิว)'],
+      ['เรียกจ่ายยาภายใน 30 นาที', within, '%', `จาก ${tot.length} คิวที่เรียกแล้ว`],
+    ] });
+}
+function exRx() {
+  const g = typeGroups(rowsNow()), n = (l, k) => l.filter(r => r[k]).length, a = (l, k) => r1(avg(l.map(r => r[k])));
+  sendXlsx('ขั้นตอนห้องยา HOSxP', { title: 'เวลาเฉลี่ยระหว่างขั้นตอนห้องยา (HOSxP rx_dispenser_type)', totals: [g.length - 1],
+    widths: [34, 16, 12, 14, 12, 22, 24, 24, 24, 24], center: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+    header: ['ประเภทคิว', 'บันทึกใบสั่งยา (คิว)', 'จัดยา (คิว)', 'ตรวจสอบ (คิว)', 'จ่ายยา (คิว)', 'บันทึก → จัดยา (นาที)', 'จัดยา → ตรวจสอบ (นาที)',
+      'ตรวจสอบ → จ่ายยา (นาที)', 'บันทึก → ตรวจสอบ (นาที)', 'บันทึก → จ่ายยา (นาที)'],
+    rows: g.map(x => [x.label, n(x.list, 'rxRecordTs'), n(x.list, 'rxPrepareTs'), n(x.list, 'rxCheckTs'), n(x.list, 'rxDispenseTs'),
+      a(x.list, 'mRecPrep'), a(x.list, 'mPrepCheck'), a(x.list, 'mCheckDisp'), a(x.list, 'mRecCheck'), a(x.list, 'mRecDisp')]) });
+}
+function exByType() {
+  const g = typeGroups(rowsNow()), a = (l, k) => r1(avg(l.map(r => r[k])));
+  sendXlsx('สรุปตามประเภทคิว', { title: 'สรุประยะเวลารอคอยตามประเภทคิว', totals: [g.length - 1],
+    widths: [34, 12, 18, 20, 30, 30, 26, 26], center: [1, 2, 3, 4, 5, 6, 7],
+    header: ['ประเภทคิว', 'จำนวนคิว', 'ตรวจยาแล้ว (HOSxP)', 'เรียกจ่ายยาแล้ว (คิว)', 'เฉลี่ยรอตรวจยา นาที (บันทึก→ตรวจ HOSxP)',
+      'เฉลี่ยรอจ่ายยา นาที (ตรวจ→จ่าย HOSxP)', 'เฉลี่ยรวม นาที (ออกคิว→เรียก)', 'นานสุด นาที (ออกคิว→เรียก)'],
+    rows: g.map(x => { const t = x.list.map(r => r.waitTotal).filter(v => v != null);
+      return [x.label, x.list.length, x.list.filter(r => r.checkedTs).length, x.list.filter(r => r.calledTs).length,
+        a(x.list, 'waitCheck'), a(x.list, 'waitDispense'), r1(avg(t)), t.length ? r1(Math.max(...t)) : '']; }) });
+}
+function exHours() {
+  const hours = {};
+  rowsNow().forEach(r => { if (!r.issuedTs) return; const h = new Date(r.issuedTs).getHours(); (hours[h] = hours[h] || []).push(r); });
+  const hs = Object.keys(hours).map(Number).sort((a, b) => a - b), range = [];
+  if (hs.length) for (let h = hs[0]; h <= hs[hs.length - 1]; h++) range.push(h);
+  sendXlsx('รายชั่วโมง', { title: 'จำนวนคิวและระยะเวลารอเฉลี่ยตามชั่วโมงที่ออกคิว', widths: [18, 14, 22, 32], center: [0, 1, 2, 3],
+    header: ['ชั่วโมงที่ออกคิว', 'จำนวนคิว', 'เรียกจ่ายยาแล้ว (คิว)', 'รอเฉลี่ย นาที (ออกคิว→เรียกจ่ายยา)'],
+    rows: range.map(h => { const l = hours[h] || [];
+      return [`${pad(h)}:00–${pad(h)}:59`, l.length, l.filter(r => r.waitTotal != null).length, r1(avg(l.map(r => r.waitTotal)))]; }) });
+}
+function exDetail() {
+  const q = $('search').value.trim().toLowerCase();
+  const rows = rowsNow().filter(r => !q || `${r.display} ${r.hn} ${r.qn} ${r.name}`.toLowerCase().includes(q));
+  const ST = { waiting: 'รอ', called: 'เรียกแล้ว', noshow: 'ไม่มา' };
+  sendXlsx('รายละเอียดรายคิว', { title: 'รายละเอียดระยะเวลารอคอยรายคิว' + (q ? ` (ค้นหา: ${q})` : ''),
+    widths: [14, 12, 30, 14, 9, 32, 15, 24, 17, 18, 18, 20, 20, 20, 20, 32, 30, 28, 13, 30, 24, 28, 24],
+    center: [0, 1, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+    header: ['วันที่', 'เลขคิว', 'ประเภทคิว', 'HN', 'QN', 'ชื่อผู้รับบริการ', 'ออกคิว (คิว)', 'บันทึกใบสั่งยา (HOSxP)', 'จัดยา (HOSxP)', 'ตรวจยา (HOSxP)',
+      'จ่ายยา (HOSxP)', 'เรียกครั้งแรก (คิว)', `${OTHER()} รับคิว (คิว)`, `${OTHER()} เรียก (คิว)`, 'เรียกจ่ายยา (คิว ล่าสุด)',
+      'รอตรวจยา นาที (บันทึก→ตรวจ HOSxP)', 'รอจ่ายยา นาที (ตรวจ→จ่าย HOSxP)', 'รวม นาที (ออกคิว→เรียก)', 'สถานะ',
+      'ผู้บันทึกใบสั่งยา (HOSxP)', 'ผู้จัดยา (HOSxP)', 'ผู้ตรวจสอบยา (HOSxP)', 'ผู้จ่ายยา (HOSxP)'],
+    rows: rows.map(r => [r.date, r.display, r.typeName, r.hn, r.qn, r.name, r.issued, r.rxRecord, r.rxPrepare, r.rxCheck, r.rxDispense,
+      r.call1, r.otherIn, r.otherCall, r.called,
+      r1(r.waitCheck), r1(r.waitDispense), r1(r.waitTotal), ST[r.status] || r.status, ...(r.rxStaff || ['', '', '', ''])]) });
+}
+// a chart as a PNG: title + range on top, white background, 2× for sharp print
+function chartPng(id, title) {
+  const svg = $(id).querySelector('svg');
+  if (!svg) { $('msg').className = 'msg err'; $('msg').textContent = '✗ ยังไม่มีกราฟ — กด แสดงข้อมูล ก่อน'; return; }
+  const W = Math.max(640, $(id).clientWidth), H = 230, TOP = 70, S = 2;
+  const bar = svg.querySelector('.bar'), barFill = bar ? getComputedStyle(bar).fill : '#4353d6';
+  const clone = svg.cloneNode(true);
+  clone.querySelectorAll('.hit').forEach(e => e.remove());
+  clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg'); clone.setAttribute('width', W); clone.setAttribute('height', H);
+  const st = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+  st.textContent = `text{font-family:Tahoma,'Segoe UI',sans-serif;font-size:11px;fill:#5d667a}.grid{stroke:#ece7dd;stroke-width:1}` +
+    `.lbl{fill:#1b2333;font-weight:700}.bar{fill:${barFill}}`;
+  clone.insertBefore(st, clone.firstChild);
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement('canvas'); c.width = W * S; c.height = (H + TOP + 12) * S;
+    const g = c.getContext('2d'); g.scale(S, S);
+    g.fillStyle = '#fff'; g.fillRect(0, 0, W, H + TOP + 12);
+    g.fillStyle = '#1b2333'; g.font = "600 18px Kanit, Tahoma, sans-serif"; g.fillText(title, 16, 30);
+    g.fillStyle = '#5d667a'; g.font = "13px Kanit, Tahoma, sans-serif"; g.fillText(exSub(), 16, 54);
+    g.drawImage(img, 0, TOP, W, H);
+    c.toBlob(b => saveBlob(b, exName(title.split(' (')[0].split(' ·')[0]) + '.png'), 'image/png');
+  };
+  img.onerror = () => { $('msg').className = 'msg err'; $('msg').textContent = '✗ สร้างรูปไม่สำเร็จ'; };
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(clone));
+}
+
+// ── start ──
+fetch(`/api/sys/${sysId}/status`).then(r => r.json()).then(d => {
+  if (d.sysInfo) { $('roomName').textContent = '· ' + d.sysInfo.name; document.title = `Dashboard — ${d.sysInfo.name}`; }
+}).catch(() => {});
+setRange('today');
+</script>
+</body>
+</html>

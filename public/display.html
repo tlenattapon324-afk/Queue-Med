@@ -338,6 +338,15 @@
     .board-next-list{display:flex;flex-wrap:wrap;gap:8px;padding:10px}
     .board-next-item{display:flex;align-items:center;gap:6px;border:1.5px solid var(--cborder);border-radius:10px;
       padding:4px 10px;font-weight:900;font-size:var(--board-next-fs,1.6vw);color:var(--text)}
+    .qsep{display:inline-block;margin:0 .04em;letter-spacing:0}
+    .board-park{margin-top:4px;display:flex;flex-direction:column;min-height:0}
+    .board-park-list{flex:1;min-height:0;overflow:hidden;align-content:flex-start}
+    .board-park-item{font-size:var(--park-fs,1.6vw)!important}
+    .board-park-rsz{flex:0 0 8px;margin-top:6px;border-radius:4px;cursor:row-resize;touch-action:none}
+    .board-park-rsz:hover{background:rgba(245,158,11,.4)}
+    .board-park-hdr{background:#b45309!important;color:#fff!important}
+    .board-park-item{border-color:#f59e0b!important;background:rgba(245,158,11,.12)}
+    .board-park-item span{color:#d97706}
     .board-next-empty{color:var(--dim);opacity:.6;padding:4px 2px;font-size:.95rem}
     .board-resizer{flex:0 0 12px;cursor:col-resize;display:flex;align-items:center;justify-content:center}
     .board-resizer::after{content:'';width:4px;height:60px;border-radius:2px;background:var(--cborder);transition:background .2s}
@@ -620,6 +629,34 @@
           <div class="sf-slider-row">
             <input type="range" id="cfgUpcomingR" min="1" max="12" step="1" value="5" oninput="syncNum('cfgUpcoming',this.value,0);onBoardOptChange()"/>
             <input class="sf-numval" type="number" id="cfgUpcoming" min="1" max="20" value="5" oninput="syncRange('cfgUpcomingR',this.value,1,12);onBoardOptChange()"/>
+          </div></div>
+        <div class="sf-row" style="margin-top:12px">
+          <div class="sf-row-inline">
+            <label class="sf-toggle"><input type="checkbox" id="cfgShowBoardParked" onchange="onBoardOptChange()"/><span class="sf-toggle-slider"></span></label>
+            <span class="sf-toggle-label">แสดง "คิวยากำลังตรวจสอบ" (คิวที่เก็บไว้) ใต้คิวถัดไป</span>
+          </div>
+        </div>
+        <div class="sf-row" id="boardParkedOpts"><label class="sf-label">หัวข้อ</label>
+          <input class="sf-input" type="text" id="cfgBoardParkedLabel" maxlength="40" oninput="onBoardOptChange()"/>
+          <label class="sf-label" style="margin-top:8px">จำนวนคิวที่แสดง <small style="opacity:.7">(พิมพ์ได้ไม่จำกัด)</small></label>
+          <div class="sf-slider-row">
+            <input type="range" id="cfgBoardParkedCountR" min="1" max="50" step="1" value="8" oninput="syncNum('cfgBoardParkedCount',this.value,0);onBoardOptChange()"/>
+            <input class="sf-numval" type="number" id="cfgBoardParkedCount" min="1" value="8" oninput="syncRange('cfgBoardParkedCountR',this.value,1,50);onBoardOptChange()"/>
+          </div>
+          <label class="sf-label" style="margin-top:8px">ขนาดเลขคิว (vw) <small style="opacity:.7">(พิมพ์ได้ไม่จำกัด)</small></label>
+          <div class="sf-slider-row">
+            <input type="range" id="cfgBoardParkedFsR" min="0.5" max="15" step="0.1" value="1.6" oninput="syncNum('cfgBoardParkedFs',this.value,1);onBoardOptChange()"/>
+            <input class="sf-numval" type="number" id="cfgBoardParkedFs" min="0.3" step="0.1" value="1.6" oninput="syncRange('cfgBoardParkedFsR',this.value,0.5,15);onBoardOptChange()"/>
+          </div>
+          <label class="sf-label" style="margin-top:8px">ขนาดตัวอักษรหัวข้อ (rem)</label>
+          <div class="sf-slider-row">
+            <input type="range" id="cfgBoardParkedHdrFsR" min="0.5" max="5" step="0.05" value="1.05" oninput="syncNum('cfgBoardParkedHdrFs',this.value,2);onBoardOptChange()"/>
+            <input class="sf-numval" type="number" id="cfgBoardParkedHdrFs" min="0.3" step="0.05" value="1.05" oninput="syncRange('cfgBoardParkedHdrFsR',this.value,0.5,5);onBoardOptChange()"/>
+          </div>
+          <label class="sf-label" style="margin-top:8px">ความสูงกล่อง (% ของจอ · 0 = อัตโนมัติ) — หรือลากเส้นเหนือกล่องบนจอ</label>
+          <div class="sf-slider-row">
+            <input type="range" id="cfgBoardParkedHR" min="0" max="90" step="1" value="0" oninput="syncNum('cfgBoardParkedH',this.value,0);onBoardOptChange()"/>
+            <input class="sf-numval" type="number" id="cfgBoardParkedH" min="0" max="100" step="0.5" value="0" oninput="syncRange('cfgBoardParkedHR',this.value,0,90);onBoardOptChange()"/>
           </div></div>
       </div>
       <!-- ═══ แบ่งคอลัมน์ช่องบริการ (split-h / board) ═══ -->
@@ -1157,8 +1194,20 @@ const socket = (typeof io === 'function' ? io() : { on() {}, emit() {}, off() {}
 // Init badge after DOM is ready (script is at bottom of body)
 document.addEventListener('DOMContentLoaded', updateModeBadge);
 if (document.readyState !== 'loading') updateModeBadge();
+// 🖥 tell the server (→ Staff Monitor) this screen is on, and what it plays
+function sendDisplayHello() {
+  try {
+    const c = typeof getCurrentCfg === 'function' ? getCurrentCfg() : {};
+    socket.emit('display_hello', { sysId: Number(sysId), mode: dispMode, layout: (c && c.layoutMode) || '',
+      sound: typeof soundEnabled === 'undefined' ? true : !!soundEnabled,
+      audio: typeof _audioUnlocked === 'undefined' ? false : !!_audioUnlocked, w: innerWidth, h: innerHeight });
+  } catch (e) {}
+}
+socket.on('display_reload', d => { if (!d || Number(d.sysId) === Number(sysId)) location.reload(); });
+setInterval(sendDisplayHello, 60000);
 socket.on('connect', () => {
   socket.emit('join_sys', Number(sysId));
+  setTimeout(sendDisplayHello, 500);
   hideOffline();
   hideStatus();
   refreshStatus();
@@ -1247,13 +1296,17 @@ const VT_DEF = {
   vtNoShowAutoScroll:false, vtNoShowScrollSpeed:15, vtColWidths:{}, vtRowHeights:{},
   vtShowWaiting:true, vtWaitingLabel:'คิวที่รอเรียก', vtWaitingWidth:300, vtWaitingBg:'#0d1b2a', vtWaitingHeaderBg:'#1565c0',
   vtWaitingHeaderColor:'#ffffff', vtWaitingHeaderFontSize:16, vtWaitingHeaderHeight:36, vtWaitingQueueColor:'#64b5f6', vtWaitingFontSize:6,
-  vtWaitingMaxItems:10, vtWaitingAutoScroll:true, vtWaitingScrollSpeed:3, vtWaitingItemHeight:70 };
+  vtWaitingMaxItems:10, vtWaitingAutoScroll:true, vtWaitingScrollSpeed:3, vtWaitingItemHeight:70,
+  // ⑤ คิวยากำลังตรวจสอบ — queues kept with 📥 เก็บคิว at the call page (off by default)
+  vtShowParked:false, vtParkedLabel:'คิวยากำลังตรวจสอบ', vtParkedWidth:300, vtParkedBg:'#1c1400', vtParkedHeaderBg:'#b45309',
+  vtParkedHeaderColor:'#ffffff', vtParkedHeaderFontSize:16, vtParkedHeaderHeight:36, vtParkedQueueColor:'#fbbf24', vtParkedFontSize:6,
+  vtParkedMaxItems:10, vtParkedAutoScroll:true, vtParkedScrollSpeed:3, vtParkedItemHeight:70 };
 const DEF = { ...VT_DEF, columns:2, maxPerCounter:1, selectedCounters:[], hiddenTypes:[], layoutMode:'grid', splitLblCtr:'ช่องบริการ', splitLblQ:'หมายเลขที่เรียกเข้าบริการ', splitHdrBg:'#2e7d32', splitHdrClr:'#ffffff', splitRowBg:'', splitCtrClr:'', splitDivClr:'', splitHdrFs:1.0, splitHdrPad:12, splitNumFs:4.5, splitCtrFs:2.8, splitCardH:140, splitCtrRatio:1, splitQRatio:2, splitTypeFs:0.8, splitTypePos:'above',
   showNoShow:false, nsRows:5, nsWidth:280, nsRowH:70, nsHdrFs:0.82, nsNumFs:1.1, nsMetaFs:0.68, nsBadgeSize:28, showNsDetail:true, speechRate:0.65, custom:{},
   // counter placement (split-h / board): 1–4 columns, column per counter, order, per-column header text
   splitCols:1, ctrCols:{}, ctrOrder:[], colHeaders:{},
   // board layout
-  boardHdr:'คิวที่กำลังเรียก', boardLeft:50, boardNumFs:11, boardRowFs:4.5, boardCtrFs:1.8, showUpcoming:true, upcomingCount:5, boardRowFit:true, boardRowH:24,
+  boardHdr:'คิวที่กำลังเรียก', boardLeft:50, boardNumFs:11, boardRowFs:4.5, boardCtrFs:1.8, showUpcoming:true, upcomingCount:5, showBoardParked:false, boardParkedLabel:'คิวยากำลังตรวจสอบ', boardParkedCount:8, boardParkedFs:1.6, boardParkedHdrFs:1.05, boardParkedH:0, boardRowFit:true, boardRowH:24,
   boardHdrH:48, boardHdrFs:1.3, boardHdrClr:'', boardHero:true, boardHeroClr:'', boardBigBg:'', boardCtrBg:'', boardQBg:'',
   anim:'scale', showName:false, maskName:true, nameFs:1.6, nsAutoScroll:false, nsSpeed:20 };
 let cfg = { ...DEF, ...(JSON.parse(localStorage.getItem(LS_KEY) || '{}')) };
@@ -1648,6 +1701,11 @@ function buildBoard(d, visible, area) {
         <div class="board-next-hdr">⏭ คิวถัดไป</div>
         <div class="board-next-list" id="boardNextList"></div>
       </div>
+      <div class="board-park-rsz" id="boardParkRsz" title="ลากขึ้น / ลง เพื่อปรับความสูง" style="${d.showBoardParked ? '' : 'display:none'}"></div>
+      <div class="board-next board-park" id="boardPark" style="${d.showBoardParked ? '' : 'display:none;'}${Number(d.boardParkedH) > 0 ? `height:${Number(d.boardParkedH)}vh;` : ''}--park-fs:${Math.max(0.3, Number(d.boardParkedFs) || 1.6)}vw">
+        <div class="board-next-hdr board-park-hdr" style="font-size:${Math.max(0.3, Number(d.boardParkedHdrFs) || 1.05)}rem">📥 ${escHtml(d.boardParkedLabel || 'คิวยากำลังตรวจสอบ')}</div>
+        <div class="board-next-list board-park-list" id="boardParkList"></div>
+      </div>
     </div>
     <div class="board-resizer" id="boardResizer" title="ลากเพื่อปรับความกว้าง"></div>
     <div class="board-right${hero ? ' grouped' : ''}">${groups.map(({ g, k }) => `
@@ -1729,7 +1787,7 @@ function renderBoard(animate, flashFor) {
           <div class="cc-prefix" style="background:${latest.color};width:2.6vw;height:2.6vw;min-width:34px;min-height:34px;font-size:1.3vw">${latest.prefix}</div>
           <span class="cc-typename" style="font-size:1.5vw;color:${latest.color}">${latest.typeName}${modeTag(latest)}</span>
         </div>`}
-        <div class="board-num" data-flash="${isNew ? 1 : ''}" style="font-size:${fitFs(latest.display, d.boardNumFs || 11)};color:${numClr(latest)}">${latest.display}</div>
+        <div class="board-num" data-flash="${isNew ? 1 : ''}" style="font-size:${fitFs(latest.display, d.boardNumFs || 11)};color:${numClr(latest)}">${qno(latest.display)}</div>
         ${patientNameHtml(latest, d, 'font-size:calc(var(--pt-name-fs,1.6rem) * 1.4)')}
         ${latest.counterName ? `<div class="board-ctr">🪟 ${escHtml(latest.counterName)}</div>` : ''}
       </div>`;
@@ -1745,21 +1803,52 @@ function renderBoard(animate, flashFor) {
     row.innerHTML = `
       <div class="board-row-ctr" style="font-size:${d.boardCtrFs || 1.8}vw;color:${(d.custom && d.custom.ccNameClr) || 'var(--accent)'}">${escHtml(c.name)}</div>
       <div class="board-row-q">${t
-        ? `<div class="${rowNew ? animClass(d) : ''}"><div class="board-num" data-flash="${rowNew ? 1 : ''}" style="font-size:${fitFs(t.display, d.boardRowFs || 4.5)};color:${numClr(t)}">${t.display}</div></div>`
+        ? `<div class="${rowNew ? animClass(d) : ''}"><div class="board-num" data-flash="${rowNew ? 1 : ''}" style="font-size:${fitFs(t.display, d.boardRowFs || 4.5)};color:${numClr(t)}">${qno(t.display)}</div></div>`
         : `<span style="color:var(--dim);opacity:.4;font-size:${(d.boardRowFs || 4.5) * 0.5}vw">—</span>`}</div>`;
     if (rowNew) flashCall(row.querySelector('[data-flash="1"]'), row.querySelector('.board-row-q'));
   });
   renderBoardNext();
+}
+// drag the handle above the box to change its height (saved as vh, so it scales with the screen)
+function bindBoardParkDrag() {
+  const h = document.getElementById('boardParkRsz'), box = document.getElementById('boardPark');
+  if (!h || !box || h._bound) return; h._bound = true;
+  h.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    const startY = e.clientY, startH = box.getBoundingClientRect().height;
+    const move = ev => { box.style.height = Math.max(60, startH - (ev.clientY - startY)) + 'px'; };
+    const up = () => {
+      removeEventListener('pointermove', move); removeEventListener('pointerup', up);
+      const vh = Math.round(box.getBoundingClientRect().height / innerHeight * 1000) / 10;
+      getCurrentCfg().boardParkedH = vh; saveCfg();
+      const n = document.getElementById('cfgBoardParkedH'); if (n) n.value = vh;
+    };
+    addEventListener('pointermove', move); addEventListener('pointerup', up);
+  });
+}
+// queues kept with 📥 เก็บคิว at the call page
+function renderBoardParked() {
+  bindBoardParkDrag();
+  const el = document.getElementById('boardParkList');
+  if (!el) return;
+  const d = getDisplayCfg();
+  const all = waitingList.filter(t => modeMatches(t) && t.parked);
+  const list = all.slice(0, Math.max(1, Math.floor(Number(d.boardParkedCount)) || 8));
+  el.innerHTML = list.length
+    ? list.map(t => `<div class="board-next-item board-park-item"><span>${qno(t.display)}</span></div>`).join('') +
+      (all.length > list.length ? `<div class="board-next-empty">+${all.length - list.length}</div>` : '')
+    : '<div class="board-next-empty">— ไม่มีคิวกำลังตรวจสอบ —</div>';
 }
 function renderBoardNext() {
   renderVtWaiting();   // the waiting list changed — จอแนวตั้ง shows it too
   const el = document.getElementById('boardNextList');
   if (!el) return;
   const d = getDisplayCfg();
-  const list = waitingList.filter(modeMatches).slice(0, Math.max(1, Number(d.upcomingCount) || 5));
+  const list = waitingList.filter(t => modeMatches(t) && !t.parked).slice(0, Math.max(1, Number(d.upcomingCount) || 5));   // a kept queue is not "next"
   el.innerHTML = list.length
-    ? list.map(t => `<div class="board-next-item" style="border-color:${t.color}"><span style="color:${t.color}">${t.display}</span></div>`).join('')
+    ? list.map(t => `<div class="board-next-item" style="border-color:${t.color}"><span style="color:${t.color}">${qno(t.display)}</span></div>`).join('')
     : '<div class="board-next-empty">— ไม่มีคิวรอ —</div>';
+  renderBoardParked();
 }
 
 // ── จอแนวตั้ง (vertical) — ported from Queue-OPD ─────────────────────────
@@ -1792,7 +1881,9 @@ function buildVertical(d, visible, area) {
   }).join('');
   area.innerHTML = `<div class="vt-called">${visible.length ? cols : '<div class="vt-empty">ยังไม่ได้ตั้งค่าช่องบริการ</div>'}</div>` +
     (d.vtShowWaiting ? `<div class="vt-rsz" data-drag="wait" title="ลากเพื่อปรับความกว้าง"></div>
-      <div class="vt-wait" id="vtWait" style="width:${d.vtWaitingWidth}px;background:${d.vtWaitingBg}"></div>` : '');
+      <div class="vt-wait" id="vtWait" style="width:${d.vtWaitingWidth}px;background:${d.vtWaitingBg}"></div>` : '') +
+    (d.vtShowParked ? `<div class="vt-rsz" data-drag="park" title="ลากเพื่อปรับความกว้าง"></div>
+      <div class="vt-wait" id="vtPark" style="width:${d.vtParkedWidth}px;background:${d.vtParkedBg}"></div>` : '');
   bindVtDrag(area);
   renderVertical(false, null);
 }
@@ -1822,7 +1913,7 @@ function renderVertical(animate, flashFor) {
     grid.innerHTML = hist.map((t, i) => {
       const fresh = isNew && i === hist.length - 1;
       return `<div class="vt-chip${fresh ? ' ' + animClass(d) : ''}" ${fresh ? 'data-flash="1"' : ''}
-        style="color:${d.vtCalledColor};background:${d.vtCalledChipBgOn === false ? 'transparent' : d.vtCalledChipBg};border:${d.vtCalledBorderWidth}px solid ${d.vtCalledBorderColor};font-size:${fitFs(t.display, d.vtCalledFontSize)}">${t.display}${modeTag(t)}</div>`;
+        style="color:${d.vtCalledColor};background:${d.vtCalledChipBgOn === false ? 'transparent' : d.vtCalledChipBg};border:${d.vtCalledBorderWidth}px solid ${d.vtCalledBorderColor};font-size:${fitFs(t.display, d.vtCalledFontSize)}">${qno(t.display)}${modeTag(t)}</div>`;
     }).join('');
     fitVtGrid(grid);
     if (isNew) { const el = grid.querySelector('[data-flash="1"]'); flashCall(el, el); }
@@ -1858,7 +1949,7 @@ function renderVtNoShow() {
     const scroll = d.vtNoShowAutoScroll && all.length > max;
     const list = scroll ? all : all.slice(-max);
     const item = t => `<div class="vt-ns-item" style="background:${d.vtNoShowItemBg};${d.vtNoShowItemBorderWidth > 0 ? `border:${d.vtNoShowItemBorderWidth}px solid ${d.vtNoShowItemBorderColor}` : ''}">
-        <span style="color:${d.vtNoShowQueueColor};font-size:${d.vtNoShowFontSize}vw">${t.display}</span><span class="vt-ns-time">${escHtml(t.calledAt || '')}</span></div>`;
+        <span style="color:${d.vtNoShowQueueColor};font-size:${d.vtNoShowFontSize}vw">${qno(t.display)}</span><span class="vt-ns-time">${escHtml(t.calledAt || '')}</span></div>`;
     const items = list.map(item).join('');
     box.innerHTML = `<div class="vt-ns-hd" style="background:${d.vtNoShowHeaderBg};color:${d.vtNoShowHeaderColor};height:${d.vtNoShowHeaderHeight}px;font-size:${d.vtNoShowHeaderFontSize}px">
         ${escHtml(d.vtNoShowLabel || '')}${all.length ? `<span class="vt-count">${all.length}</span>` : ''}</div>
@@ -1868,21 +1959,28 @@ function renderVtNoShow() {
   });
 }
 function renderVtWaiting() {
-  const box = document.getElementById('vtWait');
-  if (!box) return;
   const d = getDisplayCfg();
-  const hidden = d.hiddenTypes || [];
-  const list = waitingList.filter(modeMatches);
+  // with the ⑤ column on, kept queues show there instead of in "รอเรียก"
+  const all = waitingList.filter(modeMatches);
+  renderVtList('vtWait', 'Waiting', d.vtShowParked ? all.filter(t => !t.parked) : all, 'ไม่มีคิวรอ');
+  renderVtList('vtPark', 'Parked', all.filter(t => t.parked), 'ไม่มีคิวกำลังตรวจสอบ');
+}
+// a scrolling list column — p = the settings prefix ('Waiting' / 'Parked')
+function renderVtList(boxId, p, list, emptyText) {
+  const box = document.getElementById(boxId);
+  if (!box) return;
+  const d0 = getDisplayCfg(), hidden = d0.hiddenTypes || [];
+  const d = new Proxy({}, { get: (_, k) => d0[String(k).replace(/^vtWaiting/, 'vt' + p)] });
   const max = Math.max(1, Number(d.vtWaitingMaxItems) || 10);
   const scroll = d.vtWaitingAutoScroll && list.length > max;
   const items = (scroll ? list : list.slice(0, max)).map(t => `
     <div class="vt-wait-item" style="height:${d.vtWaitingItemHeight}px">
-      <span class="vt-wait-no" style="color:${d.vtWaitingQueueColor};font-size:${fitFs(t.display, d.vtWaitingFontSize)}">${t.display}${modeTag(t)}</span>
+      <span class="vt-wait-no" style="color:${d.vtWaitingQueueColor};font-size:${fitFs(t.display, d.vtWaitingFontSize)}">${qno(t.display)}${modeTag(t)}</span>
       ${hidden.includes(Number(t.typeId)) ? '' : `<span class="vt-wait-type" style="color:${t.color}">${escHtml(t.typeName || '')}</span>`}
     </div>`).join('');
   box.innerHTML = `<div class="vt-wait-hd" style="background:${d.vtWaitingHeaderBg};color:${d.vtWaitingHeaderColor};height:${d.vtWaitingHeaderHeight}px;font-size:${d.vtWaitingHeaderFontSize}px">
       ${escHtml(d.vtWaitingLabel || '')}${list.length ? `<span class="vt-count">${list.length}</span>` : ''}</div>
-    <div class="vt-wait-body">${!list.length ? '<span class="vt-wait-empty">ไม่มีคิวรอ</span>'
+    <div class="vt-wait-body">${!list.length ? `<span class="vt-wait-empty">${emptyText}</span>`
       // speed is per queue, so a long list scrolls no faster than a short one
       : scroll ? `<div class="vt-wait-track" style="animation-duration:${Math.max(1, d.vtWaitingScrollSpeed) * list.length}s"><div class="vt-wait-list">${items}</div><div class="vt-wait-list" aria-hidden="true">${items}</div></div>`
       : `<div class="vt-wait-list">${items}</div>`}</div>`;
@@ -1895,7 +1993,7 @@ function bindVtDrag(area) {
     const target = (kind === 'col' || kind === 'row') ? h.previousElementSibling : h.nextElementSibling;
     if (!target) return;
     const vert = kind === 'row' || kind === 'ns';
-    const sign = (kind === 'ns' || kind === 'wait') ? -1 : 1;   // these grow towards the handle
+    const sign = (kind === 'ns' || kind === 'wait' || kind === 'park') ? -1 : 1;   // these grow towards the handle
     const start = vert ? e.clientY : e.clientX;
     const rect = target.getBoundingClientRect();
     const startSize = vert ? rect.height : rect.width;
@@ -1903,7 +2001,7 @@ function bindVtDrag(area) {
     const move = ev => {
       size = Math.max(40, Math.round(startSize + sign * ((vert ? ev.clientY : ev.clientX) - start)));
       if (kind === 'ns') target.style.height = size + 'px';
-      else if (kind === 'wait') target.style.width = size + 'px';
+      else if (kind === 'wait' || kind === 'park') target.style.width = size + 'px';
       else target.style.flex = `0 0 ${size}px`;
     };
     const up = () => {
@@ -1913,6 +2011,7 @@ function bindVtDrag(area) {
       if (kind === 'row')  c.vtRowHeights    = { ...(d.vtRowHeights || {}), [id]: size };
       if (kind === 'ns')   c.vtNoShowHeights = { ...(d.vtNoShowHeights || {}), [id]: size };
       if (kind === 'wait') c.vtWaitingWidth  = size;
+      if (kind === 'park') c.vtParkedWidth   = size;
       saveCfg(); loadVtUI(); renderVertical(false, null);   // refit the numbers to the new box sizes
     };
     addEventListener('pointermove', move); addEventListener('pointerup', up);
@@ -1925,7 +2024,7 @@ window.addEventListener('resize', () => {
 });
 function resetVtSizes() {
   const c = getCurrentCfg();
-  c.vtColWidths = {}; c.vtRowHeights = {}; c.vtNoShowHeights = {}; c.vtWaitingWidth = VT_DEF.vtWaitingWidth;
+  c.vtColWidths = {}; c.vtRowHeights = {}; c.vtNoShowHeights = {}; c.vtWaitingWidth = VT_DEF.vtWaitingWidth; c.vtParkedWidth = VT_DEF.vtParkedWidth;
   saveCfg(); loadVtUI(); buildCounterGrid();
 }
 // settings form: [key, label, type, min, max, step] — tcolor = colour that may follow the theme ('')
@@ -1982,6 +2081,21 @@ const VT_FIELDS = [
     ['vtWaitingHeaderColor', 'สีตัวอักษรหัวข้อ', 'color'],
     ['vtWaitingHeaderFontSize', 'ขนาดตัวอักษรหัวข้อ (px)', 'num', 8, 60, 1],
     ['vtWaitingHeaderHeight', 'ความสูงหัวข้อ (px)', 'num', 16, 100, 1]]],
+  ['⑤ คิวยากำลังตรวจสอบ (คิวที่เก็บไว้)', [
+    ['vtShowParked', 'แสดงคิวยากำลังตรวจสอบ (ต่อจากคิวที่รอเรียก)', 'bool'],
+    ['vtParkedLabel', 'หัวข้อ', 'text'],
+    ['vtParkedWidth', 'ความกว้าง (px)', 'num', 80, 4000, 5],
+    ['vtParkedMaxItems', 'จำนวนคิวที่แสดง', 'num', 1, 999, 1],
+    ['vtParkedAutoScroll', 'เลื่อนอัตโนมัติเมื่อเกินจำนวน', 'bool'],
+    ['vtParkedScrollSpeed', 'ความเร็วเลื่อน (วินาทีต่อคิว)', 'num', 1, 20, 0.5],
+    ['vtParkedItemHeight', 'ความสูงต่อคิว (px)', 'num', 20, 2000, 1],
+    ['vtParkedFontSize', 'ขนาดเลขคิว (vw)', 'num', 0.3, 100, 0.1],
+    ['vtParkedQueueColor', 'สีเลขคิว', 'color'],
+    ['vtParkedBg', 'สีพื้น', 'color'],
+    ['vtParkedHeaderBg', 'สีพื้นหัวข้อ', 'color'],
+    ['vtParkedHeaderColor', 'สีตัวอักษรหัวข้อ', 'color'],
+    ['vtParkedHeaderFontSize', 'ขนาดตัวอักษรหัวข้อ (px)', 'num', 8, 60, 1],
+    ['vtParkedHeaderHeight', 'ความสูงหัวข้อ (px)', 'num', 16, 100, 1]]],
 ];
 const VT_TYPES = Object.fromEntries(VT_FIELDS.flatMap(([, fs]) => fs.map(f => [f[0], f])));
 function buildVtOpts() {
@@ -2071,7 +2185,8 @@ function flashCall(numEl, boxEl) {
   const key = (bc + (onBox ? '' : getComputedStyle(el).color)).replace(/[^a-z0-9]/gi, '');
   const name = onBox
     ? blinkKeyframes('bxb' + key, `0%,49.9%{box-shadow:inset 0 0 0 100vmax ${bc}}50%,100%{box-shadow:inset 0 0 0 100vmax transparent}`)
-    : blinkKeyframes('nmb' + key, `0%,49.9%{color:${bc};text-shadow:0 0 .12em ${bc}}50%,100%{color:${getComputedStyle(el).color};text-shadow:none}`);
+    // one solid colour, no glow / halo around the digits (it looked like a reflection on TVs)
+    : blinkKeyframes('nms' + key, `0%,49.9%{color:${bc}}50%,100%{color:${getComputedStyle(el).color}}`);
   el.style.animation = `${name} ${dur}s linear ${cnt}`;
   el.addEventListener('animationend', function done(ev) {
     if (ev.animationName !== name) return;
@@ -2170,7 +2285,7 @@ function renderCell(counterId, animate, flashFor) {
           <div class="cc-prefix" style="background:${ticket.color};${!isMain ? 'width:26px;height:26px;font-size:.75rem' : ''}">${ticket.prefix}</div>
           <span class="cc-typename" style="${!isMain ? 'font-size:.72rem' : ''}">${ticket.typeName}${modeTag(ticket)}</span>
         </div>`}
-        <div class="cc-num" data-flash="${doFlash?'1':''}" style="color:${numClr};font-size:${sz}">${ticket.display}</div>
+        <div class="cc-num" data-flash="${doFlash?'1':''}" style="color:${numClr};font-size:${sz}">${qno(ticket.display)}</div>
         ${isMain ? patientNameHtml(ticket, displayCfg) : ''}
         <div class="cc-time" style="${!isMain ? 'font-size:.65rem' : ''}">${ticket.calledAt || ''}</div>
       </div>`;
@@ -2225,12 +2340,12 @@ function renderSplitCard(counter, animate, flashFor) {
             <span class="split-typename" style="font-size:${typeFs};color:${ticket.color};text-align:center;word-break:break-word">${ticket.typeName}${modeTag(ticket)}</span>
           </div>
           <div style="flex:1;display:flex;flex-direction:column;align-items:center;min-width:0">
-            <div class="split-q-val" data-flash="${doFlash?'1':''}" style="font-size:${qFs};color:${ticket.color};text-align:center">${ticket.display}</div>${nameH}
+            <div class="split-q-val" data-flash="${doFlash?'1':''}" style="font-size:${qFs};color:${ticket.color};text-align:center">${qno(ticket.display)}</div>${nameH}
           </div>
         </div>`;
         if (anim) qCell = `<div class="${anim}" style="width:100%">${qCell}</div>`;
       } else {
-        qCell = `<div class="${anim}" style="display:flex;flex-direction:column;align-items:center;max-width:100%">${badgeRow}<div class="split-q-val" data-flash="${doFlash?'1':''}" style="font-size:${qFs};color:${ticket.color}">${ticket.display}</div>${nameH}</div>`;
+        qCell = `<div class="${anim}" style="display:flex;flex-direction:column;align-items:center;max-width:100%">${badgeRow}<div class="split-q-val" data-flash="${doFlash?'1':''}" style="font-size:${qFs};color:${ticket.color}">${qno(ticket.display)}</div>${nameH}</div>`;
       }
     } else {
       qCell = `<div class="split-q-idle">รอเรียกคิว...</div>`;
@@ -2333,7 +2448,7 @@ function renderNoShow() {
     <div class="ns-item" style="height:${dcfg.nsRowH}px;${!detail ? 'justify-content:center;gap:8px' : ''}">
       <div class="ns-badge" style="background:${t.color};width:${bsz}px;height:${bsz}px;border-radius:${bRadius};font-size:${bFs}">${t.prefix}</div>
       <div style="${!detail ? 'text-align:center' : ''}">
-        <div class="ns-num" style="${!detail ? 'font-size:'+((dcfg.nsNumFs||1.1)*1.6)+'rem' : ''}">${t.display}${modeTag(t)}</div>
+        <div class="ns-num" style="${!detail ? 'font-size:'+((dcfg.nsNumFs||1.1)*1.6)+'rem' : ''}">${qno(t.display)}${modeTag(t)}</div>
         ${detail ? `<div class="ns-meta">${t.typeName}${t.counterName?' · '+t.counterName:''}</div>` : ''}
       </div>
       ${detail ? `<div class="ns-times">
@@ -2563,6 +2678,13 @@ function onBoardOptChange() {
   c.boardRowH     = Math.min(90, Math.max(5, parseInt(document.getElementById('cfgBoardRowH').value) || 24));
   document.getElementById('boardRowHRow').style.display = c.boardRowFit ? 'none' : '';
   c.upcomingCount = Math.max(1, parseInt(document.getElementById('cfgUpcoming').value) || 5);
+  c.showBoardParked  = document.getElementById('cfgShowBoardParked').checked;
+  c.boardParkedLabel = document.getElementById('cfgBoardParkedLabel').value.trim() || 'คิวยากำลังตรวจสอบ';
+  c.boardParkedCount = Math.max(1, parseInt(document.getElementById('cfgBoardParkedCount').value) || 8);
+  c.boardParkedFs    = Math.max(0.3, parseFloat(document.getElementById('cfgBoardParkedFs').value) || 1.6);
+  c.boardParkedHdrFs = Math.max(0.3, parseFloat(document.getElementById('cfgBoardParkedHdrFs').value) || 1.05);
+  c.boardParkedH     = Math.min(100, Math.max(0, parseFloat(document.getElementById('cfgBoardParkedH').value) || 0));
+  document.getElementById('boardParkedOpts').style.display = c.showBoardParked ? '' : 'none';
   saveCfg(); buildCounterGrid();
 }
 function onModeTagChange() {
@@ -2628,6 +2750,13 @@ function loadNewCfgUI(d) {
   set('cfgBoardCtrFs', d.boardCtrFs || 1.8);    set('cfgBoardCtrFsR', Math.min(6, d.boardCtrFs || 1.8));
   set('cfgUpcoming', d.upcomingCount || 5);     set('cfgUpcomingR', Math.min(12, d.upcomingCount || 5));
   document.getElementById('cfgShowUpcoming').checked = d.showUpcoming !== false;
+  document.getElementById('cfgShowBoardParked').checked = d.showBoardParked === true;
+  document.getElementById('cfgBoardParkedLabel').value = d.boardParkedLabel || 'คิวยากำลังตรวจสอบ';
+  set('cfgBoardParkedCount', d.boardParkedCount || 8); set('cfgBoardParkedCountR', Math.min(50, d.boardParkedCount || 8));
+  set('cfgBoardParkedFs', d.boardParkedFs || 1.6);      set('cfgBoardParkedFsR', Math.min(15, d.boardParkedFs || 1.6));
+  set('cfgBoardParkedHdrFs', d.boardParkedHdrFs || 1.05); set('cfgBoardParkedHdrFsR', Math.min(5, d.boardParkedHdrFs || 1.05));
+  set('cfgBoardParkedH', d.boardParkedH || 0);          set('cfgBoardParkedHR', Math.min(90, d.boardParkedH || 0));
+  document.getElementById('boardParkedOpts').style.display = d.showBoardParked === true ? '' : 'none';
   document.getElementById('cfgBoardRowFit').checked = d.boardRowFit !== false;
   document.getElementById('cfgBoardHero').checked = d.boardHero !== false;
   document.getElementById('boardHeroClrRow').style.display = d.boardHero !== false ? '' : 'none';
@@ -3117,6 +3246,7 @@ function updateSoundBtn() {
   const btn = document.getElementById('btnSound');
   if (!btn) return;
   btn.textContent = soundEnabled ? '🔊 เสียง' : '🔇 เสียง';
+  if (socket.connected) sendDisplayHello();
   btn.classList.toggle('on', soundEnabled);
 }
 
@@ -3136,6 +3266,7 @@ function checkAudioUnlock() {
 function unlockAudio() {
   _audioUnlocked = true;
   document.getElementById('audioUnlock').classList.remove('show');
+  sendDisplayHello();
   // starting the shared output inside the tap makes the page's audio permission stick (and keeps it awake)
   audioCtx();
 }
@@ -3150,7 +3281,12 @@ function toggleSound() {
   if (soundEnabled) safeSpeak('เปิดเสียงแล้ว');
 }
 
+// queue number on screen: "1 - 001" drawn with a narrow hyphen instead of two wide spaces
+function qno(d) {
+  return escHtml(String(d || '')).replace(/\s*-\s*/g, '<span class="qsep">-</span>');
+}
 function fmtQueueNum(display) {
+  display = String(display || '').replace(/[\s-]/g, '');   // "1 - 001" is read as 1001
   const LETTERS = {
     A:'เอ', B:'บี', C:'ซี', D:'ดี', E:'อี', F:'เอฟ', G:'จี',
     H:'เอช', I:'ไอ', J:'เจ', K:'เค', L:'แอล', M:'เอ็ม',
@@ -3246,9 +3382,8 @@ function nextAnnounce() {
   const finish = () => { if (done) return; done = true; clearTimeout(guard); setTimeout(nextAnnounce, 800); };
   // a clip that never reports its end (network stall) must not hold up the calls behind it
   const guard = setTimeout(finish, 30000);
-  let bellMs = 0;
-  try { bellMs = playBell(); } catch(e) {}
-  announceQueue(ticket, bellMs ? bellMs + 250 : 0, finish);
+  // no lead-in chime: the announcement starts straight away (playBell() kept, unused)
+  announceQueue(ticket, 0, finish);
 }
 
 // afterMs: wait for the bell to finish, so the chime never covers "ขอเชิญ หมายเลข"

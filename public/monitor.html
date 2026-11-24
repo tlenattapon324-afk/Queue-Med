@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <script src="/vendor/api-token.js"></script>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <link rel="icon" href="/favicon.ico" sizes="any"/>
+  <title>Staff Queue Monitor</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#F1F5F9; --card:#FFFFFF; --blue:#2563EB; --blue-soft:#DBEAFE; --blue-ink:#1E3A8A; --teal:#0F766E; --teal-soft:#CCFBF1;
+      --ink:#1E293B; --muted:#64748B; --dim:#94A3B8; --line:#E2E8F0; --head:#F8FAFC;
+      --green:#16A34A; --amber:#D97706; --amber-soft:#FEF3C7; --red:#DC2626; --red-soft:#FEE2E2; --orange:#EA580C;
+      --shadow:0 1px 2px rgba(15,23,42,.04),0 4px 14px -6px rgba(15,23,42,.10);
+    }
+    [hidden]{display:none !important}
+    html,body{height:100%}
+    body{font-family:'Prompt','Segoe UI',sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;min-height:100vh;overflow:hidden;font-weight:400}
+    b{font-weight:600}
+    /* ── top bar ── */
+    .top{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--line);box-shadow:0 1px 3px rgba(15,23,42,.04)}
+    .t-left{min-width:0}
+    .t-title{font-size:1.1rem;font-weight:600;color:var(--blue-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .t-title small{color:var(--muted);font-weight:400}
+    .t-pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+    .pill{display:inline-flex;align-items:center;gap:7px;font-size:.78rem;font-weight:500;padding:3px 11px;border-radius:999px;background:#F8FAFC;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+    .pill i{width:8px;height:8px;border-radius:50%;background:var(--dim);flex:none}
+    .pill.ok{background:#F0FDF4;border-color:#BBF7D0;color:#166534}.pill.ok i{background:var(--green);box-shadow:0 0 0 3px rgba(22,163,74,.18)}
+    .pill.bad{background:#FEF2F2;border-color:#FECACA;color:#B91C1C}.pill.bad i{background:var(--red);box-shadow:0 0 0 3px rgba(220,38,38,.15)}
+    .pill.warn{background:#FFFBEB;border-color:#FDE68A;color:#92400E}.pill.warn i{background:var(--amber)}
+    .t-clock{text-align:center}
+    .t-time{font-size:2.4rem;font-weight:600;line-height:1;color:var(--blue-ink);font-variant-numeric:tabular-nums;letter-spacing:1px}
+    .t-date{font-size:.85rem;color:var(--muted);margin-top:2px}
+    .t-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;min-width:0}
+    .t-disp{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    .t-btn{font:inherit;font-size:.82rem;font-weight:500;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:6px 13px;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s}
+    .t-btn:hover{background:#F8FAFC;border-color:#CBD5E1}
+    .t-btn.pri{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 4px 10px -4px rgba(37,99,235,.5)}
+    .t-btn.pri:hover{background:#1D4ED8}
+    .t-dlist{font-size:.75rem;color:var(--muted);text-align:right;max-width:560px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    /* ── body grid ── */
+    .main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(300px,25%) minmax(0,1fr) minmax(340px,30%);gap:16px;padding:16px}
+    .col{display:flex;flex-direction:column;gap:16px;min-height:0;min-width:0}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;min-height:0}
+    .card-h{background:linear-gradient(180deg,#EFF6FF,#F8FAFC);color:var(--blue-ink);font-size:1.08rem;font-weight:600;padding:11px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+    .card-h .cnt{margin-left:auto;font-size:.85rem;font-weight:600;background:var(--blue);color:#fff;border-radius:999px;padding:1px 11px;min-width:30px;text-align:center}
+    /* section headers: a solid colour per group so each box reads at a glance */
+    .card{--hc:var(--blue)}
+    .card-h{background:var(--hc) !important;color:#fff !important;border-bottom:none;font-size:1.12rem;letter-spacing:.2px;text-shadow:0 1px 1px rgba(0,0,0,.12)}
+    .card-h .cnt{background:#fff;color:var(--hc)}
+    .main > .col:nth-child(1) > .card:nth-child(1){--hc:#2563EB}   /* คิวที่กำลังเรียก */
+    .main > .col:nth-child(1) > .card:nth-child(2){--hc:#D97706}   /* คิวยากำลังตรวจสอบ */
+    .main > .col:nth-child(2) > .card:nth-child(1){--hc:#0F766E}   /* ภาพรวมช่องบริการ */
+    .main > .col:nth-child(3) > .card:nth-child(1){--hc:#4F46E5}   /* สรุปคิวสำคัญ */
+    .main > .col:nth-child(3) > .card:nth-child(2){--hc:#DC2626}   /* ไม่มา / ติดต่อเจ้าหน้าที่ */
+    .main > .col:nth-child(3) > .card:nth-child(3){--hc:#0284C7}   /* คิวถัดไป */
+    .card{border-top:none}
+    .card-b{padding:14px;display:flex;flex-direction:column;gap:12px;min-height:0;flex:1}
+    .empty{color:var(--dim);text-align:center;padding:22px 8px;font-size:.95rem;display:flex;flex-direction:column;align-items:center;gap:6px}
+    .empty::before{content:'○';font-size:1.7rem;line-height:1;opacity:.7}
+    #nowBox .empty::before{content:'🔔'}
+    #pkList .empty::before{content:'📥'}
+    #ctrGrid .empty::before{content:'🖥'}
+    #nsList .empty::before{content:'✓'}
+    #nxList .empty::before{content:'⏭'}
+    /* left: current call */
+    .now{background:linear-gradient(180deg,#EFF6FF,#fff);color:var(--ink);border-radius:12px;padding:16px 12px;text-align:center;border:2px solid #BFDBFE}
+    .now.blink{animation:nowBlink 1s 6}
+    @keyframes nowBlink{50%{background:#DBEAFE;border-color:var(--blue)}}
+    .now-num{font-size:clamp(3rem,5.4vw,5.2rem);font-weight:700;line-height:1.05;color:var(--blue);white-space:nowrap;font-variant-numeric:tabular-nums}
+    .now-type{font-size:1.15rem;font-weight:600;color:var(--blue-ink);margin-top:2px}
+    .now-meta{font-size:.9rem;color:var(--muted)}
+    .kv{background:#F8FAFC;border:1px solid var(--line);color:var(--ink);border-radius:12px;padding:10px 14px;display:grid;gap:6px;font-size:1rem}
+    .kv .k{color:var(--muted);font-size:.88rem}
+    .kv-row{display:flex;justify-content:space-between;gap:8px}
+    .kv-row b{text-align:right}
+    .ctr-line{font-size:1.1rem;font-weight:600;color:var(--teal)}
+    .park-list{display:flex;flex-direction:column;gap:8px;overflow:auto;min-height:0}
+    .pk{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;background:#FFFBEB;border:1px solid #FDE68A;border-left:4px solid #F59E0B;border-radius:10px;padding:8px 12px}
+    .pk-num{font-size:1.25rem;font-weight:600;white-space:nowrap;color:var(--ink)}
+    .pk-why{font-size:.85rem;color:#92400E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .pk-min{font-size:.9rem;font-weight:600;white-space:nowrap;color:#B45309}
+    .pk-min.warn{color:var(--red)}
+    .sub-stat{display:flex;justify-content:space-between;align-items:center;font-size:.92rem;color:var(--muted);background:#F5F3FF;border:1px solid #DDD6FE;border-radius:10px;padding:7px 12px}
+    .sub-stat b{color:#6D28D9;font-size:1.15rem}
+    /* middle: counters */
+    .ctr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:12px;overflow:auto;align-content:start}
+    .ctr{display:grid;grid-template-columns:110px 1fr;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:12px;overflow:hidden;min-height:132px;box-shadow:0 1px 3px rgba(15,23,42,.05)}
+    .ctr-name{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;background:var(--blue-soft);color:var(--blue-ink);font-size:1.3rem;font-weight:700;padding:10px;line-height:1.2;border-right:1px solid #BFDBFE;word-break:keep-all}
+    .ctr-name small{font-size:.74rem;font-weight:500;color:#3B5B9A;background:#fff;border-radius:999px;padding:1px 9px}
+    .ctr-body{padding:10px 14px;display:grid;gap:4px;align-content:center;min-width:0;background:#fff}
+    .ctr-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;min-width:0}
+    .ctr-q{font-size:1.05rem;font-weight:500;color:var(--muted);white-space:nowrap}
+    .ctr-q b{font-size:1.75rem;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+    .ctr-st{font-size:.98rem;font-weight:500;color:var(--muted)}
+    .ctr-st span{display:inline-flex;align-items:center;gap:7px;font-weight:600;border-radius:999px;padding:2px 12px 2px 10px;font-size:.92rem}
+    .ctr-st span::before{content:'';width:8px;height:8px;border-radius:50%;background:currentColor;flex:none}
+    .st-on{color:#1D4ED8;background:#DBEAFE}.st-wait{color:#C2410C;background:#FFEDD5}.st-idle{color:var(--teal);background:var(--teal-soft)}.st-ns{color:#C2410C;background:#FFEDD5}
+    .ctr-pt{font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+    .ctr-min{font-size:.92rem;font-weight:500;white-space:nowrap;color:var(--muted)}
+    .ctr-min.warn{color:var(--red);font-weight:600}
+    .ctr-foot{font-size:.8rem;color:var(--dim)}
+    .ctr.idle .ctr-name{background:#F0FDFA;color:var(--teal);border-right-color:#99F6E4}
+    .ctr.idle .ctr-q b{color:#CBD5E1}
+    .ctr.ns .ctr-name{background:#FFF7ED;color:#C2410C;border-right-color:#FED7AA}
+    .ctr-grid.few{grid-template-columns:1fr}
+    .ctr-grid.few .ctr{min-height:150px;grid-template-columns:190px 1fr}
+    .ctr-grid.few .ctr-name{font-size:1.6rem}
+    .ctr-grid.few .ctr-q b{font-size:2.1rem}
+    .ctr-grid.few .ctr-st,.ctr-grid.few .ctr-pt{font-size:1.1rem}
+    /* right: KPI (soft colours) */
+    .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .kpis:has(> .kpi:nth-child(4):last-child){grid-template-columns:repeat(2,1fr)}
+    .kpi{border-radius:12px;padding:14px 8px;text-align:center;min-width:0;border:1px solid transparent}
+    .kpi b{display:block;font-size:clamp(1.9rem,3vw,2.8rem);font-weight:700;line-height:1.05;font-variant-numeric:tabular-nums}
+    .kpi span{font-size:.88rem;font-weight:500;white-space:nowrap;color:var(--ink);opacity:.8}
+    .k-wait{background:#FEE2E2;border-color:#FECACA}.k-wait b{color:#B91C1C}
+    .k-ready{background:#DCFCE7;border-color:#BBF7D0}.k-ready b{color:#15803D}
+    .k-check{background:#EDE9FE;border-color:#DDD6FE}.k-check b{color:#6D28D9}
+    .k-park{background:#FEF3C7;border-color:#FDE68A}.k-park b{color:#B45309}
+    .k-done{background:#DBEAFE;border-color:#BFDBFE}.k-done b{color:#1D4ED8}
+    .k-ns{background:#FEE2E2;border-color:#FCA5A5}.k-ns b{color:#7F1D1D}
+    .ns-list,.next-list{display:flex;flex-direction:column;gap:8px;overflow:auto;min-height:0}
+    .ns{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;background:#fff;color:var(--ink);border:1px solid var(--line);border-left:4px solid var(--red);border-radius:10px;padding:8px 12px}
+    .ns-num{font-size:1.3rem;font-weight:600;white-space:nowrap}
+    .ns-mid{font-size:.88rem;color:var(--muted);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .ns-t{text-align:right;font-size:.82rem;line-height:1.3;white-space:nowrap;color:var(--muted)}
+    .ns-t b{color:#B91C1C}
+    .nx{display:grid;grid-template-columns:auto 1fr auto auto;gap:10px;align-items:center;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+    .nx:first-child{border-color:#93C5FD;background:#EFF6FF;box-shadow:0 0 0 2px #DBEAFE}
+    .nx-num{font-size:1.3rem;font-weight:600;white-space:nowrap}
+    .nx-type{font-size:.88rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+    .nx-drug{font-size:.9rem;font-weight:500;white-space:nowrap;color:var(--teal)}
+    .nx-wait{font-size:.9rem;font-weight:600;white-space:nowrap;color:var(--muted)}
+    .nx-wait.warn{color:var(--red)}
+    .badge{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;padding:0 5px;border-radius:7px;color:#fff;font-weight:600;font-size:.85rem;margin-right:8px;vertical-align:middle}
+    .grow{flex:1}
+    .offline{position:fixed;inset:auto 16px 16px auto;background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;border-radius:12px;padding:10px 16px;font-weight:600;display:none;z-index:9;box-shadow:var(--shadow)}
+    .offline.show{display:block}
+    @media (max-width:1250px){
+      body{overflow:auto}
+      .main{grid-template-columns:1fr 1fr}
+      .col.mid{grid-column:1 / -1;order:3}
+      .top{grid-template-columns:1fr auto}
+      .t-right{grid-column:1 / -1;align-items:flex-start}.t-disp{justify-content:flex-start}.t-dlist{text-align:left}
+    }
+    @media (max-width:760px){
+      .main{grid-template-columns:1fr;padding:10px}
+      .ctr-grid{grid-template-columns:1fr}
+      .top{grid-template-columns:1fr}.t-clock{text-align:left}
+    }
+  </style>
+</head>
+<body>
+<header class="top">
+  <div class="t-left">
+    <div class="t-title" id="tTitle">ระบบคิว <small>| Staff Queue Monitor</small></div>
+    <div class="t-pills">
+      <span class="pill" id="pSrv"><i></i>Queue Server</span>
+      <span class="pill" id="pHos" hidden><i></i>HOSxP</span>
+      <span class="pill" id="pUpd"><i></i>อัปเดต —</span>
+    </div>
+  </div>
+  <div class="t-clock"><div class="t-time" id="clock">--:--:--</div><div class="t-date" id="cdate"></div></div>
+  <div class="t-right">
+    <div class="t-disp">
+      <span class="pill" id="pDisp"><i></i>จอแสดงผล —</span>
+      <span class="pill" id="pSound"><i></i>เสียง —</span>
+      <button class="t-btn pri" onclick="openDisplay()" title="เปิดหน้าจอแสดงผลของห้องนี้ในแท็บใหม่">👁 เปิดดูจอผู้ป่วย</button>
+      <button class="t-btn" onclick="reloadDisplays()" title="สั่งให้จอแสดงผลทุกเครื่องของห้องนี้รีเฟรชหน้า">🔄 รีเฟรชจอ</button>
+    </div>
+    <div class="t-dlist" id="dList"></div>
+  </div>
+</header>
+
+<main class="main">
+  <section class="col">
+    <div class="card">
+      <div class="card-h">🔔 คิวที่กำลังเรียก</div>
+      <div class="card-b" id="nowBox"><div class="empty">ยังไม่มีการเรียกคิว</div></div>
+    </div>
+    <div class="card grow">
+      <div class="card-h">📥 คิวยากำลังตรวจสอบ <span class="cnt" id="pkCnt">0</span></div>
+      <div class="card-b">
+        <div class="sub-stat" id="chkStat" hidden><span>🔍 รอตรวจสอบยา (HOSxP)</span><b id="chkN">0</b></div>
+        <div class="park-list" id="pkList"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="col mid">
+    <div class="card grow">
+      <div class="card-h">🖥 ภาพรวมช่องบริการ <span class="cnt" id="ctrCnt">0</span></div>
+      <div class="card-b"><div class="ctr-grid" id="ctrGrid"></div></div>
+    </div>
+  </section>
+
+  <section class="col">
+    <div class="card">
+      <div class="card-h">📊 สรุปคิวสำคัญ</div>
+      <div class="card-b"><div class="kpis" id="kpis"></div></div>
+    </div>
+    <div class="card" style="max-height:34vh">
+      <div class="card-h">⚠ ไม่มา / ติดต่อเจ้าหน้าที่ <span class="cnt" id="nsCnt">0</span></div>
+      <div class="card-b"><div class="ns-list" id="nsList"></div></div>
+    </div>
+    <div class="card grow">
+      <div class="card-h">⏭ คิวถัดไป</div>
+      <div class="card-b"><div class="next-list" id="nxList"></div></div>
+    </div>
+  </section>
+</main>
+<div class="offline" id="offline">⚠ ขาดการเชื่อมต่อ Queue Server — กำลังเชื่อมต่อใหม่…</div>
+
+<script>
+const qs = new URLSearchParams(location.search);
+const sysId = Number(qs.get('sys')) || 1;
+const mode = ['opd', 'ipd', 'all'].includes(qs.get('mode')) ? qs.get('mode') : 'opd';
+const socket = io();
+let st = null, displays = [], lastTs = 0, lastUpd = null;
+const drug = {};                       // vn → n
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const hm = s => String(s || '').slice(0, 5);
+const inMode = t => mode === 'all' || (t.mode || 'opd') === mode;
+const minSince = ts => ts ? Math.max(0, Math.floor((Date.now() - ts) / 60000)) : 0;
+function minFromHm(s) {
+  const m = /^(\d{1,2}):(\d{2})/.exec(String(s || '')); if (!m) return 0;
+  const d = new Date(); d.setHours(+m[1], +m[2], 0, 0);
+  return Math.max(0, Math.floor((Date.now() - d) / 60000));
+}
+const badge = t => `<span class="badge" style="background:${esc(t.color || '#64748b')}">${esc(t.prefix || '•')}</span>`;
+const drugTxt = t => t && t.vn && drug[String(t.vn).trim()] !== undefined ? `${drug[String(t.vn).trim()]} รายการ` : '';
+const LAYOUT = { board: 'บอร์ด', vertical: 'แนวตั้ง', classic: 'มาตรฐาน', grid: 'ตาราง' };
+
+// ── clock ──
+function tick() {
+  const d = new Date();
+  document.getElementById('clock').textContent = d.toLocaleTimeString('th-TH', { hour12: false });
+  document.getElementById('cdate').textContent = d.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
+  if (lastUpd) document.getElementById('pUpd').innerHTML = `<i></i>อัปเดตล่าสุด ${lastUpd.toLocaleTimeString('th-TH', { hour12: false })}`;
+}
+setInterval(tick, 1000); tick();
+
+// ── data ──
+let _t = null;
+function refresh() { clearTimeout(_t); _t = setTimeout(load, 250); }
+async function load() {
+  try {
+    const d = await fetch(`/api/sys/${sysId}/status`).then(r => r.json());
+    if (!d || !d.counters) return;
+    st = d; lastUpd = new Date();
+    document.getElementById('pUpd').className = 'pill ok';
+    render(); loadDrugs();
+  } catch { document.getElementById('pUpd').className = 'pill bad'; }
+}
+let drugBusy = false;
+async function loadDrugs() {
+  if (!st || drugBusy) return;
+  const cur = Object.values(st.lastCalledByCounter || {});
+  const vns = [...new Set([...cur, ...nextList(), ...(st.allWaiting || []).filter(t => t.parked)]
+    .filter(t => t && t.vn && t.mode !== 'ipd').map(t => String(t.vn).trim()))].filter(v => drug[v] === undefined);
+  if (!vns.length) return;
+  drugBusy = true;
+  try {
+    const r = await fetch('/api/drug-counts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ vns }) }).then(r => r.json());
+    if (r.success) { Object.assign(drug, r.counts); render(); }
+  } catch {} finally { drugBusy = false; }
+}
+function flowRole() { const f = st && st.flow; return !f ? null : f.pharmacy ? 'pharmacy' : f.cashier ? 'cashier' : null; }
+function waitingAll() { return (st.allWaiting || []).filter(inMode); }
+function nextList() {
+  if (!st) return [];
+  const pharm = flowRole() === 'pharmacy' && mode !== 'ipd';
+  return waitingAll().filter(t => !t.parked && (!pharm || t.flow !== 'check'));
+}
+
+// ── render ──
+function render() {
+  if (!st) return;
+  const sys = st.sysInfo || {};
+  document.title = `Monitor · ${sys.name || 'ระบบคิว'}`;
+  document.getElementById('tTitle').innerHTML = `${esc((sys.icon || '') + ' ' + (sys.name || 'ระบบคิว'))} ${mode === 'ipd' ? '(IPD)' : mode === 'opd' ? '(OPD)' : ''} <small>| Staff Queue Monitor</small>`;
+  // HOSxP
+  const f = st.flow, h = f ? (f.pharmacy || f.cashier || {}).hos : null, pH = document.getElementById('pHos');
+  pH.hidden = !f;
+  if (f) {
+    pH.className = 'pill ' + (h && h.ok ? 'ok' : h ? 'bad' : '');
+    pH.innerHTML = `<i></i>${h && h.ok ? `HOSxP ปกติ · เช็ค ${esc(hm(h.at))}` : h ? `HOSxP เชื่อมต่อไม่ได้ ตั้งแต่ ${esc(hm(h.since))}` : 'HOSxP รอเช็ค'}`;
+  }
+  renderNow(); renderPark(); renderCounters(); renderKpis(); renderNoShows(); renderNext();
+}
+function renderNow() {
+  const cur = Object.values(st.lastCalledByCounter || {}).filter(t => t && inMode(t)).sort((a, b) => (b._ts || 0) - (a._ts || 0))[0];
+  const el = document.getElementById('nowBox');
+  if (!cur) { el.innerHTML = '<div class="empty">ยังไม่มีการเรียกคิว</div>'; return; }
+  const fresh = cur._ts && cur._ts !== lastTs; lastTs = cur._ts;
+  const dn = drugTxt(cur);
+  el.innerHTML = `
+    <div class="now${fresh ? ' blink' : ''}">
+      <div class="now-num">${esc(cur.display)}</div>
+      <div class="now-type">${esc(cur.typeName || '')}</div>
+      <div class="now-meta">เรียกเวลา ${esc(hm(cur.calledAt))} น. · ${minSince(cur._ts)} นาที${cur.noShow ? ' · <b style="color:#b91c1c">✕ ไม่มา</b>' : ''}</div>
+    </div>
+    <div class="ctr-line">ช่องบริการ : ${esc(cur.counterName || '—')}</div>
+    <div class="kv">
+      <div class="kv-row"><span class="k">คนไข้</span><b>${esc(cur.patientName || '—')}</b></div>
+      <div class="kv-row"><span class="k">HN</span><b>${esc(cur.hn || '—')}</b></div>
+      ${cur.qn ? `<div class="kv-row"><span class="k">QN</span><b>${esc(cur.qn)}</b></div>` : ''}
+      <div class="kv-row"><span class="k">สิทธิ</span><b>${esc(cur.pttypeName || '—')}</b></div>
+      <div class="kv-row"><span class="k">รายการยา</span><b>${dn || (cur.vn && cur.mode !== 'ipd' ? '…' : '—')}</b></div>
+    </div>`;
+}
+function renderPark() {
+  const w = waitingAll(), pk = w.filter(t => t.parked);
+  document.getElementById('pkCnt').textContent = pk.length;
+  const pharm = flowRole() === 'pharmacy' && mode !== 'ipd';
+  document.getElementById('chkStat').hidden = !pharm;
+  document.getElementById('chkN').textContent = w.filter(t => !t.parked && t.flow === 'check').length;
+  document.getElementById('pkList').innerHTML = pk.length ? pk.map(t => {
+    const m = minFromHm(t.parked.at);
+    return `<div class="pk"><span class="pk-num">${badge(t)}${esc(t.display)}</span>
+      <span class="pk-why">${esc(t.parked.reason || 'เก็บคิวไว้')}${t.parked.by ? ' · ' + esc(t.parked.by) : ''}${drugTxt(t) ? ' · ' + drugTxt(t) : ''}</span>
+      <span class="pk-min${m >= 30 ? ' warn' : ''}">${m} นาที</span></div>`;
+  }).join('') : '<div class="empty">ไม่มีคิวที่เก็บไว้ตรวจสอบ</div>';
+}
+function renderCounters() {
+  const cs = st.counters || [];
+  document.getElementById('ctrCnt').textContent = cs.length + ' ช่อง';
+  const served = (st.allServed || []).filter(inMode);
+  const grid = document.getElementById('ctrGrid');
+  grid.classList.toggle('few', cs.length <= 4);      // a few counters: one per row, like the sample
+  grid.innerHTML = cs.length ? cs.map(c => {
+    const cur = (st.lastCalledByCounter || {})[c.id];
+    const t = cur && inMode(cur) ? cur : null;
+    const n = served.filter(x => x.counterId === c.id && !x.noShow).length;
+    const m = t ? minSince(t._ts) : 0;
+    const [cls, stTxt] = !t ? ['idle', '<span class="st-idle">ว่าง · พร้อมเรียก</span>']
+      : t.noShow ? ['ns', '<span class="st-ns">คิวล่าสุดไม่มา · รอเรียกคิวถัดไป</span>']
+      : ['', '<span class="st-on">กำลังให้บริการ</span>'];
+    const num = c.name || '', sub = '';
+    return `<div class="ctr ${cls}">
+      <div class="ctr-name">${esc(num)}<small>${esc(sub || `ให้บริการแล้ว ${n}`)}</small></div>
+      <div class="ctr-body">
+        <div class="ctr-row"><span class="ctr-q">กำลังเรียก : <b>${t ? esc(t.display) : '—'}</b></span>${t ? `<span class="ctr-min${m >= 30 && !t.noShow ? ' warn' : ''}">⏱ ${m} นาที</span>` : ''}</div>
+        <div class="ctr-st">สถานะ : ${stTxt}</div>
+        <div class="ctr-row"><span class="ctr-pt">คนไข้ : ${t ? esc(t.patientName || '—') : '—'}</span>${t && drugTxt(t) ? `<span class="ctr-min">💊 ${drugTxt(t)}</span>` : ''}</div>
+        <div class="ctr-foot">${t ? `${esc(t.typeName || '')} · เรียก ${esc(hm(t.calledAt))} น.` : 'ยังไม่มีคิวที่เรียกอยู่'}</div>
+      </div></div>`;
+  }).join('') : '<div class="empty">ยังไม่มีช่องบริการ — เพิ่มได้ที่หน้าตั้งค่า</div>';
+}
+function renderKpis() {
+  const w = waitingAll(), pharm = flowRole() === 'pharmacy' && mode !== 'ipd';
+  const served = (st.allServed || []).filter(t => inMode(t) && !t.noShow);
+  const ns = (st.noShows || []).filter(inMode);
+  const k = [
+    ['k-wait', w.filter(t => !t.parked).length, 'รอเรียก'],
+    pharm ? ['k-ready', w.filter(t => !t.parked && t.flow !== 'check').length, 'พร้อมจ่าย'] : null,
+    pharm ? ['k-check', w.filter(t => !t.parked && t.flow === 'check').length, 'รอตรวจสอบยา'] : null,
+    ['k-park', w.filter(t => t.parked).length, 'กำลังตรวจสอบ'],
+    ['k-done', served.length, 'ให้บริการแล้ว'],
+    ['k-ns', ns.length, 'ไม่มา / ติดต่อ จนท.'],
+  ].filter(Boolean);
+  document.getElementById('kpis').innerHTML = k.map(([c, n, l]) => `<div class="kpi ${c}"><b>${n}</b><span>${l}</span></div>`).join('');
+}
+function renderNoShows() {
+  const ns = (st.noShows || []).filter(inMode).slice().sort((a, b) => (b.noShowTs || 0) - (a.noShowTs || 0));
+  document.getElementById('nsCnt').textContent = ns.length;
+  document.getElementById('nsList').innerHTML = ns.length ? ns.map(t => `
+    <div class="ns"><span class="ns-num">${badge(t)}${esc(t.display)}</span>
+      <span class="ns-mid">${esc(t.patientName || t.typeName || '')}${t.counterName ? ' · ' + esc(t.counterName) : ''}</span>
+      <span class="ns-t">เรียก ${esc(hm(t.calledAt))}<br><b>ไม่มา ${esc(hm(t.noShowAt))}</b></span></div>`).join('')
+    : '<div class="empty">ไม่มีคิวที่ไม่มา</div>';
+}
+function renderNext() {
+  const list = nextList().slice(0, 5);
+  document.getElementById('nxList').innerHTML = list.length ? list.map(t => {
+    const m = minSince(t.issuedTs || t._ts);
+    return `<div class="nx"><span class="nx-num">${badge(t)}${esc(t.display)}</span>
+      <span class="nx-type">${esc(t.typeName || '')}${t.patientName ? ' · ' + esc(t.patientName) : ''}</span>
+      <span class="nx-drug">${drugTxt(t) ? '💊 ' + drugTxt(t) : ''}</span>
+      <span class="nx-wait${m >= 30 ? ' warn' : ''}">รอ ${m} นาที</span></div>`;
+  }).join('') : '<div class="empty">ไม่มีคิวรอเรียก</div>';
+}
+// ── displays ──
+function renderDisplays() {
+  const mine = displays.filter(d => mode === 'all' || d.mode === mode || d.mode === 'all');
+  const pD = document.getElementById('pDisp'), pS = document.getElementById('pSound');
+  pD.className = 'pill ' + (mine.length ? 'ok' : 'bad');
+  pD.innerHTML = `<i></i>จอแสดงผล ${mine.length ? `ONLINE ${mine.length} จอ` : 'OFFLINE'}`;
+  const soundOn = mine.filter(d => d.sound), unlocked = soundOn.filter(d => d.audio);
+  pS.className = 'pill ' + (!mine.length ? '' : !soundOn.length ? 'bad' : unlocked.length < soundOn.length ? 'warn' : 'ok');
+  pS.innerHTML = `<i></i>${!mine.length ? 'เสียง —' : !soundOn.length ? '🔇 ปิดเสียงเรียก'
+    : unlocked.length < soundOn.length ? '🔊 เปิดเสียง · ยังไม่ได้แตะจอ (เสียงอาจไม่ดัง)' : '🔊 เสียงเรียกคิว พร้อม'}`;
+  document.getElementById('dList').textContent = mine.length
+    ? mine.map(d => `${d.ip || 'เครื่องนี้'} · ${(d.mode || '').toUpperCase()}${d.layout ? ' · ' + (LAYOUT[d.layout] || d.layout) : ''}${d.w ? ` · ${d.w}×${d.h}` : ''} · ออนไลน์ ${minSince(d.since)} นาที`).join('   |   ')
+    : 'ไม่พบจอแสดงผลที่เปิดอยู่ — เปิด /display.html ที่จอหน้าห้อง';
+}
+function openDisplay() { window.open(`/display.html?sys=${sysId}&mode=${mode === 'all' ? 'opd' : mode}`, '_blank'); }
+function reloadDisplays() {
+  if (!displays.length) return alert('ไม่มีจอแสดงผลที่ออนไลน์อยู่');
+  if (!confirm(`สั่งรีเฟรชจอแสดงผล ${displays.length} จอ ของห้องนี้?`)) return;
+  socket.emit('display_reload_req', sysId);
+}
+
+// ── realtime ──
+const srv = document.getElementById('pSrv');
+socket.on('connect', () => {
+  socket.emit('join_sys', sysId);
+  socket.emit('displays_get', sysId, list => { displays = list || []; renderDisplays(); });
+  srv.className = 'pill ok'; srv.innerHTML = '<i></i>Queue Server ปกติ';
+  document.getElementById('offline').classList.remove('show');
+  load();
+});
+socket.on('disconnect', () => {
+  srv.className = 'pill bad'; srv.innerHTML = '<i></i>Queue Server ขาดการเชื่อมต่อ';
+  document.getElementById('offline').classList.add('show');
+});
+socket.on('displays_updated', d => { if (Number(d.sysId) === sysId) { displays = d.displays || []; renderDisplays(); } });
+['sys_state', 'queue_called', 'queue_issued', 'queue_uncalled', 'queue_noshow', 'queue_forwarded', 'queue_reset', 'queue_deleted_waiting',
+ 'noshow_recalled', 'noshow_display_cleared', 'counter_cleared', 'counters_updated', 'types_updated', 'flow_updated', 'systems_updated']
+  .forEach(ev => socket.on(ev, refresh));
+// minutes tick + a safety refresh
+setInterval(() => { render(); renderDisplays(); }, 30000);
+setInterval(load, 60000);
+renderDisplays();
+</script>
+</body>
+</html>

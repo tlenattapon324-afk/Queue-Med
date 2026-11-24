@@ -191,8 +191,12 @@
     }
     // Fixed black-on-white so the host page's theme colours never leak into the slip
     const ff = cfg.fontFamily ? `font-family:'${esc(cfg.fontFamily)}',sans-serif;` : '';
-    return `<div style="${ff}color:#000;background:#fff">${h}</div>`;
+    // ↔ / ↕ shift (mm) from the slip designer: moves the whole slip — for printers whose printable area is off-centre
+    const ox = clampOff(cfg.offsetX), oy = clampOff(cfg.offsetY);
+    const shift = ox || oy ? `transform:translate(${ox}mm,${oy}mm);` : '';
+    return `<div style="${ff}${shift}color:#000;background:#fff">${h}</div>`;
   }
+  function clampOff(v) { const n = Number(v) || 0; return Math.max(-20, Math.min(20, Math.round(n * 2) / 2)); }
 
   // Logo / barcode are <img>: wait until decoded, otherwise window.print() prints them blank
   function whenImagesReady(el, timeoutMs = 3000) {
@@ -219,7 +223,7 @@
     const { w, h } = paperSize(cfg);
     Object.assign(el.style, {
       width: w + 'mm', boxSizing: 'border-box', padding: MARGIN_MM + 'mm', margin: '0',
-      height: h ? h + 'mm' : '', overflow: h ? 'hidden' : '', background: '#fff',
+      height: h ? h + 'mm' : '', overflow: h ? 'hidden' : '', overflowX: 'hidden', background: '#fff',
     });
   }
 

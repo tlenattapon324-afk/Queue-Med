@@ -13,446 +13,289 @@
 <script src="/vendor/qrcode.js"></script>
 <script src="/slip-render.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700;900&family=Sarabun:wght@300;400;600;700&family=Prompt:wght@300;400;600;700&family=Mitr:wght@300;400;600;700&family=Noto+Sans+Thai:wght@300;400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&family=Kanit:wght@300;400;500;600;700&family=Mitr:wght@400;600&family=Noto+Sans+Thai:wght@400;600;700&display=swap');
     *{box-sizing:border-box;margin:0;padding:0}
 
-    body{
-      font-family:'Kanit','Segoe UI',sans-serif;
-      min-height:100vh;
-      background:
-        radial-gradient(ellipse 90% 70% at 0% 0%,   rgba(255,255,255,.85) 0%, transparent 55%),
-        radial-gradient(ellipse 70% 55% at 100% 0%,  rgba(178,235,242,.9)  0%, transparent 55%),
-        radial-gradient(ellipse 80% 65% at 50% 120%, rgba(129,212,250,.55)     0%, transparent 55%),
-        radial-gradient(ellipse 60% 50% at 100% 80%, rgba(77,208,225,.4)   0%, transparent 55%),
-        linear-gradient(145deg,#e0f7fa 0%,#b2ebf2 45%,#80deea 100%);
-      color:#0d3a45;display:flex;flex-direction:column;overflow-x:hidden;
+    /* ── Hospital dashboard theme: navy / indigo / purple on white · orange = main action · green = success ── */
+    :root{
+      --paper:#f2f4fa; --tile:#ffffff; --ink:#1b2545; --muted:#65708c; --line:#e2e6f0;
+      --navy:#1e2a5a; --navy-2:#2b3a78;
+      --accent:#4f46e5; --accent-2:#7c3aed; --accent-soft:#eef0ff; --accent-ink:#3730a3;
+      --coral:#f97316; --coral-dark:#ea580c; --coral-soft:#fff1e6;
+      --green:#16a34a; --mint:#e6f6ec; --mint-ink:#15803d;
+      --sky:#e8f0fd; --sky-ink:#1d4ed8; --lav:#f1ecff; --lav-ink:#6d28d9; --butter:#fff6dc; --butter-ink:#a16207; --red:#dc2626;
+      --r-lg:18px; --r-md:14px; --r-sm:10px;
+      --shadow:0 1px 2px rgba(27,37,69,.05),0 8px 24px -12px rgba(27,37,69,.18);
     }
+    body.ipd{--accent:#0f9f6e; --accent-2:#0d9488; --accent-soft:#e4f7ef; --accent-ink:#0f6b4c}
 
-    body::before{display:none}
+    body{font-family:'Sarabun','Prompt','Segoe UI',sans-serif;font-size:16px;min-height:100vh;background:var(--paper);color:var(--ink);
+      display:flex;flex-direction:column;overflow-x:hidden}
+    h2,h3,.kiosk-title,.clock-time,.pd-num,.cb-preview b,.wait-total b{font-family:'Prompt','Sarabun',sans-serif}
 
-    /* ── Nav ── */
-    nav{
-      position:relative;z-index:10;
-      background:rgba(255,255,255,.65);backdrop-filter:blur(14px);
-      border-bottom:1px solid rgba(13,58,69,.12);
-      padding:0 22px;display:flex;align-items:center;height:58px;gap:6px;
-    }
-    .nav-logo{font-size:1.1rem;font-weight:900;color:#00838f;margin-right:14px;
-      text-decoration:none;white-space:nowrap;letter-spacing:1px}
-    nav a{color:rgba(13,58,69,.75);text-decoration:none;padding:4px 11px;
-      border-radius:18px;font-size:1rem;font-weight:600;transition:all .2s;white-space:nowrap}
-    nav a:hover{background:rgba(0,151,167,.12)}
-    nav a.active{background:#00acc1;color:#fff}
-    .nav-officer{font-size:.92rem;color:#2c5566;
-      margin-left:auto;padding:0 4px;white-space:nowrap}
-    .btn-logout{background:#fdecea;border:1px solid #f3b6b0;
-      color:#c62828;border-radius:16px;padding:6px 14px;font-size:.9rem;font-weight:600;
-      cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap;margin-left:6px}
-    .btn-logout:hover{background:#f9d3ce}
-    .nav-ipd-toggle{display:flex;align-items:center;gap:5px;cursor:pointer;
-      background:rgba(46,125,50,.1);border:1px solid rgba(46,125,50,.3);
-      border-radius:20px;padding:3px 10px 3px 8px;font-size:.78rem;
-      color:#2e7d32;white-space:nowrap;transition:all .2s;user-select:none}
-    .nav-ipd-toggle:hover{background:rgba(46,125,50,.18)}
-    .nav-ipd-toggle.active{background:rgba(46,125,50,.28);border-color:#66bb6a;color:#1b5e20}
-    .nav-ipd-lbl{font-weight:700;font-size:.92rem}
+    /* ── Top menu ── */
+    nav{position:relative;z-index:10;background:var(--navy);color:#fff;padding:0 20px;display:flex;align-items:center;height:58px;gap:6px;
+      box-shadow:0 2px 10px rgba(30,42,90,.25)}
+    .nav-logo{font-family:'Prompt',sans-serif;font-size:1.12rem;font-weight:700;color:#fff;margin-right:16px;text-decoration:none;white-space:nowrap}
+    nav a{color:rgba(255,255,255,.78);text-decoration:none;padding:7px 14px;border-radius:10px;font-size:1rem;font-weight:500;transition:all .15s;white-space:nowrap}
+    nav a:hover{background:rgba(255,255,255,.1);color:#fff}
+    nav a.active{background:#fff;color:var(--navy);font-weight:700}
+    .nav-officer{font-size:.92rem;color:rgba(255,255,255,.85);margin-left:10px;padding:0 4px;white-space:nowrap}
+    .btn-issue-mode{margin-left:auto;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:10px;
+      padding:6px 12px;font:inherit;font-size:.9rem;cursor:pointer;white-space:nowrap}
+    .btn-issue-mode:hover{background:rgba(255,255,255,.18)}
+    .btn-issue-mode b{color:#c7d2fe;font-weight:600}
+    .nav-ipd-toggle{display:flex;align-items:center;gap:7px;cursor:pointer;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);
+      border-radius:10px;padding:5px 10px;color:#fff;white-space:nowrap;user-select:none;margin-left:6px}
+    .nav-ipd-toggle.active{background:#16a34a;border-color:#16a34a}
+    .nav-ipd-lbl{font-weight:600;font-size:.9rem}
     .nav-ipd-sw{position:relative;flex-shrink:0}
     .nav-ipd-sw input{opacity:0;width:0;height:0;position:absolute}
-    .nav-ipd-knob{position:relative;width:32px;height:17px;
-      background:rgba(46,125,50,.25);border-radius:17px;transition:background .25s}
-    .nav-ipd-knob::before{content:'';position:absolute;width:13px;height:13px;
-      border-radius:50%;background:#fff;top:2px;left:2px;
-      transition:transform .25s;box-shadow:0 1px 3px rgba(0,0,0,.4)}
-    .nav-ipd-sw input:checked + .nav-ipd-knob{background:linear-gradient(135deg,#00e676,#00c853)}
+    .nav-ipd-knob{position:relative;width:34px;height:19px;background:rgba(255,255,255,.3);border-radius:19px;transition:background .2s}
+    .nav-ipd-knob::before{content:'';position:absolute;width:15px;height:15px;border-radius:50%;background:#fff;top:2px;left:2px;transition:transform .2s}
+    .nav-ipd-sw input:checked + .nav-ipd-knob{background:rgba(255,255,255,.45)}
     .nav-ipd-sw input:checked + .nav-ipd-knob::before{transform:translateX(15px)}
+    .btn-logout{background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:6px 12px;font:inherit;font-size:.9rem;
+      cursor:pointer;white-space:nowrap;margin-left:6px}
+    .btn-logout:hover{background:#dc2626;border-color:#dc2626}
 
-    /* ── Main ── */
-    .main{
-      flex:1;position:relative;z-index:1;
-      display:flex;flex-direction:column;align-items:center;
-      padding:12px 16px 108px;
-    }
+    /* ── Page: 3 columns + control bar ── */
+    .main{flex:1;display:flex;flex-direction:column;gap:14px;padding:16px 18px 16px;width:100%;max-width:1880px;margin:0 auto}
+    .k3{flex:1;display:grid;grid-template-columns:minmax(330px,1fr) minmax(0,1.75fr) minmax(300px,.95fr);gap:16px;min-height:0}
+    .col{background:var(--tile);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:18px;min-width:0;
+      display:flex;flex-direction:column;gap:14px}
 
-    /* ── KIOSK SCANNER STEP ── */
-    #scannerStep{
-      width:100%;max-width:860px;
-      display:flex;flex-direction:column;align-items:center;
-    }
+    /* column 1 — search & scan */
+    .col-head{display:flex;align-items:center;gap:12px}
+    .ch-ico{width:44px;height:44px;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex:none}
+    .kiosk-title{font-size:1.3rem;font-weight:700;color:var(--navy);line-height:1.2}
+    .col-head small{color:var(--muted);font-size:.9rem}
+    .search-card{background:linear-gradient(160deg,var(--navy),var(--navy-2));border-radius:var(--r-md);padding:14px;display:flex;flex-direction:column;gap:10px}
+    .seg{display:flex;background:rgba(255,255,255,.1);border-radius:10px;padding:3px;gap:3px}
+    .seg button{flex:1;border:none;background:transparent;color:rgba(255,255,255,.8);font:inherit;font-weight:600;font-size:.92rem;padding:6px 4px;border-radius:8px;cursor:pointer}
+    .seg button.on{background:#fff;color:var(--navy)}
+    .search-row{display:flex;gap:8px}
+    .search-input{flex:1;min-width:0;border:2px solid transparent;border-radius:12px;padding:14px 14px;font-family:'Prompt',sans-serif;font-size:1.7rem;font-weight:600;
+      color:var(--ink);text-align:center;letter-spacing:2px;background:#fff}
+    .search-input::placeholder{font-family:'Sarabun',sans-serif;font-size:1rem;font-weight:500;letter-spacing:0;color:#9aa3b8}
+    .search-input:focus{outline:none;border-color:var(--coral);box-shadow:0 0 0 4px rgba(249,115,22,.25)}
+    .btn-search{flex:none;border:none;border-radius:12px;background:var(--coral);color:#fff;padding:0 18px;min-width:96px;cursor:pointer;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-family:'Prompt',sans-serif;transition:background .15s}
+    .btn-search:hover{background:var(--coral-dark)}
+    .btn-search:disabled{opacity:.55;cursor:wait}
+    .btn-search .si{font-size:1.35rem}
+    .btn-search .st{font-size:1rem;font-weight:600}
+    .search-hint{color:rgba(255,255,255,.75);font-size:.88rem}
+    .search-hint kbd{background:rgba(255,255,255,.18);border-radius:5px;padding:0 6px;font-family:inherit}
+    .bar-input.active-field,.bar-input.dim{}
 
-    /* Header row: logo + title */
-    .kiosk-header{
-      display:flex;align-items:center;width:100%;margin-bottom:14px;gap:16px;
-    }
-    .kiosk-logo{
-      display:flex;align-items:center;gap:10px;flex-shrink:0;
-      background:rgba(255,255,255,.7);border:1.5px solid rgba(0,151,167,.2);
-      border-radius:14px;padding:10px 16px;min-width:150px;
-      box-shadow:0 3px 12px rgba(0,151,167,.12);
-    }
-    .kiosk-logo-icon{font-size:2rem;line-height:1;flex-shrink:0}
-    .kiosk-logo-name{font-size:.68rem;color:rgba(13,58,69,.5);font-weight:400}
-    .kiosk-logo-sys{font-size:.92rem;color:#0d3a45;font-weight:700}
-    .kiosk-title{
-      flex:1;text-align:center;
-      font-size:1.9rem;font-weight:900;color:#00697f;
-      text-shadow:0 2px 12px rgba(0,151,167,.15);letter-spacing:.5px;
-    }
-    .kiosk-header-spacer{flex-shrink:0;min-width:150px}
-
-    /* Metallic scanner frame */
-    .kiosk-scanner-frame{
-      position:relative;width:100%;max-width:680px;
-      background:#eaf7fa;border-radius:18px;
-      overflow:visible;margin-bottom:16px;
-      box-shadow:
-        0 0 0 2px #b2e0ea,
-        0 0 0 6px #ffffff,
-        0 16px 44px rgba(0,151,167,.2),
-        inset 0 1px 0 rgba(255,255,255,.6);
-    }
-    /* Corner rivets */
-    .kiosk-scanner-frame::before{
-      content:'';position:absolute;inset:0;z-index:4;pointer-events:none;border-radius:18px;
-      background:
-        radial-gradient(circle 7px at 14px 14px,#8fd3e0 50%,transparent 50%),
-        radial-gradient(circle 7px at calc(100% - 14px) 14px,#8fd3e0 50%,transparent 50%),
-        radial-gradient(circle 7px at 14px calc(100% - 36px),#8fd3e0 50%,transparent 50%),
-        radial-gradient(circle 7px at calc(100% - 14px) calc(100% - 36px),#8fd3e0 50%,transparent 50%);
-    }
-    .kiosk-scanner-inner{
-      position:relative;width:100%;aspect-ratio:16/8;
-      background:#0b1820;border-radius:18px 18px 0 0;overflow:hidden;
-    }
-    #scanVideo{width:100%;height:100%;object-fit:cover;display:block}
-
-    .scan-line{
-      position:absolute;left:0;right:0;height:3px;
-      background:linear-gradient(90deg,transparent,#00e676 20%,#6effa4 50%,#00e676 80%,transparent);
-      box-shadow:0 0 14px #00e676,0 0 6px rgba(0,230,118,.6);
-      border-radius:2px;
-      animation:scanMove 2.2s ease-in-out infinite;
-      display:none;
-    }
-    @keyframes scanMove{0%{top:12%}50%{top:82%}100%{top:12%}}
-
-    .no-camera{
-      position:absolute;inset:0;display:flex;flex-direction:column;
-      align-items:center;justify-content:center;gap:10px;
-      background:linear-gradient(180deg,#0f232f,#0b1820);
-      color:rgba(255,255,255,.85);
-    }
-    .no-camera .nc-icon{font-size:4rem}
-    .no-camera span{font-size:.85rem;text-align:center;padding:0 20px;font-weight:600}
+    .kiosk-scanner-frame{display:flex;flex-direction:column;gap:8px}
+    .kiosk-scanner-inner{position:relative;width:100%;height:clamp(150px,calc(100vh - 640px),300px);background:#101731;border-radius:var(--r-md);overflow:hidden}
+    #scanVideo{width:100%;height:100%;object-fit:cover;display:block;position:absolute;inset:0}
+    .scan-line{position:absolute;left:10%;right:10%;height:3px;z-index:2;background:linear-gradient(90deg,transparent,#22c55e,transparent);
+      box-shadow:0 0 12px #22c55e;animation:scanMove 2.2s ease-in-out infinite;display:none}
+    @keyframes scanMove{0%{top:14%}50%{top:84%}100%{top:14%}}
+    .no-camera{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#fff;z-index:1;
+      background:radial-gradient(ellipse at 50% 40%,#25336b 0%,#101731 75%)}
+    .no-camera .nc-icon{font-size:2.4rem;width:70px;height:70px;border-radius:20px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center}
+    .no-camera span{font-size:.95rem;text-align:center;padding:0 18px;opacity:.9}
     .no-camera.hidden{display:none}
+    .cam-state{display:flex;align-items:center;gap:8px;background:var(--accent-soft);border-radius:10px;padding:8px 12px}
+    .cam-dot{width:10px;height:10px;border-radius:50%;background:#94a3b8;flex:none}
+    .cam-dot.ready{background:#3b82f6}.cam-dot.scan{background:#22c55e;box-shadow:0 0 0 4px rgba(34,197,94,.25)}.cam-dot.err{background:var(--red)}
+    .kiosk-scan-statusbar{font-weight:600;font-size:.95rem;color:var(--accent-ink)}
+    .howto{list-style:none;display:flex;flex-direction:column;gap:6px;margin-top:auto}
+    .howto li{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.95rem}
+    .howto b{width:24px;height:24px;border-radius:7px;background:var(--lav);color:var(--lav-ink);display:flex;align-items:center;justify-content:center;font-size:.85rem;flex:none}
 
-    .kiosk-scan-statusbar{
-      background:#f0fbfd;border-top:1px solid #cdeef4;
-      font-size:.8rem;color:#00697f;font-weight:700;
-      text-align:center;padding:8px 20px;min-height:32px;
-      display:flex;align-items:center;justify-content:center;
-      border-radius:0 0 18px 18px;
-    }
+    /* column 2 — patient & issue */
+    .col-issue{position:relative}
+    .pane-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:8px;color:var(--muted);padding:30px}
+    .pane-empty .pe-ico{font-size:2.6rem;width:90px;height:90px;border-radius:26px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;margin-bottom:6px}
+    .pane-empty[hidden]{display:none}
+    .pane-empty h3{color:var(--navy);font-size:1.35rem}
+    .pane-empty p{line-height:1.6}
+    #typeStep{display:none;flex-direction:column;gap:12px;min-height:0}
+    #typeStep.show{display:flex}
+    .pt-card{display:flex;align-items:flex-start;gap:16px;background:var(--accent-soft);border-radius:var(--r-md);padding:16px}
+    .pt-ava{width:60px;height:60px;border-radius:16px;flex:none;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-size:1.6rem}
+    .pt-body{flex:1;min-width:0}
+    .pt-name{font-family:'Prompt',sans-serif;font-size:1.6rem;font-weight:700;color:var(--navy);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .pt-grid{display:grid;grid-template-columns:minmax(118px,1.15fr) minmax(0,.55fr) minmax(0,.7fr) minmax(0,1.7fr);gap:8px}
+    .pt-grid > div{background:#fff;border-radius:10px;padding:6px 10px;display:flex;flex-direction:column;min-width:0}
+    .pt-grid span{font-size:.8rem;color:var(--muted);font-weight:600}
+    .pt-grid b{font-size:1.15rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .pt-grid .pt-wide{grid-column:auto}
+    .btn-back{flex:none;border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:10px;padding:8px 12px;font:inherit;font-weight:600;cursor:pointer}
+    .btn-back:hover{color:var(--red);border-color:#fca5a5}
+    .drug-card{border:1px solid #fed7aa;background:var(--coral-soft);border-radius:var(--r-md);overflow:hidden}
+    .drug-card-head{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;user-select:none}
+    .drug-icon{font-size:1.3rem}
+    .drug-summary{flex:1;font-weight:600;font-size:1.1rem}
+    .drug-summary b{color:var(--coral-dark);font-size:1.4rem}
+    .drug-toggle-arrow{color:var(--muted);transition:transform .2s}
+    .drug-card.open .drug-toggle-arrow{transform:rotate(180deg)}
+    .drug-list{display:none;max-height:240px;overflow-y:auto;padding:0 12px 12px}
+    .drug-card.open .drug-list{display:block}
+    .drug-item{background:#fff;border-radius:10px;padding:9px 12px;margin-bottom:6px}
+    .drug-item-name{font-weight:700;color:var(--ink)}
+    .drug-item-usage{font-size:.88rem;color:#3b4456}
+    .drug-item-meta{display:flex;gap:14px;font-size:.82rem;color:var(--muted)}
+    .drug-item-meta b{color:var(--coral-dark)}
+    .drug-empty{text-align:center;color:var(--muted);padding:12px}
+    .cards-lbl{font-family:'Prompt',sans-serif;font-weight:600;color:var(--navy);font-size:1.05rem}
+    .cards-grid{display:flex;flex-direction:column;gap:12px;overflow:auto;min-height:0}
+    .type-group + .type-group{padding-top:10px;border-top:1px dashed var(--line)}
+    .type-group-hdr{display:inline-flex;font-size:.85rem;font-weight:700;padding:3px 12px;border-radius:999px;margin-bottom:8px}
+    .type-group.opd .type-group-hdr{background:var(--sky);color:var(--sky-ink)}
+    .type-group.ipd .type-group-hdr{background:var(--mint);color:var(--mint-ink)}
+    .type-group.both .type-group-hdr{background:var(--butter);color:var(--butter-ink)}
+    .type-group-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--card-min,190px),1fr));gap:10px}
+    .q-card{position:relative;cursor:pointer;text-align:left;border-radius:var(--r-md);padding:12px 14px;display:flex;align-items:center;gap:12px;
+      background:#fff;border:2px solid color-mix(in srgb,var(--tc) 35%,#fff);transition:border-color .15s,box-shadow .15s,background .15s}
+    .q-card:hover{border-color:var(--tc);background:color-mix(in srgb,var(--tc) 7%,#fff)}
+    .q-card.sel{border-color:var(--tc);background:color-mix(in srgb,var(--tc) 12%,#fff);box-shadow:0 0 0 4px color-mix(in srgb,var(--tc) 22%,transparent)}
+    .q-card.sel::after{content:'✓';position:absolute;top:8px;right:10px;width:24px;height:24px;border-radius:50%;background:var(--tc);color:#fff;
+      display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem}
+    .q-card.wide{grid-column:auto}
+    .qc-icon{width:48px;height:48px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-family:'Prompt',sans-serif;font-size:1.3rem;font-weight:700;flex:none}
+    .qc-main{min-width:0;flex:1}
+    .qc-name{font-weight:700;font-size:1.08rem;color:var(--ink);line-height:1.25}
+    .qc-wait{font-size:.88rem;color:var(--muted)}
+    .qc-wait strong{color:var(--ink)}
+    .qc-go{display:none}
+    .no-types{text-align:center;color:var(--muted);padding:24px}
+    .no-types a{color:var(--accent)}
+    .confirm-bar{display:flex;align-items:center;gap:16px;margin-top:auto;padding:14px 16px;border-radius:var(--r-md);background:var(--navy);color:#fff}
+    .confirm-bar[hidden]{display:none}
+    .cb-preview{display:flex;flex-direction:column;flex:1;min-width:0}
+    .cb-preview span{font-size:.88rem;opacity:.8}
+    .cb-preview b{font-size:2.4rem;line-height:1.05;letter-spacing:2px}
+    .cb-preview small{opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .btn-confirm{border:none;border-radius:14px;background:var(--coral);color:#fff;font-family:'Prompt',sans-serif;font-size:1.3rem;font-weight:700;
+      padding:16px 26px;cursor:pointer;white-space:nowrap;box-shadow:0 8px 18px -8px rgba(249,115,22,.8)}
+    .btn-confirm:hover{background:var(--coral-dark)}
+    .btn-confirm:disabled{opacity:.6;cursor:wait}
+    .pane-done{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:8px;padding:20px;
+      background:linear-gradient(180deg,var(--mint),#fff 70%);border-radius:var(--r-md)}
+    .pane-done[hidden]{display:none}
+    .pd-ok{background:var(--green);color:#fff;font-weight:700;border-radius:999px;padding:6px 18px;font-size:1.05rem}
+    .pd-type{display:inline-flex;align-items:center;gap:8px;font-weight:600;color:var(--ink);font-size:1.15rem;margin-top:6px}
+    .pd-type i{font-style:normal;min-width:34px;height:30px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;padding:0 6px}
+    .pd-num{font-size:clamp(4.5rem,9vw,7.5rem);font-weight:700;line-height:1;color:var(--navy);letter-spacing:4px}
+    .pd-who{color:var(--muted);font-size:1.05rem}
+    .pd-btns{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;justify-content:center}
+    .btn-print,.btn-next{border:none;border-radius:12px;font-family:'Prompt',sans-serif;font-size:1.05rem;font-weight:600;padding:12px 20px;cursor:pointer}
+    .btn-print{background:#fff;color:var(--navy);border:2px solid var(--navy)}
+    .btn-print:hover{background:var(--navy);color:#fff}
+    .btn-next{background:var(--green);color:#fff}
+    .pd-note{font-size:.88rem;color:var(--muted)}
+    .pd-note.warn{color:var(--red);font-weight:700;font-size:.95rem}
 
-    /* ── KIOSK TOGGLE PILLS ── */
-    .kiosk-toggle-row{
-      display:flex;gap:10px;flex-wrap:wrap;justify-content:center;
-      width:100%;max-width:680px;margin-bottom:0;
-    }
-    .kiosk-pill{
-      flex:1;min-width:170px;max-width:240px;
-      display:flex;align-items:center;gap:10px;
-      background:rgba(255,255,255,.7);
-      border:1.5px solid rgba(0,151,167,.2);
-      border-radius:14px;padding:12px 15px;
-      cursor:pointer;user-select:none;transition:all .2s;
-      box-shadow:0 3px 12px rgba(0,151,167,.1);
-    }
-    .kiosk-pill:hover{border-color:rgba(0,151,167,.4);background:rgba(255,255,255,.9)}
-    .kp-icon{font-size:1.35rem;flex-shrink:0}
+    /* column 3 — live dashboard */
+    .col-dash{background:linear-gradient(180deg,#fff,#fbfbff)}
+    .clock{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;border-radius:var(--r-md);padding:16px 18px}
+    .clock-time{font-size:2.6rem;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+    .clock-time small{font-size:1.1rem;opacity:.7;margin-left:4px}
+    .clock-date{margin-top:6px;opacity:.9}
+    .wait-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+    .wait-head > span:first-child{font-weight:700;color:var(--navy);font-family:'Prompt',sans-serif}
+    .wait-total{display:flex;align-items:baseline;gap:6px}
+    .wait-total b{font-size:2.4rem;line-height:1;color:var(--navy)}
+    .wait-total small{color:var(--muted)}
+    .live{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;color:var(--mint-ink);background:var(--mint);border-radius:999px;padding:2px 10px;font-weight:600}
+    .live i{width:7px;height:7px;border-radius:50%;background:var(--green);animation:livePulse 1.6s infinite}
+    @keyframes livePulse{50%{opacity:.3}}
+    .wait-list{display:flex;flex-direction:column;gap:8px;overflow:auto;min-height:0;flex:1}
+    .wait-row{display:flex;align-items:center;gap:12px;border-radius:12px;padding:10px 12px;background:#fff;border:1px solid var(--line);
+      border-left:5px solid var(--wc,#4f46e5)}
+    .wait-row .wp{min-width:40px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Prompt',sans-serif;font-weight:700;padding:0 6px}
+    .wait-row .wn{flex:1;min-width:0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .wait-row .wc{font-family:'Prompt',sans-serif;font-weight:700;font-size:1.4rem;color:var(--navy)}
+    .wait-row .wc small{font-size:.8rem;font-weight:500;color:var(--muted);margin-left:3px}
+    .wait-empty{color:var(--muted)}
+
+    /* control bar — settings + device status */
+    .ctl{display:flex;align-items:stretch;gap:14px;flex-wrap:wrap}
+    .kiosk-toggle-row{flex:1 1 640px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .kiosk-pill{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:10px 14px;cursor:pointer;
+      user-select:none;box-shadow:var(--shadow)}
+    .kiosk-pill:has(input:checked){border-color:color-mix(in srgb,var(--accent) 45%,#fff)}
+    .kp-icon{width:38px;height:38px;border-radius:10px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex:none}
     .kp-text{flex:1;min-width:0}
-    .kp-label{font-size:.84rem;font-weight:700;color:#0d3a45;display:block;white-space:nowrap}
-    .kp-sw{
-      position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0;
-    }
+    .kp-label{display:block;font-weight:700;color:var(--ink);white-space:nowrap}
+    .kp-sub{display:block;font-size:.82rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .kp-sw{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;flex:none}
     .kp-sw input{opacity:0;width:0;height:0;position:absolute}
-    .kp-knob{
-      position:relative;width:48px;height:25px;
-      background:rgba(13,58,69,.15);border-radius:25px;transition:background .25s;
-    }
-    .kp-knob::before{
-      content:'';position:absolute;width:19px;height:19px;border-radius:50%;
-      background:#fff;top:3px;left:3px;
-      transition:transform .25s;box-shadow:0 2px 5px rgba(0,0,0,.25);
-    }
-    .kp-sw input:checked + .kp-knob{background:linear-gradient(135deg,#00e676,#00c853)}
-    .kp-sw input:checked + .kp-knob::before{transform:translateX(23px)}
-    .kp-onlbl{
-      font-size:.58rem;font-weight:700;letter-spacing:.8px;
-      color:rgba(13,58,69,.35);transition:color .25s;
-    }
-    .kp-sw input:checked ~ .kp-onlbl{color:#00897b}
-
-    /* ── Help button ── */
-    .btn-help-kiosk{
-      position:fixed;bottom:16px;left:16px;z-index:51;
-      display:flex;align-items:center;gap:8px;
-      background:rgba(255,255,255,.75);border:1.5px solid rgba(0,151,167,.25);
-      color:#00697f;border-radius:30px;
-      padding:8px 18px;font-size:.78rem;font-weight:700;
-      cursor:pointer;font-family:'Kanit',sans-serif;
-      backdrop-filter:blur(10px);transition:all .2s;
-      box-shadow:0 4px 16px rgba(0,151,167,.15);
-    }
-    .btn-help-kiosk:hover{border-color:rgba(0,151,167,.5);color:#00495a}
+    .kp-knob{position:relative;width:46px;height:25px;background:#cbd2e1;border-radius:25px;transition:background .2s}
+    .kp-knob::before{content:'';position:absolute;width:19px;height:19px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+    .kp-sw input:checked + .kp-knob{background:var(--green)}
+    .kp-sw input:checked + .kp-knob::before{transform:translateX(21px)}
+    .kp-onlbl{font-size:.6rem;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase}
+    .kp-sw input:checked ~ .kp-onlbl{color:var(--green)}
+    .kiosk-pill.kp-manual:has(input:checked){background:var(--coral-soft);border-color:var(--coral)}
+    .kiosk-pill.kp-manual:has(input:checked) .kp-knob{background:var(--coral)}
+    .kp-manual.off-mode{display:none}
+    .dev{flex:0 1 auto;display:flex;gap:8px;align-items:stretch;background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:8px 10px;box-shadow:var(--shadow)}
+    .dev-item{display:flex;align-items:center;gap:8px;padding:4px 10px;border-radius:10px;background:#f6f7fb;min-width:0}
+    .dev-item i{width:10px;height:10px;border-radius:50%;background:#94a3b8;flex:none}
+    .dev-item.ok i{background:var(--green)}.dev-item.warn i{background:#f59e0b}.dev-item.bad i{background:var(--red)}
+    .dev-item span{font-size:.82rem;color:var(--muted)}
+    .dev-item b{font-size:.9rem;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis}
 
     /* legacy selectors kept for applyScreenConfig compatibility */
-    .scan-title{display:none}
-    .btn-scan-toggle{display:none!important}
-    .auto-scan-wrap{display:none!important}
-    .scanner-card{display:none!important}
+    .scan-title,.btn-scan-toggle,.auto-scan-wrap,.scanner-card{display:none!important}
+    .bottom-bar,.bar-head,.bar-hint{display:none}
 
-    /* ── BOTTOM BAR ── */
-    .bottom-bar{
-      position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:50;
-      width:calc(100% - 32px);max-width:740px;
-      background:rgba(255,255,255,.85);
-      backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
-      border:1px solid rgba(0,151,167,.28);
-      border-radius:22px;
-      padding:12px 14px;
-      display:flex;align-items:stretch;gap:10px;
-      box-shadow:0 10px 44px rgba(0,151,167,.18);
-    }
-
-    /* QN / HN field groups */
-    .bar-field{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
-    .bar-field-lbl{
-      font-size:.9rem;font-weight:700;letter-spacing:1px;
-      color:#00697f;text-transform:uppercase;padding-left:4px;
-    }
-    .bar-sep{
-      width:1px;background:rgba(0,151,167,.15);
-      align-self:stretch;flex-shrink:0;margin:2px 0;
-    }
-
-    .bar-input{
-      width:100%;min-width:0;
-      background:#f0fbfd;
-      border:1.5px solid rgba(0,151,167,.3);
-      border-radius:12px;padding:12px 14px;
-      color:#0d3a45;font-size:1.5rem;font-weight:700;
-      font-family:'Kanit',sans-serif;text-align:center;
-      letter-spacing:2px;transition:border-color .2s,background .2s,box-shadow .2s;
-    }
-    .bar-input:focus{
-      outline:none;border-color:#00acc1;background:#e0f7fa;
-      box-shadow:0 0 0 3px rgba(0,172,193,.15);
-    }
-    .bar-input::placeholder{font-size:1.05rem;letter-spacing:.5px;font-weight:300;color:rgba(13,58,69,.32)}
-    .bar-input.active-field{
-      border-color:#00acc1;background:#e0f7fa;
-      box-shadow:0 0 0 3px rgba(0,172,193,.12)}
-    .bar-input.dim{opacity:.35;pointer-events:none}
-
-    .btn-bar-search{
-      flex-shrink:0;align-self:stretch;
-      background:linear-gradient(145deg,#00bcd4,#0097a7);
-      border:none;color:#fff;border-radius:15px;
-      padding:0 22px;min-width:80px;
-      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
-      cursor:pointer;font-family:'Kanit',sans-serif;transition:all .22s;
-      box-shadow:0 4px 16px rgba(0,150,170,.4);
-    }
-    .btn-bar-search .si{font-size:1.7rem}
-    .btn-bar-search .st{font-size:.95rem;font-weight:700;letter-spacing:1px}
-    .btn-bar-search:hover{
-      background:linear-gradient(145deg,#26c6da,#00acc1);
-      transform:translateY(-1px);box-shadow:0 7px 22px rgba(0,150,170,.5);
-    }
-    .btn-bar-search:active{transform:translateY(0)}
-    .btn-bar-search:disabled{opacity:.38;cursor:not-allowed;transform:none}
-
-    /* ── TYPE STEP ── */
-    #typeStep{
-      display:none;width:100%;max-width:780px;
-      flex-direction:column;align-items:center;
-    }
-    #typeStep.show{display:flex}
-
-    .pt-card{
-      width:100%;
-      background:rgba(255,255,255,.75);
-      border:1px solid rgba(0,151,167,.22);
-      border-radius:20px;padding:16px 22px;
-      display:flex;align-items:center;gap:16px;
-      margin-bottom:22px;
-      animation:fadeUp .35s cubic-bezier(.22,1,.36,1);
-      backdrop-filter:blur(10px);
-      box-shadow:0 6px 24px rgba(0,151,167,.1);
-    }
-    .pt-ava{width:58px;height:58px;border-radius:14px;flex-shrink:0;
-      background:linear-gradient(135deg,#00acc1,#00838f);
-      display:flex;align-items:center;justify-content:center;font-size:1.4rem}
-    .pt-body{flex:1;min-width:0}
-    .pt-name{font-size:1.5rem;font-weight:800;color:#0d3a45;margin-bottom:8px;
-      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .pt-tags{display:flex;gap:8px;flex-wrap:wrap}
-    .pt-tag{display:inline-flex;align-items:center;gap:5px;
-      background:#e0f7fa;border:1px solid rgba(0,151,167,.25);
-      border-radius:20px;padding:4px 12px;font-size:1rem;color:#00697f;font-weight:600}
-    .pt-tag b{color:#0d3a45;font-weight:800}
-    .btn-back{flex-shrink:0;background:rgba(0,151,167,.08);
-      border:1px solid rgba(0,151,167,.25);color:#00697f;
-      border-radius:12px;padding:9px 18px;font-size:1rem;font-weight:700;
-      cursor:pointer;font-family:'Kanit',sans-serif;transition:all .2s;white-space:nowrap}
-    .btn-back:hover{background:rgba(0,151,167,.18);color:#0d3a45}
-
-    /* ── Drug summary card ── */
-    .drug-card{width:100%;background:rgba(255,255,255,.78);border:1px solid rgba(0,151,167,.22);
-      border-radius:16px;margin-bottom:18px;overflow:hidden;backdrop-filter:blur(8px);
-      animation:fadeUp .35s cubic-bezier(.22,1,.36,1);box-shadow:0 6px 24px rgba(0,151,167,.1)}
-    .drug-card-head{display:flex;align-items:center;gap:10px;padding:14px 18px;cursor:pointer;
-      transition:background .2s;user-select:none}
-    .drug-card-head:hover{background:rgba(0,151,167,.06)}
-    .drug-icon{font-size:1.5rem;flex-shrink:0}
-    .drug-summary{flex:1;font-size:1.35rem;font-weight:800;color:#0d3a45}
-    .drug-summary b{color:#e65100;font-size:1.6rem;font-weight:900}
-    .drug-toggle-arrow{color:rgba(13,58,69,.4);transition:transform .2s;font-size:1rem;flex-shrink:0}
-    .drug-card.open .drug-toggle-arrow{transform:rotate(180deg)}
-    .drug-list{display:none;max-height:320px;overflow-y:auto;padding:0 14px 14px}
-    .drug-card.open .drug-list{display:block}
-    .drug-item{background:#f0fbfd;border:1px solid rgba(0,151,167,.18);
-      border-radius:10px;padding:11px 14px;margin-bottom:7px}
-    .drug-item:last-child{margin-bottom:0}
-    .drug-item-name{font-size:1.05rem;font-weight:800;color:#0d3a45;margin-bottom:4px}
-    .drug-item-usage{font-size:.82rem;color:#3a6d78;margin-bottom:5px;line-height:1.45;font-weight:600}
-    .drug-item-meta{display:flex;gap:14px;font-size:.78rem;color:#5a8a94;font-weight:600}
-    .drug-item-meta b{color:#00838f;font-size:.85rem}
-    .drug-empty{text-align:center;color:rgba(13,58,69,.4);padding:14px;font-size:.8rem}
-
-    .cards-lbl{font-size:1.15rem;color:#0a5f86;letter-spacing:1px;font-weight:700;
-      text-align:center;margin-bottom:14px;width:100%;text-transform:uppercase}
-    .cards-grid{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;width:100%}
-    .q-card{
-      position:relative;overflow:hidden;
-      background:rgba(255,255,255,.75);border:1px solid rgba(0,151,167,.22);
-      border-radius:20px;padding:26px 22px;text-align:center;
-      min-width:148px;flex:1;max-width:200px;
-      cursor:pointer;transition:all .25s;backdrop-filter:blur(8px);
-      box-shadow:0 4px 18px rgba(0,151,167,.1);
-    }
-    .q-card:hover{transform:translateY(-6px);background:#fff;
-      border-color:rgba(0,151,167,.4);box-shadow:0 14px 36px rgba(0,151,167,.22)}
-    .q-card:active{transform:translateY(-2px)}
-    .qc-icon{width:56px;height:56px;border-radius:15px;margin:0 auto 12px;
-      display:flex;align-items:center;justify-content:center;
-      font-size:1.55rem;font-weight:900;color:#000;box-shadow:0 5px 18px rgba(0,0,0,.22)}
-    .qc-name{font-size:1.4rem;font-weight:800;margin-bottom:8px;color:#0d3a45}
-    .qc-wait{font-size:1.05rem;color:#3d6070;font-weight:600}
-    .qc-wait strong{font-size:.92rem;font-weight:800;color:#e65100}
-    .no-types{text-align:center;color:rgba(13,58,69,.4);padding:32px;font-size:.88rem}
-
-    /* OPD / IPD / both — separate sections on the kiosk */
-    .type-group{width:100%;border-radius:22px;padding:14px 16px 18px;margin-bottom:6px;
-      background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.25)}
-    .type-group.opd{border-color:rgba(30,136,229,.65);background:rgba(30,136,229,.12)}
-    .type-group.ipd{border-color:rgba(0,200,83,.7);background:rgba(0,200,83,.12)}
-    .type-group.both{border-color:rgba(255,193,7,.7);background:rgba(255,193,7,.10)}
-    .type-group-hdr{display:inline-block;font-size:1.2rem;font-weight:800;letter-spacing:1px;
-      padding:5px 16px;border-radius:12px;margin-bottom:12px;color:#fff}
-    .type-group.opd  .type-group-hdr{background:#1565c0}
-    .type-group.ipd  .type-group-hdr{background:#00897b}
-    .type-group.both .type-group-hdr{background:#f9a825;color:#3e2700}
-    .type-group-cards{display:flex;flex-wrap:wrap;gap:14px;justify-content:center}
-
-    /* ── RESULT overlay ── */
-    .result-overlay{
-      display:none;position:fixed;inset:0;z-index:60;
-      background:rgba(0,50,70,.88);backdrop-filter:blur(16px);
-      align-items:center;justify-content:center;
-    }
+    /* RESULT overlay (kept) */
+    .result-overlay{display:none;position:fixed;inset:0;z-index:60;background:rgba(27,37,69,.55);align-items:center;justify-content:center}
     .result-overlay.show{display:flex}
-    .result-card{
-      background:linear-gradient(160deg,#00acc1,#006064);
-      border:1px solid rgba(255,255,255,.2);
-      border-radius:28px;padding:40px 50px;text-align:center;
-      animation:scaleUp .4s cubic-bezier(.22,1,.36,1);
-      box-shadow:0 24px 60px rgba(0,0,0,.5);
-      max-width:380px;width:90%;
-    }
-    @keyframes scaleUp{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
-    @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+    .result-card{background:#fff;border-radius:24px;padding:30px 40px;text-align:center;max-width:400px;width:90%}
+    .res-num{font-size:5rem;font-weight:700;color:var(--accent)}
+    .res-prefix{width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff}
+    .btn-new{border:none;background:var(--navy);color:#fff;border-radius:999px;padding:10px 24px;font:inherit;cursor:pointer}
+    @keyframes scaleUp{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
     @keyframes spin{to{transform:rotate(360deg)}}
 
-    .res-lbl{font-size:.66rem;color:rgba(255,255,255,.55);letter-spacing:4px;margin-bottom:6px}
-    .res-type-badge{
-      display:inline-flex;align-items:center;gap:8px;
-      background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
-      border-radius:22px;padding:5px 16px;font-size:.86rem;margin:8px 0 12px;
+    /* screens */
+    /* desktop: the page fits the window — only the queue-card list scrolls, the confirm bar stays in view */
+    @media (min-width:1281px){
+      .main{flex:none;height:calc(100vh - 58px);overflow:hidden}
+      .k3{min-height:0;grid-template-rows:minmax(0,1fr)}
+      .col{min-height:0;overflow:hidden}
+      .col-search{overflow:auto}
+      #typeStep.show{flex:1;min-height:0}
+      .cards-grid{flex:1;min-height:60px;overflow:auto;padding:2px 4px 2px 2px}
+      .wait-list{overflow:auto}
     }
-    .res-prefix{width:28px;height:28px;border-radius:7px;
-      display:flex;align-items:center;justify-content:center;
-      font-weight:900;font-size:.85rem;color:#000}
-    .res-pt{font-size:.85rem;color:rgba(255,255,255,.62);margin-bottom:6px;min-height:1.2em}
-    .res-num{font-size:5.5rem;font-weight:900;letter-spacing:6px;line-height:1;
-      color:#fff;text-shadow:0 4px 24px rgba(0,0,0,.4);margin-bottom:10px}
-    .res-time{font-size:.74rem;color:rgba(255,255,255,.42);margin-bottom:24px}
-    .btn-new{display:inline-flex;align-items:center;gap:8px;
-      background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
-      color:#fff;border-radius:30px;padding:10px 28px;
-      font-family:'Kanit',sans-serif;font-size:.88rem;cursor:pointer;transition:all .22s}
-    .btn-new:hover{background:rgba(255,255,255,.22)}
-
-    /* ── Fixed kiosk theme (not user-editable): soft light-blue page, white surfaces, dark navy text ── */
-    body{
-      background:
-        radial-gradient(ellipse 85% 65% at 0% 0%,   rgba(255,255,255,.95) 0%, transparent 60%),
-        radial-gradient(ellipse 70% 55% at 100% 0%,  rgba(219,234,254,.9)  0%, transparent 60%),
-        radial-gradient(ellipse 80% 60% at 50% 115%, rgba(147,197,253,.45) 0%, transparent 60%),
-        linear-gradient(160deg,#f3f8ff 0%,#e1eefc 50%,#cfe3f8 100%);
-      background-attachment:fixed;color:#0f2a4a;
+    @media (max-height:950px){
+      .main{padding-top:12px;gap:12px}
+      .col{padding:14px;gap:12px}
+      .howto{display:none}
+      .clock-time{font-size:2.1rem}
+      .pt-name{font-size:1.4rem}
+      .cb-preview b{font-size:2rem}
+      .btn-confirm{padding:13px 22px;font-size:1.15rem}
+      .pt-card{padding:12px 14px}
+      .pt-name{margin-bottom:6px}
+      .cards-grid .q-card{padding:8px 12px!important}
+      .cards-grid .q-card .qc-icon{width:40px!important;height:40px!important;font-size:1.1rem}
+      .confirm-bar{padding:10px 14px}
     }
-    nav{background:rgba(255,255,255,.92);border-bottom:1.5px solid #c9ddf5;box-shadow:0 2px 12px rgba(30,64,175,.08)}
-    .nav-logo{color:#0d3b5e}
-    nav a{color:#1e3a8a;font-weight:700}
-    nav a:hover{background:#e0edff}
-    nav a.active{background:#1565c0;color:#fff}
-    .nav-officer{color:#1e3a8a;font-weight:600}
+    @media (max-width:1280px){
+      .k3{grid-template-columns:minmax(300px,1fr) minmax(0,1.6fr)}
+      .col-dash{grid-column:1 / -1}
+      .wait-list{flex-direction:row;flex-wrap:wrap}
+      .wait-row{flex:1 1 220px}
+    }
+    @media (max-width:820px){
+      .k3{grid-template-columns:1fr}
+      .kiosk-toggle-row{grid-template-columns:1fr}
+      nav{overflow-x:auto}
+      .pt-grid{grid-template-columns:1fr 1fr}
+    }
 
-    .kiosk-logo{background:#fff;border-color:#c9ddf5;box-shadow:0 4px 14px rgba(30,64,175,.08)}
-    .kiosk-logo-name{color:#475569;font-size:.8rem}
-    .kiosk-logo-sys{color:#0d3b5e;font-size:1.05rem;font-weight:800}
-    .kiosk-title{color:#0d3b5e;font-size:2.3rem;text-shadow:0 2px 0 #fff}
-
-    .kiosk-scanner-frame{background:#f4f9ff;
-      box-shadow:0 0 0 2px #bcd7f3,0 0 0 7px #fff,0 16px 40px rgba(30,64,175,.14)}
-    .kiosk-scanner-frame::before{
-      background:
-        radial-gradient(circle 7px at 14px 14px,#93c5fd 50%,transparent 50%),
-        radial-gradient(circle 7px at calc(100% - 14px) 14px,#93c5fd 50%,transparent 50%),
-        radial-gradient(circle 7px at 14px calc(100% - 36px),#93c5fd 50%,transparent 50%),
-        radial-gradient(circle 7px at calc(100% - 14px) calc(100% - 36px),#93c5fd 50%,transparent 50%)}
-    .no-camera{color:#fff}
-    .no-camera span{font-size:1.05rem}
-    .kiosk-scan-statusbar{background:#fff;border-top-color:#d6e6f8;color:#0d47a1;font-size:1rem;font-weight:800}
-
-    .kiosk-toggle-row{max-width:720px}
-    .kiosk-pill{max-width:300px;background:#fff;border:1.5px solid #bcd7f3;box-shadow:0 4px 14px rgba(30,64,175,.08)}
-    .kiosk-pill:hover{background:#fff;border-color:#60a5fa}
-    .kp-label{color:#0d3b5e;font-size:1.05rem;font-weight:800}
-    .kp-knob{background:#cbd5e1}
-    .kp-onlbl{color:#64748b;font-size:.68rem}
-    .kp-sw input:checked ~ .kp-onlbl{color:#15803d}
-
-    .btn-help-kiosk{background:#fff;border-color:#bcd7f3;color:#1565c0}
-    .btn-help-kiosk:hover{border-color:#60a5fa;color:#0d47a1}
-
-    .bottom-bar{background:rgba(255,255,255,.96);border:1.5px solid #bcd7f3;box-shadow:0 10px 36px rgba(30,64,175,.16)}
-    .bar-field-lbl{color:#0d47a1;font-size:1rem;font-weight:800}
-    .bar-sep{background:#d6e6f8}
-    .bar-input{background:#f4f9ff;border:2px solid #9ec5f3;color:#0f172a;font-size:1.6rem;font-weight:800}
-    .bar-input::placeholder{color:rgba(15,42,74,.45);font-weight:500}
-    .bar-input:focus,.bar-input.active-field{border-color:#1565c0;background:#fff;box-shadow:0 0 0 4px rgba(21,101,192,.15)}
     /* ── Issue mode (ตามประเภท / ตามจำนวนยา) ── */
     .btn-issue-mode{margin-left:auto;background:#fff;border:1.5px solid #bcd7f3;color:#1e3a8a;border-radius:18px;
       padding:5px 14px;font-size:.88rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
@@ -525,11 +368,29 @@
     .im-pt-use input[type=checkbox]{width:18px;height:18px;accent-color:#0891b2;flex:none;margin-top:2px}
     .im-pt-use #ptBody{margin:2px 0 4px 26px}
     #ptUnused{color:#b45309;font-weight:700}
+    .pt-route-note{color:#0e7490;font-weight:700;padding-left:26px}
+    .cash-pt{margin:0 0 6px 26px;padding:8px 10px;border:1.5px solid #fed7aa;border-radius:10px;background:#fff7ed}
+    .cash-pt-lbl{font-size:.85rem;font-weight:700;color:#9a3412;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+    .cash-pt-clear{margin-left:auto;border:1px solid #fca5a5;background:#fff;color:#b91c1c;border-radius:999px;padding:2px 10px;font:inherit;font-size:.78rem;cursor:pointer}
+    .cash-pt-clear:hover{background:#fee2e2}
+    .cash-pt .im-picked{background:#fff;margin-bottom:6px}
+    .cash-pt-search{position:relative}
+    .cash-pt-search .im-search{margin:0}
+    .cash-pt-results{display:flex;flex-direction:column;gap:4px;margin-top:4px;max-height:220px;overflow:auto}
+    .cash-pt-results:empty{display:none}
+    .cash-pt-results button{display:flex;justify-content:space-between;gap:10px;text-align:left;border:1px solid #fed7aa;background:#fff;border-radius:8px;padding:7px 10px;font:inherit;font-size:.92rem;cursor:pointer;color:#0f172a}
+    .cash-pt-results button:hover{background:#ffedd5;border-color:#fb923c}
+    .cash-pt-results button small{color:#94a3b8;flex:none}
+    .pt-route-note:empty{display:none}
     input.im-tag{width:100%;min-width:0;border:1.5px dashed transparent;font-family:inherit;outline:none;cursor:text}
     input.im-tag:hover{border-color:currentColor}
     input.im-tag:focus{border-style:solid;border-color:currentColor;background:#fff}
     .im-dept-on{display:flex;gap:10px;align-items:center;margin-top:14px;padding:10px 12px;border:1.5px solid #c5cae9;border-radius:10px;background:#f5f6fd;font-weight:800;color:#283593;cursor:pointer}
     .im-dept-on input{width:20px;height:20px;accent-color:#3949ab;flex:none}
+    .im-dept-check{display:flex;gap:10px;align-items:flex-start;margin:0 0 8px;padding:8px 12px;border:1.5px solid #c5cae9;border-radius:10px;background:#fff;cursor:pointer}
+    .im-dept-check input{width:18px;height:18px;accent-color:#3949ab;flex:none;margin-top:3px}
+    .im-dept-check b{color:#283593}
+    .im-dept-check small{display:block;color:#64748b;font-size:.82rem;font-weight:500;margin-top:2px}
     #deptBody{margin-top:8px}
     #drugSplitBody,#noDrugBody{margin-top:8px}
     #payBaseRows{border-radius:10px;transition:background .2s}
@@ -560,6 +421,12 @@
     .dup-q b{font-size:2.4rem;color:var(--c,#d97706);line-height:1.1}
     .dup-q span{color:#475569;font-size:.92rem}
     .dup-note{color:#64748b;font-size:.85rem;margin-top:10px}
+    .dup-btns{display:flex;gap:10px;margin-top:14px}
+    .dup-btns .dup-ok{margin-top:0;flex:1.4;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+    .dup-ok kbd{font-family:inherit;font-size:.72rem;background:rgba(255,255,255,.2);border-radius:6px;padding:1px 7px}
+    .dup-reprint{flex:1;border:2px solid var(--navy,#1e2a5a);background:#fff;color:var(--navy,#1e2a5a);border-radius:12px;padding:10px;font:inherit;font-size:1rem;font-weight:700;cursor:pointer}
+    .dup-reprint:hover{background:var(--navy,#1e2a5a);color:#fff}
+    .dup-printed{color:#15803d;font-weight:700;font-size:.9rem;min-height:1.2em;margin-top:8px}
     .dup-ok{margin-top:14px;width:100%;border:none;background:#d97706;color:#fff;border-radius:12px;padding:12px;font-size:1.05rem;font-weight:800;cursor:pointer;font-family:inherit}
     @media (max-width:560px){.im-codes{grid-template-columns:1fr}.im-row.im-pay-row{grid-template-columns:1fr 1.3fr .7fr}}
     .im-err{color:#b91c1c;font-weight:700;min-height:22px;margin-top:10px;font-size:.92rem}
@@ -567,39 +434,185 @@
     .im-btns button{border-radius:10px;padding:10px 22px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit}
     .im-cancel{background:#fff;border:1.5px solid #cbd5e1;color:#334155}
     .im-save{background:linear-gradient(135deg,#1e88e5,#1565c0);border:none;color:#fff}
-    /* label + 📌 badge stay on one line, so picking a box never pushes its input down */
-    .bar-field-lbl{display:flex;align-items:center;white-space:nowrap;min-width:0}
-    .def-pin{flex-shrink:0;margin-left:8px;padding:0 7px;border-radius:9px;background:#fff7d6;border:1px solid #f5c542;
-      color:#8a5a00;font-size:.62em;font-weight:700;letter-spacing:0;text-transform:none;line-height:1.6}
-    .btn-bar-search{background:linear-gradient(145deg,#1e88e5,#1565c0);box-shadow:0 4px 16px rgba(21,101,192,.35)}
-    .btn-bar-search:hover{background:linear-gradient(145deg,#2196f3,#1976d2);box-shadow:0 7px 22px rgba(21,101,192,.45)}
+    /* ── Bento theme for nav button, notice and settings windows ── */
+    .issue-notice{border-radius:var(--r-md);padding:14px 18px;margin:0;font-size:1.15rem;font-weight:600;border:none!important}
+    .issue-notice.wait{background:var(--accent-soft);color:var(--accent-ink)}
+    .issue-notice.ok{background:var(--mint);color:var(--mint-ink)}
+    .issue-notice.warn{background:var(--butter);color:var(--butter-ink)}
+    .im-overlay{background:rgba(27,35,51,.5);backdrop-filter:blur(6px)}
+    .im-box{border-radius:24px;color:var(--ink)}
+    .im-box h3{color:var(--ink)}
+    .im-save{background:var(--ink)}
+    .im-save:hover{background:#2c3850}
+    .dup-ok{background:var(--ink)}
 
-    .pt-card,.drug-card{background:#fff;border:1.5px solid #bcd7f3;box-shadow:0 6px 22px rgba(30,64,175,.08)}
-    .pt-ava{background:linear-gradient(135deg,#1e88e5,#1565c0)}
-    .pt-name,.drug-summary,.drug-item-name{color:#0d3b5e}
-    .pt-tag{background:#eaf3ff;border-color:#bcd7f3;color:#1e3a8a}
-    .pt-tag b{color:#0d3b5e}
-    .btn-back{background:#fff;border-color:#bcd7f3;color:#1565c0}
-    .btn-back:hover{background:#eaf3ff;color:#0d47a1}
-    .drug-item{background:#f4f9ff;border-color:#d6e6f8}
-    .drug-item-usage{color:#334155}
-    .drug-item-meta{color:#475569}
-    .drug-item-meta b{color:#1565c0}
+    /* ── เลือกคิวเอง: switch tile + popup ── */
+    .kiosk-toggle-row{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr)}
+    .kiosk-pill.kp-manual{background:var(--coral-soft);border-color:#f6d3c5}
+    .kiosk-pill.kp-manual:has(input:checked){background:#ffd9cb;border-color:var(--coral);box-shadow:0 0 0 3px rgba(232,96,60,.18)}
+    .kiosk-pill.kp-manual:has(input:checked) .kp-knob{background:var(--coral)}
+    .kp-sub{display:block;font-size:.8rem;color:var(--muted);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .kp-manual.off-mode{display:none}
+    .pick-box{max-width:1040px;position:relative}
+    .pick-cancel-top{position:absolute;top:14px;right:16px;z-index:2;display:inline-flex;align-items:center;gap:8px;border:1.5px solid #fca5a5;background:#fff;color:#b91c1c;
+      border-radius:12px;padding:8px 14px;font:inherit;font-size:.98rem;font-weight:700;cursor:pointer}
+    .pick-cancel-top:hover{background:#fee2e2}
+    .pick-cancel-top kbd{font-family:inherit;font-size:.75rem;font-weight:600;background:#fee2e2;border-radius:6px;padding:1px 7px;color:#991b1b}
+    body.mobile .pick-cancel-top{top:10px;right:10px;padding:6px 10px;font-size:.85rem}
+    body.mobile .pick-cancel-top kbd{display:none}
+    body.mobile .pick-box .ni-icon{margin-top:34px}
+    /* compact: the whole window fits a 900px-tall screen without scrolling */
+    .pick-box.im-box{padding:16px 22px 18px}
+    .pick-box .ni-icon{font-size:1.7rem;margin-bottom:0}
+    .pick-box h3{margin:2px 0 8px;font-size:1.2rem}
+    .pick-box .ni-pt{padding:8px 12px}
+    .pk-who{display:flex;justify-content:center;align-items:baseline;gap:12px;flex-wrap:wrap}
+    .pk-who b{font-size:1.1rem}
+    .pk-who span{color:var(--muted)}
+    .pick-box .pick-stats{margin-top:8px}
+    .pick-box .ps-tile{padding:6px 12px}
+    .pick-box .pick-rec{margin-top:8px;padding:8px 14px;line-height:1.45}
+    .pick-box .pick-head{margin:10px 0 8px}
+    .pick-box .ni-cancel{margin-top:10px;padding:10px}
+    .pick-box .pick-other-hint{margin-top:-2px}
+    .pick-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 0 10px}
+    .pick-head .ni-q{margin:0}
+    .pick-other-sw{display:inline-flex;align-items:center;gap:8px;cursor:pointer;user-select:none;font-size:.9rem;font-weight:600;
+      color:var(--muted);background:#f4f1ea;border:1px solid var(--line);border-radius:999px;padding:5px 8px 5px 14px}
+    .pick-other-sw input{position:absolute;opacity:0;width:0;height:0}
+    .pick-other-sw i{position:relative;width:40px;height:22px;border-radius:22px;background:#d7d2c8;transition:background .2s;flex:none}
+    .pick-other-sw i::before{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;
+      box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s}
+    .pick-other-sw:has(input:checked){color:var(--ink);background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 35%,#fff)}
+    .pick-other-sw input:checked + i{background:var(--accent)}
+    .pick-other-sw input:checked + i::before{transform:translateX(18px)}
+    #pickTypes:not(.show-other) button.other{display:none}
+    .pick-other-hint{grid-column:1 / -1;font-size:.85rem;color:var(--muted);text-align:center}
+    #pickTypes.show-other .pick-other-hint{display:none}
+    .pick-box .ni-types{grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:10px}
+    /* queue cards in the popup — the kiosk card look */
+    .pick-box .ni-types button.pk-card{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:flex-start;gap:8px;text-align:left;
+      min-height:118px;padding:12px 12px 10px;border-radius:20px;border:1.5px solid color-mix(in srgb,var(--tc) 30%,#fff);
+      background:color-mix(in srgb,var(--tc) 12%,#fff);color:var(--ink);font-size:1rem;transition:transform .15s,box-shadow .15s,border-color .15s}
+    .pick-box .ni-types button.pk-card::after{content:"";position:absolute;right:-26px;bottom:-26px;width:100px;height:100px;border-radius:50%;
+      background:color-mix(in srgb,var(--tc) 16%,transparent);pointer-events:none}
+    .pick-box .ni-types button.pk-card:hover{transform:translateY(-3px);border-color:var(--tc);box-shadow:0 14px 26px -14px color-mix(in srgb,var(--tc) 70%,transparent)}
+    .pick-box .ni-types button.pk-card.rec{border-color:var(--tc);box-shadow:0 0 0 4px color-mix(in srgb,var(--tc) 28%,transparent);background:color-mix(in srgb,var(--tc) 20%,#fff)}
+    .pk-top{display:flex;align-items:center;justify-content:space-between;width:100%;position:relative;z-index:1}
+    .pk-icon{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;font-weight:700}
+    .pk-go{width:32px;height:32px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;color:var(--ink)}
+    .pick-box .ni-types button.pk-card .rec-tag{margin-left:0;font-size:.85rem;padding:4px 12px}
+    .pk-name{font-size:1.1rem;font-weight:600;line-height:1.2;position:relative;z-index:1}
+    .pk-sub{font-size:.85rem;color:var(--muted);font-weight:500;margin-top:-4px;position:relative;z-index:1}
+    .pk-wait{margin-top:auto;background:rgba(255,255,255,.85);border-radius:999px;padding:3px 12px;font-size:.92rem;color:var(--muted);position:relative;z-index:1}
+    .pk-wait strong{color:var(--ink);font-size:1.1rem}
+    .pick-stats{display:grid;grid-template-columns:1.3fr .8fr 1.2fr;gap:8px;margin-top:10px;text-align:left}
+    .ps-tile{border-radius:12px;padding:8px 12px;display:flex;flex-direction:column;gap:1px;min-width:0}
+    .ps-tile span{font-size:.78rem;font-weight:600;opacity:.85}
+    .ps-tile b{font-size:1.15rem;font-weight:700;line-height:1.25;overflow-wrap:anywhere}
+    .ps-tile b i{font-style:normal;font-size:.8rem;font-weight:500}
+    .ps-tile small{font-size:.75rem;opacity:.85}
+    .ps-tile.pt{background:var(--sky);color:var(--sky-ink)}
+    .ps-tile.drug{background:var(--coral-soft);color:#9a3412}
+    .ps-tile.cash{background:var(--mint);color:var(--mint-ink)}
+    .ps-tile.cash.due{background:#fff1d6;color:#9a5b00}
+    /* ไม่มียา: a solid red tile with large white text and a gentle pulse — the first thing staff see */
+    .ps-tile.drug.none{background:#dc2626;color:#fff;box-shadow:0 0 0 0 rgba(220,38,38,.5);animation:ndPulse 1.6s ease-in-out infinite}
+    .ps-tile.drug.none span,.ps-tile.drug.none small{color:#fff;opacity:.95}
+    .ps-tile.drug.none b{color:#fff;font-size:2rem;line-height:1.1}
+    @keyframes ndPulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.45)}50%{box-shadow:0 0 0 6px rgba(220,38,38,.12)}}
+    /* an amount to pay: big red figure, red frame */
+    .ps-tile.cash.due{background:#fff1f2;color:#9f1239;box-shadow:inset 0 0 0 2px #fb7185}
+    .ps-tile.cash.due b{color:#dc2626;font-size:2rem;line-height:1.1}
+    .ps-tile.cash.due b i{color:#dc2626;font-size:1rem}
+    .pick-rec .nd-big{font-size:1.2rem}
+    .ps-tile b{color:var(--ink)}
+    @media (max-width:640px){.pick-stats{grid-template-columns:1fr}}
+    @media (max-width:640px){.pick-box .ni-types{grid-template-columns:1fr}}
+    .pick-icon{color:var(--coral)}
+    .pick-box h3{color:var(--ink)!important}
+    .pick-rec{margin-top:12px;border-radius:14px;padding:10px 14px;background:var(--accent-soft);color:var(--accent-ink);font-weight:600;line-height:1.5}
+    .pick-rec.warn{background:var(--butter);color:var(--butter-ink)}
+    .pick-rec:empty{display:none}
+    .ni-types button.rec{background:color-mix(in srgb,var(--c) 10%,#fff);box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 30%,transparent)}
+    .ni-types button .rec-tag{margin-left:auto;flex:none;background:var(--c);color:#fff;border-radius:999px;padding:2px 10px;font-size:.78rem;font-weight:700}
+    .ni-types button .sub{font-weight:500;color:var(--muted);font-size:.92rem}
+    @media (max-width:640px){.kiosk-toggle-row{grid-auto-flow:row}}
 
-    .cards-lbl{color:#0d3b5e;font-size:1.25rem;font-weight:800}
-    .q-card{background:#fff;border:1.5px solid #bcd7f3;box-shadow:0 6px 20px rgba(30,64,175,.10)}
-    .q-card:hover{border-color:#60a5fa;box-shadow:0 14px 34px rgba(30,64,175,.20)}
-    .qc-name{color:#0d3b5e;font-size:1.55rem}
-    .qc-wait{color:#334155;font-size:1.1rem}
-    .qc-wait strong{color:#c2410c;font-size:1.3rem}
-    .no-types{color:#475569;font-size:1rem}
-    .type-group{background:rgba(255,255,255,.55)}
-
-    .result-overlay{background:rgba(15,42,74,.55)}
-    .result-card{background:linear-gradient(160deg,#1e88e5,#0d47a1);border-color:rgba(255,255,255,.3)}
-    .res-lbl{color:rgba(255,255,255,.85);font-size:.85rem}
-    .res-pt{color:#fff;font-size:1rem}
-    .res-time{color:rgba(255,255,255,.8);font-size:.9rem}
+    /* ══ Mobile mode (📱 in the top menu): one column, thumb-friendly; on a desktop it shows as a phone-width column ══ */
+    .btn-view{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:10px;padding:6px 12px;
+      font:inherit;font-size:.9rem;cursor:pointer;white-space:nowrap;margin-left:6px}
+    .btn-view:hover{background:rgba(255,255,255,.2)}
+    body.mobile .btn-view{background:#f97316;border-color:#f97316}
+    body.mobile nav{height:auto;flex-wrap:wrap;gap:6px;padding:8px 10px;row-gap:6px}
+    body.mobile nav a{padding:5px 7px;font-size:.85rem}
+    body.mobile .nav-logo{margin-right:2px;font-size:.95rem}
+    body.mobile .nav-officer{display:none}
+    body.mobile .btn-issue-mode{margin-left:0;font-size:.8rem;padding:5px 9px}
+    body.mobile .nav-ipd-lbl{font-size:.8rem}
+    body.mobile .btn-logout,body.mobile .btn-view{font-size:.8rem;padding:5px 9px;margin-left:0}
+    body.mobile .main{height:auto;overflow:visible;max-width:520px;padding:10px 10px 18px;gap:10px}
+    body.mobile .k3{display:flex;flex-direction:column;gap:10px;min-height:auto}
+    body.mobile .col{padding:12px;gap:10px;border-radius:14px;overflow:visible;min-height:auto}
+    /* live summary on top: time + waiting per type in one swipeable strip */
+    body.mobile .col-dash{order:-1;flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px}
+    body.mobile .clock{padding:8px 12px;border-radius:12px}
+    body.mobile .clock-time{font-size:1.45rem}
+    body.mobile .clock-time small{font-size:.8rem}
+    body.mobile .clock-date{font-size:.78rem;margin-top:2px}
+    body.mobile .wait-head{flex:1;min-width:150px}
+    body.mobile .wait-total b{font-size:1.8rem}
+    body.mobile .wait-list{flex:1 1 100%;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;gap:6px;padding-bottom:2px}
+    body.mobile .wait-row{flex:none;padding:6px 10px;gap:8px;border-left-width:4px}
+    body.mobile .wait-row .wn{max-width:110px;font-size:.82rem}
+    body.mobile .wait-row .wp{min-width:30px;height:28px;border-radius:8px;font-size:.9rem}
+    body.mobile .wait-row .wc{font-size:1.1rem}
+    /* search */
+    body.mobile .col-head,body.mobile .howto{display:none}
+    body.mobile .search-card{padding:10px;gap:8px}
+    body.mobile .search-input{font-size:1.35rem;padding:11px 10px}
+    body.mobile .btn-search{min-width:76px;padding:0 12px}
+    body.mobile .search-hint{font-size:.78rem}
+    body.mobile .kiosk-scanner-inner{height:150px}
+    body.mobile .no-camera .nc-icon{width:52px;height:52px;font-size:1.8rem}
+    /* patient + issue */
+    body.mobile .pane-empty{padding:16px 8px;gap:4px}
+    body.mobile .pane-empty .pe-ico{width:64px;height:64px;font-size:2rem;border-radius:18px}
+    body.mobile .pane-empty h3{font-size:1.1rem}
+    body.mobile .pane-empty p{font-size:.9rem}
+    body.mobile .pt-card{padding:10px 12px;position:relative}
+    body.mobile .pt-ava{display:none}
+    body.mobile .pt-name{font-size:1.2rem;white-space:normal;padding-right:96px}
+    body.mobile .pt-grid{grid-template-columns:1fr 1fr}
+    body.mobile .pt-grid .pt-wide{grid-column:1 / -1}
+    body.mobile .btn-back{position:absolute;top:8px;right:8px;padding:6px 10px;font-size:.85rem}
+    body.mobile #typeStep.show{flex:none}
+    body.mobile .cards-grid{overflow:visible;flex:none}
+    body.mobile .type-group-cards{grid-template-columns:1fr 1fr}
+    body.mobile .cards-grid .q-card{padding:10px!important;gap:8px}
+    body.mobile .cards-grid .q-card .qc-icon{width:38px!important;height:38px!important;font-size:1rem}
+    body.mobile .qc-name{font-size:.98rem!important}
+    body.mobile .qc-wait{font-size:.8rem!important}
+    body.mobile .confirm-bar{position:sticky;bottom:8px;z-index:20;padding:10px 12px;gap:10px;box-shadow:0 10px 24px -8px rgba(30,42,90,.6)}
+    body.mobile .cb-preview b{font-size:1.7rem}
+    body.mobile .btn-confirm{padding:12px 14px;font-size:1.05rem}
+    body.mobile .pane-done{padding:18px 10px}
+    body.mobile .pd-num{font-size:4.6rem}
+    body.mobile .pd-btns{flex-direction:column;width:100%}
+    body.mobile .btn-print,body.mobile .btn-next{width:100%}
+    /* settings + device status */
+    body.mobile .ctl{flex-direction:column;gap:8px}
+    body.mobile .kiosk-toggle-row{grid-template-columns:1fr;grid-auto-flow:row;flex:none;gap:8px}
+    body.mobile .kiosk-pill{padding:8px 12px}
+    body.mobile .dev{flex-wrap:wrap}
+    body.mobile .dev-item{flex:1 1 auto}
+    /* popups fit a phone */
+    body.mobile .pick-box .ni-types{grid-template-columns:1fr 1fr}
+    body.mobile .pick-stats{grid-template-columns:1fr 1fr}
+    body.mobile .pick-stats .ps-tile.pt{grid-column:1 / -1}
+    body.mobile .im-box{padding:14px}
+    /* a desktop screen previews the phone column */
+    @media (min-width:700px){ body.mobile{background:#dfe3ee} body.mobile .main{box-shadow:0 0 0 1px var(--line)} }
 
     /* Print */
     #printDynArea{display:none}
@@ -628,6 +641,7 @@
       <div class="nav-ipd-knob"></div>
     </div>
   </label>
+  <button class="btn-view" id="btnViewMode" onclick="toggleViewMode()" title="สลับหน้าจอแบบมือถือ / เดสก์ท็อป (จำไว้ในเครื่องนี้)">📱 มือถือ</button>
   <button class="btn-logout" onclick="doLogout()">⏻ ออกจากระบบ</button>
 </nav>
 
@@ -637,84 +651,167 @@
     <span id="sysIcon">📋</span>&nbsp;<span id="sysNameLabel">กำลังโหลด...</span>
   </div>
 
-  <!-- STEP 1: Kiosk Scanner -->
-  <div id="scannerStep">
+  <div class="k3">
+    <!-- ═════ คอลัมน์ 1 : ค้นหาและสแกน ═════ -->
+    <section class="col col-search" id="scannerStep">
+      <div class="col-head">
+        <span class="ch-ico">🔍</span>
+        <div><h2 class="kiosk-title">ค้นหาผู้ป่วย</h2><small id="sysNameKiosk">กำลังโหลด...</small></div>
+        <span class="hero-ico" id="sysIconKiosk" hidden>🏥</span>
+      </div>
 
-    <!-- Title row -->
-    <div class="kiosk-header" style="justify-content:center">
-      <h1 class="kiosk-title">สแกนคิวอาร์โค้ด / รับบัตรคิว</h1>
-    </div>
-
-    <!-- Metallic scanner frame -->
-    <div class="kiosk-scanner-frame">
-      <div class="kiosk-scanner-inner">
-        <video id="scanVideo" playsinline muted></video>
-        <div class="scan-line" id="scanLine"></div>
-        <div class="no-camera" id="noCameraDiv">
-          <span class="nc-icon">📷</span>
-          <span id="noCameraText">ทาปุ่ม "สแกนคิวบาร์โค้ด" เพื่อเปิดกล้อง</span>
-          <span style="font-size:.72rem;opacity:.6">หรือยิงบาร์โค้ด HN จากใบนำทาง / กรอก HN ด้านล่าง</span>
+      <!-- one box for QN / HN (AN in IPD) -->
+      <div class="search-card">
+        <div class="seg" id="searchSeg" role="tablist" aria-label="ประเภทการค้นหา">
+          <button type="button" data-m="auto" class="on" title="ระบบเลือกให้: 6 หลักขึ้นไป = HN · น้อยกว่า = QN">อัตโนมัติ</button>
+          <button type="button" data-m="qn" id="segQn">QN</button>
+          <button type="button" data-m="hn">HN</button>
+        </div>
+        <div class="search-row">
+          <input class="search-input" id="searchInput" type="text" autocomplete="off" inputmode="numeric"
+                 placeholder="กรอก QN หรือ HN แล้วกด Enter"/>
+          <button class="btn-search" id="searchBtn" onclick="searchFromBox()">
+            <span class="si">🔍</span><span class="st">ค้นหา</span>
+          </button>
+        </div>
+        <div class="search-hint" id="searchHint">พิมพ์เลขแล้วกด <kbd>Enter</kbd> · ยิงบาร์โค้ด HN ได้ทันที</div>
+        <!-- the old QN / HN boxes stay (hidden) — the lookup reads them -->
+        <div class="legacy-fields" hidden>
+          <span class="bar-field-lbl" id="qnFieldLbl"></span><input class="bar-input" id="qnInput" type="text"/>
+          <span class="bar-field-lbl" id="hnFieldLbl"></span><input class="bar-input" id="hnInput" type="text"/>
         </div>
       </div>
-      <div class="kiosk-scan-statusbar" id="scanStatusBar">พร้อมรับบัตรคิว — ยิงบาร์โค้ด HN หรือกรอกข้อมูลด้านล่าง</div>
-    </div>
 
-    <!-- Toggle pill row -->
+      <!-- camera -->
+      <div class="kiosk-scanner-frame">
+        <div class="kiosk-scanner-inner">
+          <video id="scanVideo" playsinline muted></video>
+          <div class="scan-line" id="scanLine"></div>
+          <div class="no-camera" id="noCameraDiv">
+            <span class="nc-icon">📷</span>
+            <span id="noCameraText">กดปุ่ม "สแกนบาร์โค้ด" ด้านล่างเพื่อเปิดกล้อง</span>
+          </div>
+        </div>
+        <div class="cam-state">
+          <span class="cam-dot" id="camDot"></span>
+          <span class="kiosk-scan-statusbar" id="scanStatusBar">พร้อมรับบัตรคิว</span>
+        </div>
+      </div>
+
+      <ol class="howto">
+        <li><b>1</b><span id="step1Txt">สแกน หรือกรอก QN / HN</span></li>
+        <li><b>2</b><span>ตรวจชื่อ แล้วเลือกประเภทคิว</span></li>
+        <li><b>3</b><span>ยืนยัน · รับบัตรคิว</span></li>
+      </ol>
+    </section>
+
+    <!-- ═════ คอลัมน์ 2 : ข้อมูลผู้ป่วยและการออกบัตรคิว ═════ -->
+    <section class="col col-issue">
+      <!-- nothing looked up yet -->
+      <div class="pane-empty" id="paneEmpty">
+        <div class="pe-ico">🪪</div>
+        <h3>ยังไม่มีข้อมูลผู้ป่วย</h3>
+        <p>ค้นหาด้วย QN / HN หรือสแกนบาร์โค้ด<br>ข้อมูลผู้ป่วยจะแสดงที่นี่ให้ตรวจสอบก่อนออกบัตรคิว</p>
+      </div>
+
+      <!-- ticket issued -->
+      <div class="pane-done" id="paneDone" hidden>
+        <div class="pd-ok">✓ ออกบัตรคิวสำเร็จ</div>
+        <div class="pd-type" id="doneType"></div>
+        <div class="pd-num" id="doneNum">---</div>
+        <div class="pd-who" id="doneWho"></div>
+        <div class="pd-btns">
+          <button class="btn-print" onclick="reprintLast()">🖨 พิมพ์บัตรคิว</button>
+          <button class="btn-next" onclick="closeDone()">＋ พร้อมรับคิวถัดไปทันที</button>
+        </div>
+        <div class="pd-note" id="doneNote"></div>
+      </div>
+
+      <!-- patient found: check, choose, confirm -->
+      <div id="typeStep">
+        <div class="pt-card">
+          <div class="pt-ava">👤</div>
+          <div class="pt-body">
+            <div class="pt-name" id="ptName">-</div>
+            <div class="pt-grid">
+              <div><span>HN</span><b id="ptHN">-</b></div>
+              <div><span id="ptQnLabel">QN</span><b id="ptQN">-</b></div>
+              <div><span>อายุ</span><b id="ptAge">-</b></div>
+              <div class="pt-wide" id="ptPttypeTag" style="display:none"><span>สิทธิการรักษา</span><b id="ptPttype">-</b></div>
+            </div>
+          </div>
+          <button class="btn-back" onclick="backToScanner()" title="ล้างข้อมูล แล้วค้นหาใหม่">✕ ค้นหาใหม่</button>
+        </div>
+
+        <div class="drug-card" id="drugCard" style="display:none">
+          <div class="drug-card-head" onclick="toggleDrugList()">
+            <span class="drug-icon">💊</span>
+            <span class="drug-summary" id="drugSummary">กำลังโหลดรายการยา...</span>
+            <span class="drug-toggle-arrow" id="drugToggleArrow">▾</span>
+          </div>
+          <div class="drug-list" id="drugList"></div>
+        </div>
+
+        <div class="issue-notice" id="issueNotice" style="display:none"></div>
+
+        <div class="cards-lbl">เลือกประเภทคิว</div>
+        <div class="cards-grid" id="cardsGrid"><div class="no-types">กำลังโหลด...</div></div>
+
+        <!-- the number the patient will get — then confirm -->
+        <div class="confirm-bar" id="confirmBar" hidden>
+          <div class="cb-preview">
+            <span>หมายเลขคิวที่จะได้รับ</span>
+            <b id="previewNum">---</b>
+            <small id="previewType"></small>
+          </div>
+          <button class="btn-confirm" id="btnConfirm" onclick="confirmIssue()">✓ ยืนยันออกบัตรคิว</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═════ คอลัมน์ 3 : Dashboard สถานะคิว ═════ -->
+    <aside class="col col-dash">
+      <div class="clock">
+        <div class="clock-time" id="clkTime">--:--</div>
+        <div class="clock-date" id="clkDate"></div>
+      </div>
+      <div class="wait-head">
+        <span>ผู้ป่วยรอรับบริการ</span>
+        <div class="wait-total"><b id="waitTotal">0</b><small>คน</small></div>
+        <span class="live"><i></i>Real-time</span>
+      </div>
+      <div class="wait-list" id="waitList"></div>
+    </aside>
+  </div>
+
+  <!-- ═════ แผงตั้งค่า + สถานะอุปกรณ์ ═════ -->
+  <footer class="ctl">
     <div class="kiosk-toggle-row">
       <label class="kiosk-pill" for="chkAutoScan">
         <span class="kp-icon">📷</span>
-        <div class="kp-text"><span class="kp-label">สแกนคิวบาร์โค้ด</span></div>
-        <div class="kp-sw">
-          <input type="checkbox" id="chkAutoScan" onchange="onAutoScanChange()"/>
-          <div class="kp-knob"></div>
-          <span class="kp-onlbl">on</span>
-        </div>
+        <div class="kp-text"><span class="kp-label">สแกนบาร์โค้ด</span><span class="kp-sub">เปิดกล้องอัตโนมัติ</span></div>
+        <div class="kp-sw"><input type="checkbox" id="chkAutoScan" onchange="onAutoScanChange()"/><div class="kp-knob"></div><span class="kp-onlbl">on</span></div>
       </label>
-
       <label class="kiosk-pill" for="chkPrintEnabled">
         <span class="kp-icon">🎫</span>
-        <div class="kp-text"><span class="kp-label">พิมพ์บัตรคิว</span></div>
-        <div class="kp-sw">
-          <input type="checkbox" id="chkPrintEnabled" onchange="onPrintEnabledChange()"/>
-          <div class="kp-knob"></div>
-          <span class="kp-onlbl">on</span>
-        </div>
+        <div class="kp-text"><span class="kp-label">พิมพ์บัตรคิวอัตโนมัติ</span><span class="kp-sub">พิมพ์ทันทีหลังออกคิว</span></div>
+        <div class="kp-sw"><input type="checkbox" id="chkPrintEnabled" onchange="onPrintEnabledChange()"/><div class="kp-knob"></div><span class="kp-onlbl">on</span></div>
       </label>
-
+      <label class="kiosk-pill kp-manual" for="chkManualPick" id="manualPickPill" title="เปิด: ไม่ออกคิวอัตโนมัติ — ขึ้นหน้าต่างให้เลือกประเภทคิวเอง (มีคิวที่ระบบแนะนำไว้ให้)">
+        <span class="kp-icon">✋</span>
+        <div class="kp-text"><span class="kp-label">เลือกคิวเอง</span><span class="kp-sub">ไม่ออกคิวอัตโนมัติ</span></div>
+        <div class="kp-sw"><input type="checkbox" id="chkManualPick" onchange="onManualPickChange()"/><div class="kp-knob"></div><span class="kp-onlbl">on</span></div>
+      </label>
     </div>
-  </div>
+    <div class="dev">
+      <div class="dev-item" id="devCam"><i></i><span>กล้อง</span><b>-</b></div>
+      <div class="dev-item" id="devPrinter"><i></i><span>เครื่องพิมพ์</span><b>-</b></div>
+      <div class="dev-item" id="devServer"><i></i><span>เซิร์ฟเวอร์</span><b>-</b></div>
+    </div>
+  </footer>
 
   <!-- Hidden legacy button kept for setScanBtnState() compat -->
   <button id="btnScanToggle" style="display:none" onclick="toggleScanner()"></button>
-
-  <!-- STEP 2: Patient + type -->
-  <div id="typeStep">
-    <div class="pt-card">
-      <div class="pt-ava">👤</div>
-      <div class="pt-body">
-        <div class="pt-name" id="ptName">-</div>
-        <div class="pt-tags">
-          <div class="pt-tag">HN: <b id="ptHN">-</b></div>
-          <div class="pt-tag"><span id="ptQnLabel">QN</span>: <b id="ptQN">-</b></div>
-          <div class="pt-tag" id="ptPttypeTag" style="display:none;background:#fff4e0;border-color:#ffcc80;color:#b45309">สิทธิ: <b id="ptPttype">-</b></div>
-        </div>
-      </div>
-      <button class="btn-back" onclick="backToScanner()">← ค้นหาใหม่</button>
-    </div>
-
-    <div class="drug-card" id="drugCard" style="display:none">
-      <div class="drug-card-head" onclick="toggleDrugList()">
-        <span class="drug-icon">💊</span>
-        <span class="drug-summary" id="drugSummary">กำลังโหลดรายการยา...</span>
-        <span class="drug-toggle-arrow" id="drugToggleArrow">▾</span>
-      </div>
-      <div class="drug-list" id="drugList"></div>
-    </div>
-
-    <div class="issue-notice" id="issueNotice" style="display:none"></div>
-    <div class="cards-lbl">เลือกประเภทการให้บริการ</div>
-    <div class="cards-grid" id="cardsGrid"><div class="no-types">กำลังโหลด...</div></div>
-  </div>
 </div>
 
 <!-- Issue mode settings -->
@@ -722,11 +819,32 @@
 <div class="im-overlay" id="niOverlay">
   <div class="im-box ni-box">
     <div class="ni-icon">⚠</div>
-    <h3>คนไข้ไม่มียาและค่าบริการ</h3>
+    <h3 id="niTitle">คนไข้ไม่มียาและค่าบริการ</h3>
     <div class="ni-pt" id="niPt"></div>
     <div class="ni-q">เลือกประเภทคิวเอง หรือกด "ยกเลิก" เพื่อไม่ออกคิว</div>
     <div class="ni-types" id="niTypes"></div>
     <button class="ni-cancel" onclick="cancelNoItems()">✕ ยกเลิก — ไม่ออกคิว</button>
+  </div>
+</div>
+
+<!-- เลือกคิวเอง เปิดอยู่: staff pick the queue type (system suggestion highlighted) -->
+<div class="im-overlay" id="pickOverlay">
+  <div class="im-box ni-box pick-box">
+    <!-- cancel sits top-right; Enter / Esc cancel too -->
+    <button class="pick-cancel-top" onclick="cancelPick()" title="ไม่ออกคิว — กด Enter หรือ Esc ได้">✕ ยกเลิก — ไม่ออกคิว <kbd>Enter</kbd></button>
+    <div class="ni-icon pick-icon" id="pickIcon">✋</div>
+    <h3 id="pickTitle">เลือกประเภทคิว</h3>
+    <div class="ni-pt" id="pickPt"></div>
+    <div class="pick-rec" id="pickRec"></div>
+    <div class="pick-head">
+      <div class="ni-q">แตะประเภทคิวที่ต้องการ</div>
+      <label class="pick-other-sw" for="chkPickOther" title="แสดงประเภทคิวที่ไม่ได้อยู่ในเงื่อนไขการออกคิว เช่น ทั่วไป / ด่วน">
+        <span>แสดงคิวประเภทอื่น</span>
+        <input type="checkbox" id="chkPickOther" onchange="onPickOtherChange()"/>
+        <i></i>
+      </label>
+    </div>
+    <div class="ni-types" id="pickTypes"></div>
   </div>
 </div>
 
@@ -738,7 +856,11 @@
     <div class="ni-pt" id="dupPt"></div>
     <div id="dupQ"></div>
     <div class="dup-note">ระบบไม่ออกคิวใหม่ให้ · ถ้าต้องการออกซ้ำ เปิด "อนุญาตให้ออกคิวซ้ำ" ที่ ⚙ ออกคิว</div>
-    <button class="dup-ok" onclick="closeDup()">ตกลง</button>
+    <div class="dup-btns">
+      <button class="dup-reprint" id="dupReprint" onclick="reprintDup()">🖨 พิมพ์บัตรคิวซ้ำ</button>
+      <button class="dup-ok" onclick="closeDup()">ตกลง <kbd>Enter</kbd></button>
+    </div>
+    <div class="dup-printed" id="dupPrinted"></div>
   </div>
 </div>
 
@@ -764,30 +886,30 @@
     <div class="im-rules" id="imPay">
       <div class="im-row im-pay-row im-head"><span>ประเภทคิว</span><span>ชื่อที่แสดง</span><span>Prefix</span></div>
       <div id="payBaseRows">
-        <div class="im-row im-pay-row" id="payCashRow"><input class="im-tag cash" id="payCashLabel" maxlength="40" title="ป้ายที่แสดงในคอลัมน์ สถานะ ของหน้าเรียกคิว — แก้ได้"/><input id="payCashName"/><input id="payCashPrefix" class="pfx" maxlength="3" oninput="this.value=this.value.toUpperCase()"/></div>
-        <div class="im-row im-pay-row" id="payFreeRow"><input class="im-tag free" id="payFreeLabel" maxlength="40" title="ป้ายที่แสดงในคอลัมน์ สถานะ ของหน้าเรียกคิว — แก้ได้"/><input id="payFreeName"/><input id="payFreePrefix" class="pfx" maxlength="3" oninput="this.value=this.value.toUpperCase()"/></div>
+        <div class="im-row im-pay-row" id="payCashRow"><input class="im-tag cash" id="payCashLabel" maxlength="40" title="ป้ายที่แสดงในคอลัมน์ สถานะ ของหน้าเรียกคิว — แก้ได้"/><input id="payCashName"/><input id="payCashPrefix" class="pfx" maxlength="5" oninput="this.value=this.value.toUpperCase()"/></div>
+        <div class="im-row im-pay-row" id="payFreeRow"><input class="im-tag free" id="payFreeLabel" maxlength="40" title="ป้ายที่แสดงในคอลัมน์ สถานะ ของหน้าเรียกคิว — แก้ได้"/><input id="payFreeName"/><input id="payFreePrefix" class="pfx" maxlength="5" oninput="this.value=this.value.toUpperCase()"/></div>
         <div class="im-off-note" id="payBaseOffNote"></div>
       </div>
       <label class="im-dept-on im-drug-on"><input type="checkbox" id="payDrugOn" onchange="syncDrugSplitUI()"/>แยกยาน้อย / ยามาก</label>
       <div id="drugSplitBody">
-        <div class="im-drug-max">💊 ยาน้อย = ตั้งแต่ <input type="number" id="payDrugMin" min="0" oninput="syncDrugSplitUI()"/>
+        <div class="im-drug-max">💊 ยาน้อย = ตั้งแต่ <input type="number" id="payDrugMin" min="1" oninput="syncDrugSplitUI()"/>
           ถึง <input type="number" id="payDrugMax" min="1" oninput="syncDrugSplitUI()"/> รายการ · ยามาก = มากกว่านั้น</div>
         <div class="im-drug-under" id="payDrugUnder"></div>
         <div class="im-drug-for">แยกให้คนไข้ที่
           <label><input type="checkbox" id="payDrugCash" onchange="syncDrugSplitUI()"/>💰 ไปการเงิน</label>
           <label><input type="checkbox" id="payDrugFree" onchange="syncDrugSplitUI()"/>✓ ไม่ผ่านการเงิน (ไม่มีค่าใช้จ่าย)</label>
           <small>ที่ไม่ติ๊ก จะได้คิวแถวบน (F / N) แถวเดียว ไม่แยกยาน้อย / ยามาก</small></div>
-        <div class="im-row im-pay-row" id="payCashSRow"><input class="im-tag cash" id="payCashSLabel" maxlength="40" title="ป้ายที่แสดงในคอลัมน์ สถานะ ของหน้าเรียกคิว — แก้ได้"/><input id="payCashSName"/><input id="payCashSPrefix" class="pfx" maxlength="3" oninput="this.value=this.value.toUpperCase()"/></div>
-        <div class="im-row im-pay-row" id="payCashLRow"><input class="im-tag cash" id="payCashLLabel" maxlength="40" title="ป้ายที่แสดงในคอลัมน์ สถานะ ของหน้าเรียกคิว — แก้ได้"/><input id="payCashLName"/><input id="payCashLPrefix" class="pfx" maxlength="3" oninput="this.value=this.value.toUpperCase()"/></div>
-        <div class="im-row im-pay-row" id="payFreeSRow"><input class="im-tag free" id="payFreeSLabel" maxlength="40" title="ป้ายที่แสดงในคอลัมน์ สถานะ ของหน้าเรียกคิว — แก้ได้"/><input id="payFreeSName"/><input id="payFreeSPrefix" class="pfx" maxlength="3" oninput="this.value=this.value.toUpperCase()"/></div>
-        <div class="im-row im-pay-row" id="payFreeLRow"><input class="im-tag free" id="payFreeLLabel" maxlength="40" title="ป้ายที่แสดงในคอลัมน์ สถานะ ของหน้าเรียกคิว — แก้ได้"/><input id="payFreeLName"/><input id="payFreeLPrefix" class="pfx" maxlength="3" oninput="this.value=this.value.toUpperCase()"/></div>
+        <div class="im-row im-pay-row" id="payCashSRow"><input class="im-tag cash" id="payCashSLabel" maxlength="40" title="ป้ายที่แสดงในคอลัมน์ สถานะ ของหน้าเรียกคิว — แก้ได้"/><input id="payCashSName"/><input id="payCashSPrefix" class="pfx" maxlength="5" oninput="this.value=this.value.toUpperCase()"/></div>
+        <div class="im-row im-pay-row" id="payCashLRow"><input class="im-tag cash" id="payCashLLabel" maxlength="40" title="ป้ายที่แสดงในคอลัมน์ สถานะ ของหน้าเรียกคิว — แก้ได้"/><input id="payCashLName"/><input id="payCashLPrefix" class="pfx" maxlength="5" oninput="this.value=this.value.toUpperCase()"/></div>
+        <div class="im-row im-pay-row" id="payFreeSRow"><input class="im-tag free" id="payFreeSLabel" maxlength="40" title="ป้ายที่แสดงในคอลัมน์ สถานะ ของหน้าเรียกคิว — แก้ได้"/><input id="payFreeSName"/><input id="payFreeSPrefix" class="pfx" maxlength="5" oninput="this.value=this.value.toUpperCase()"/></div>
+        <div class="im-row im-pay-row" id="payFreeLRow"><input class="im-tag free" id="payFreeLLabel" maxlength="40" title="ป้ายที่แสดงในคอลัมน์ สถานะ ของหน้าเรียกคิว — แก้ได้"/><input id="payFreeLName"/><input id="payFreeLPrefix" class="pfx" maxlength="5" oninput="this.value=this.value.toUpperCase()"/></div>
         <div class="im-hint">• ตรวจเงื่อนไขไปการเงิน / ไม่ผ่านการเงินก่อน แล้วนับรายการยาไม่ซ้ำ (icode ขึ้นต้น 1) ของ VN วันนี้ เพื่อเลือกคิวยาน้อยหรือยามาก<br>
           • แถวบน (F / N) ของฝั่งที่ติ๊กแยก จะไม่ถูกใช้ออกคิว · คนไข้ห้องตรวจที่ติ๊กไว้ด้านล่าง ยังได้ Prefix ของห้องตรวจเหมือนเดิม</div>
       </div>
       <label class="im-dept-on im-nodrug-on"><input type="checkbox" id="payNoDrugOn" onchange="syncNoDrugUI()"/>ไม่มียา แต่ต้องไปการเงิน → ออกคิวที่ห้องการเงินเลย</label>
       <div id="noDrugBody">
         <div class="im-drug-max">ส่งไปห้อง <select id="payNoDrugSys" class="im-sel"></select></div>
-        <div class="im-row im-pay-row"><input class="im-tag nodrug" id="payNoDrugLabel" maxlength="40" title="ป้ายที่แสดงในคอลัมน์ สถานะ ของหน้าเรียกคิว — แก้ได้"/><input id="payNoDrugName"/><input id="payNoDrugPrefix" class="pfx" maxlength="3" oninput="this.value=this.value.toUpperCase()"/></div>
+        <div class="im-row im-pay-row"><input class="im-tag nodrug" id="payNoDrugLabel" maxlength="40" title="ป้ายที่แสดงในคอลัมน์ สถานะ ของหน้าเรียกคิว — แก้ได้"/><input id="payNoDrugName"/><input id="payNoDrugPrefix" class="pfx" maxlength="5" oninput="this.value=this.value.toUpperCase()"/></div>
         <div class="im-hint">• คนไข้ที่ต้องไปการเงิน (มีค่าใช้จ่ายตามรหัส paidst ที่ตั้งไว้ / สิทธิที่ติ๊กให้รูดบัตร / มีแต่ค่าบริการ) <b>และไม่มีรายการยาเลย</b> จะได้คิวนี้ในรายการรอของห้องการเงินทันที ไม่ต้องรอเรียกที่ห้องยา<br>
           • Prefix ต้องไม่ซ้ำกับคิวของห้องนี้และของห้องการเงิน · คิวนี้จะไม่ถูกส่งต่อกลับมาห้องยา</div>
       </div>
@@ -796,13 +918,36 @@
         <label>ต้องจ่ายเงิน → ไปการเงินทุกกรณี<input id="payCashCodes" placeholder="01,03"/></label>
         <label>ลูกหนี้สิทธิ → ไม่ต้องจ่ายเงิน<input id="payDebtCodes" placeholder="02"/></label>
       </div>
-      <div class="im-sub">สิทธิที่เลือก (เช่น ข้าราชการ) — ติ๊ก <b id="edcCount">0</b> สิทธิ</div>
+      <!-- หมวดค่าใช้จ่าย (opitemrece.income) ที่ต้องไปการเงินทุกเคส — e.g. 17 ค่ายานอกบัญชียาหลักแห่งชาติ, whatever the paidst -->
       <div class="im-pt-use">
-        <label><input type="checkbox" id="payEdcOn" onchange="syncPtUI()"/>💳 ไปการเงินทุกกรณี <small>(รูดบัตร EDC / ต้องจ่ายเงิน — ไม่ว่ามีค่าใช้จ่ายแบบไหน)</small></label>
-        <label><input type="checkbox" id="payPtOn" onchange="syncPtUI()"/>🔤 แยก Prefix ให้สิทธิที่ติ๊ก <small>(ทุกสิทธิที่ติ๊กได้ Prefix เดียวกันนี้ และไปการเงินทุกกรณี)</small></label>
-        <div class="im-row im-pay-row" id="ptBody"><input class="im-tag pttype" id="payPttypeLabel" maxlength="40" title="ป้ายที่แสดงในคอลัมน์ สถานะ ของหน้าเรียกคิว — แก้ได้"/><input id="payPtName"/><input id="payPtPrefix" class="pfx" maxlength="3" oninput="this.value=this.value.toUpperCase()"/></div>
-        <small id="ptUnused">⏸ ไม่ได้ใช้ทั้ง 2 อย่าง — สิทธิที่ติ๊กไว้จะไม่มีผลกับการออกคิว</small>
+        <label><input type="checkbox" id="payIncomeOn" onchange="syncIncomeUI()"/>🧾 ไปการเงินตามหมวดค่าใช้จ่าย <small>(มีรายการในหมวดที่เลือก (opitemrece.income) → ไปการเงินทุกเคส ไม่สนใจ paidst)</small></label>
+        <div class="cash-pt" id="incomeBody">
+          <div class="cash-pt-lbl">หมวดที่ไปการเงินทุกเคส — <b id="incomeCount">0</b> หมวด <button type="button" class="cash-pt-clear" onclick="clearIncome()">ล้างทั้งหมด</button></div>
+          <div class="im-picked" id="incomePicked"></div>
+          <div class="cash-pt-search">
+            <input id="incomeSearch" class="im-search" placeholder="🔍 พิมพ์ชื่อ / รหัสหมวด (เช่น 17 หรือ ยานอกบัญชี) แล้วกดเลือก" oninput="renderIncome()" onfocus="renderIncome()" autocomplete="off"/>
+            <div class="cash-pt-results" id="incomeResults"></div>
+          </div>
+        </div>
       </div>
+      <div class="im-sub">สิทธิที่เลือก</div>
+      <div class="im-pt-use">
+        <label><input type="checkbox" id="payEdcOn" onchange="syncPtUI()"/>💳 ไปการเงินทุกกรณี <small>(สิทธิที่ต้องไปการเงิน 100% — รูดบัตร EDC / ต้องจ่ายเงิน ไม่ว่ามีค่าใช้จ่ายแบบไหน)</small></label>
+        <!-- its own สิทธิ list (usually one สิทธิ) — separate from the แยก Prefix list below -->
+        <div class="cash-pt" id="cashPtBody">
+          <div class="cash-pt-lbl">สิทธิที่ไปการเงิน 100% — <b id="cashPtCount">0</b> สิทธิ <button type="button" class="cash-pt-clear" onclick="clearCashPt()">ล้างทั้งหมด</button></div>
+          <div class="im-picked" id="cashPtPicked"></div>
+          <div class="cash-pt-search">
+            <input id="cashPtSearch" class="im-search" placeholder="🔍 พิมพ์ชื่อ / รหัสสิทธิ แล้วกดเลือก" oninput="renderCashPt()" autocomplete="off"/>
+            <div class="cash-pt-results" id="cashPtResults"></div>
+          </div>
+        </div>
+        <label><input type="checkbox" id="payPtOn" onchange="syncPtUI()"/>🔤 แยก Prefix ให้สิทธิที่ติ๊ก <small>(ทุกสิทธิในรายการด้านล่างได้ Prefix เดียวกันนี้)</small></label>
+        <small id="ptRouteNote" class="pt-route-note"></small>
+        <div class="im-row im-pay-row" id="ptBody"><input class="im-tag pttype" id="payPttypeLabel" maxlength="40" title="ป้ายที่แสดงในคอลัมน์ สถานะ ของหน้าเรียกคิว — แก้ได้"/><input id="payPtName"/><input id="payPtPrefix" class="pfx" maxlength="5" oninput="this.value=this.value.toUpperCase()"/></div>
+        <small id="ptUnused">⏸ ไม่ได้แยก Prefix — รายการสิทธิด้านล่างไม่มีผลกับการออกคิว</small>
+      </div>
+      <div class="im-sub">สิทธิที่แยก Prefix — ติ๊ก <b id="edcCount">0</b> สิทธิ</div>
       <div class="im-picked" id="edcPicked"></div>
       <button type="button" class="im-pick-toggle" id="edcWrapBtn" onclick="togglePick('edcWrap')"></button>
       <div class="im-pick-wrap" id="edcWrap">
@@ -811,7 +956,8 @@
       </div>
       <label class="im-dept-on"><input type="checkbox" id="payDeptOn" onchange="syncDeptUI()"/>แยก Prefix ตามห้องตรวจ</label>
       <div id="deptBody">
-        <div class="im-row im-pay-row"><input class="im-tag dept" id="payDeptLabel" maxlength="40" title="ป้ายที่แสดงในคอลัมน์ สถานะ ของหน้าเรียกคิว — แก้ได้"/><input id="payDeptName"/><input id="payDeptPrefix" class="pfx" maxlength="3" oninput="this.value=this.value.toUpperCase()"/></div>
+        <div class="im-row im-pay-row"><input class="im-tag dept" id="payDeptLabel" maxlength="40" title="ป้ายที่แสดงในคอลัมน์ สถานะ ของหน้าเรียกคิว — แก้ได้"/><input id="payDeptName"/><input id="payDeptPrefix" class="pfx" maxlength="5" oninput="this.value=this.value.toUpperCase()"/></div>
+        <label class="im-dept-check"><input type="checkbox" id="payDeptCheck" onchange="syncDeptUI()"/><div><b>เช็คไปการเงิน / ไม่ผ่านการเงิน</b><small id="payDeptCheckNote"></small></div></label>
         <div class="im-sub">ห้องตรวจที่จะได้ Prefix นี้ — ติ๊ก <b id="deptCount">0</b> ห้อง</div>
         <div class="im-picked" id="deptPicked"></div>
         <button type="button" class="im-pick-toggle" id="deptWrapBtn" onclick="togglePick('deptWrap')"></button>
@@ -822,7 +968,7 @@
         <div class="im-hint">• คนไข้ที่ห้องตรวจหลัก (ovst.main_dep) ตรงกับที่ติ๊ก จะได้เลขคิวตาม Prefix นี้<br>
           • เงื่อนไขไปการเงิน / ไม่ผ่านการเงินยังตรวจเหมือนเดิม เพียงแต่เลขคิวเป็น Prefix ของห้องตรวจ</div>
       </div>
-      <div class="im-hint">• <b>ไปการเงิน</b>: มีรายการที่ต้องจ่ายเงิน (รหัสช่องแรก) ที่ราคามากกว่า 0 — หรือเป็นสิทธิที่ติ๊กไว้ (ไปการเงินทุกกรณี)
+      <div class="im-hint">• <b>ไปการเงิน</b>: มีรายการที่ต้องจ่ายเงิน (รหัสช่องแรก) ที่ราคามากกว่า 0 — หรือเป็นสิทธิที่ติ๊กไว้ (ไปการเงินทุกกรณี) — หรือมีรายการในหมวดค่าใช้จ่ายที่เลือก (เช่น 17 ยานอกบัญชี ไม่สนใจ paidst)
         — หรือมีรายการที่มีราคาแต่ยังไม่ระบุประเภทการชำระเงิน (กันลืมเก็บเงิน) — หรือไม่มีรายการยา (icode ขึ้นต้น 1) แต่มีค่าบริการ (icode ขึ้นต้น 3)<br>
         • <b>ไม่มีทั้งยาและค่าบริการ</b>: ขึ้นหน้าต่างเตือน ให้เจ้าหน้าที่เลือกประเภทคิวเอง หรือยกเลิกไม่ออกคิว<br>
         • <b>ไม่ผ่านการเงิน</b>: นอกนั้นทั้งหมด (ไม่มีค่าใช้จ่าย หรือเบิกตามสิทธิได้) — คิวนี้จะไม่ถูกส่งต่อการเงินอัตโนมัติ แต่ยังกดส่งเองได้ในหน้าประวัติ<br>
@@ -852,21 +998,6 @@
 </div>
 
 <!-- Floating bottom bar -->
-<div class="bottom-bar">
-  <div class="bar-field">
-    <div class="bar-field-lbl" id="qnFieldLbl">🔢 &nbsp;QN — เลขคิว</div>
-    <input class="bar-input" id="qnInput" type="text" placeholder="กรอกเลขคิว" autocomplete="off" inputmode="numeric"/>
-  </div>
-  <div class="bar-sep"></div>
-  <div class="bar-field">
-    <div class="bar-field-lbl" id="hnFieldLbl">🏥 &nbsp;HN — เลขประจำตัว</div>
-    <input class="bar-input" id="hnInput" type="text" placeholder="กรอก HN" autocomplete="off" inputmode="numeric"/>
-  </div>
-  <button class="btn-bar-search" id="searchBtn" onclick="doLookup()">
-    <span class="si">🔍</span>
-    <span class="st">ค้นหา</span>
-  </button>
-</div>
 
 <div id="printDynArea"></div>
 
@@ -904,6 +1035,22 @@ function onPrintEnabledChange() {
   localStorage.setItem('printEnabled', chkPrintEnabled.checked ? '1' : '0');
 }
 
+// ── เลือกคิวเอง (per machine, per room): auto-issue modes open a popup instead of issuing ──
+const chkManualPick = document.getElementById('chkManualPick');
+const manualPickKey = () => `qf_kiosk_manualpick_${sysId}`;
+try { chkManualPick.checked = localStorage.getItem(manualPickKey()) === '1'; } catch (e) {}
+function onManualPickChange() {
+  try { localStorage.setItem(manualPickKey(), chkManualPick.checked ? '1' : '0'); } catch (e) {}
+  setStatus(chkManualPick.checked ? '✋ เลือกคิวเอง: เปิด — หลังค้นหาจะขึ้นหน้าต่างให้เลือกประเภทคิว'
+                                  : 'เลือกคิวเอง: ปิด — ออกคิวอัตโนมัติตามที่ตั้งค่าไว้', chkManualPick.checked ? '#c2410c' : '');
+}
+// the switch only matters when the room issues automatically (ตามสิทธิ / ตามจำนวนยา)
+function syncManualPickPill() {
+  const pill = document.getElementById('manualPickPill');
+  if (pill) pill.classList.toggle('off-mode', !['pay', 'drug'].includes(issueMode.mode));
+}
+const manualPick = () => chkManualPick.checked && ['pay', 'drug'].includes(issueMode.mode);
+
 // ── IPD (inpatient) mode toggle ───────────────────────────────────────────
 const chkIpd = document.getElementById('chkIpd');
 chkIpd.checked = localStorage.getItem('ipdMode') === '1';
@@ -926,10 +1073,14 @@ function applyIpdMode() {
   if (navCashier) navCashier.href = `/cashier.html?sys=${sysId}${ipd ? '&mode=ipd' : ''}`;
   const navIpdToggle = document.getElementById('navIpdToggle');
   if (navIpdToggle) navIpdToggle.classList.toggle('active', ipd);
-  const frame = document.querySelector('.kiosk-scanner-frame');
-  if (frame) frame.style.boxShadow = ipd
-    ? '0 0 0 2px #2e7d32, 0 0 0 6px #ffffff, 0 16px 44px rgba(46,125,50,.28), inset 0 1px 0 rgba(255,255,255,.6)'
-    : '';
+  document.body.classList.toggle('ipd', ipd);   // bento accent turns green in IPD mode
+  const heroSub = document.getElementById('heroSub');
+  if (heroSub) heroSub.textContent = ipd ? 'ยิงบาร์โค้ด AN หรือกรอก AN / HN ที่แถบด้านล่าง'
+                                         : 'ยิงบาร์โค้ด HN จากใบนำทาง หรือกรอก QN / HN ที่แถบด้านล่าง';
+  const step1 = document.getElementById('step1Txt');
+  if (step1) step1.textContent = ipd ? 'สแกน หรือกรอก AN / HN' : 'สแกน หรือกรอก QN / HN';
+  if (typeof renderWaitTile === 'function' && queueTypes) renderWaitTile();
+  if (typeof syncSearchIpd === 'function' && document.getElementById('searchSeg')) syncSearchIpd();
   // ย้าย cursor ไปยังช่องเริ่มต้นของ mode นี้ (ช่องที่คลิกเลือกไว้ล่าสุด)
   updateFieldPin();
   const onScan = document.getElementById('scannerStep') &&
@@ -944,7 +1095,7 @@ function preferredField() {
   try { v = localStorage.getItem(fieldPrefKey()); } catch (e) {}
   return v === 'qn' || v === 'hn' ? v : (chkIpd.checked ? 'qn' : 'hn');   // first time: AN for IPD, HN for OPD
 }
-function focusPreferredField() { (preferredField() === 'qn' ? qnEl : hnEl).focus(); }
+function focusPreferredField() { const sb = document.getElementById('searchInput'); (sb || (preferredField() === 'qn' ? qnEl : hnEl)).focus(); }
 function updateFieldPin() {
   const pref = preferredField();
   [['qnFieldLbl', 'qn'], ['hnFieldLbl', 'hn']].forEach(([id, f]) => {
@@ -1087,7 +1238,7 @@ async function startScanner() {
     setScanBtnState(true);
     noCameraDiv.classList.add('hidden');
     scanLineEl.style.display = 'block';
-    setStatus('🟢 กำลังสแกน...');
+    setStatus('🟢 กำลังสแกน...'); camState('scan', 'กำลังสแกน');
 
     await reader.decodeFromVideoDevice(null, 'scanVideo', (result, err) => {
       if (result && isScanning && !scanCooldown) {
@@ -1105,7 +1256,7 @@ async function startScanner() {
     setScanBtnState(false);
     scanLineEl.style.display = 'none';
     noCameraDiv.classList.remove('hidden');
-    setStatus('⚠ ไม่สามารถเปิดกล้องได้ — ใส่ HN / QN ด้านล่าง');
+    setStatus('⚠ ไม่สามารถเชื่อมต่อกล้องได้ — กรอก QN / HN แทน'); camState('err', 'เชื่อมต่อไม่ได้');
   }
 }
 
@@ -1116,8 +1267,8 @@ function stopScanner() {
   scanLineEl.style.display = 'none';
   noCameraDiv.classList.remove('hidden');
   const autoOn = document.getElementById('chkAutoScan').checked;
-  document.getElementById('noCameraText').textContent = autoOn ? 'กำลังเตรียมกล้อง...' : 'กดปุ่มด้านล่างเพื่อเปิดกล้อง';
-  setStatus(autoOn ? 'โหมดสแกนอัตโนมัติ' : 'กดปุ่มด้านล่างเพื่อเริ่มสแกน');
+  document.getElementById('noCameraText').textContent = autoOn ? 'กำลังเตรียมกล้อง...' : 'เปิด "สแกนบาร์โค้ด" ที่แถบด้านล่างเพื่อใช้กล้อง';
+  setStatus(autoOn ? 'โหมดสแกนอัตโนมัติ' : 'พร้อมรับบัตรคิว'); camState('ready', autoOn ? 'พร้อมสแกน' : 'พร้อม (ปิดอยู่)');
 }
 
 function setScanBtnState(active) {
@@ -1222,6 +1373,7 @@ function doLookup() {
       const pttypeTag = document.getElementById('ptPttypeTag');
       const pttypeEl  = document.getElementById('ptPttype');
       if (elName) elName.textContent = d.patient.name || '';
+      const elAge = document.getElementById('ptAge'); if (elAge) elAge.textContent = d.patient.age || '-';
       if (elHN)   elHN.textContent   = d.patient.hn   || '-';
       // IPD: show AN; OPD: show QN
       const isIpdResult = d.patient.mode === 'ipd';
@@ -1293,11 +1445,11 @@ function loadPatientDrugs(vn) {
     if (!d.success) { summaryEl.innerHTML = '⚠ โหลดรายการยาไม่สำเร็จ'; return; }
     const items = d.items || [];
     if (!items.length) {
-      summaryEl.innerHTML = '💊 ไม่มีรายการยา';
+      summaryEl.innerHTML = 'ไม่มีรายการยา';
       listEl.innerHTML = '';
       return;
     }
-    summaryEl.innerHTML = `💊 มียา <b>${items.length}</b> รายการ`;
+    summaryEl.innerHTML = `มียา <b>${items.length}</b> รายการ`;
     listEl.innerHTML = items.map(it => `
       <div class="drug-item">
         <div class="drug-item-name">${escHtml(it.drugName || '(ไม่ระบุชื่อยา)')}</div>
@@ -1330,10 +1482,20 @@ async function autoIssueByDrugs(p) {
     if (r.success) n = r.counts[String(p.vn).trim()] ?? 0;
   } catch (e) {}
   if (currentPatient !== p) return;   // staff already went back / looked up someone else
-  if (n === null) { showNotice('warn', '⚠ นับรายการยาไม่สำเร็จ — กรุณาเลือกประเภทคิวเอง'); return; }
+  if (n === null) {
+    showNotice('warn', '⚠ นับรายการยาไม่สำเร็จ — กรุณาเลือกประเภทคิวเอง');
+    if (manualPick()) openPick(p, null, '⚠ นับรายการยาไม่สำเร็จ');
+    return;
+  }
   const rule = (issueMode.rules || []).find(r => n >= r.min && n <= r.max && queueTypes.some(t => t.id === r.typeId));
   if (!rule) {
     showNotice('warn', `💊 ยา <b>${n}</b> รายการ — ไม่อยู่ในช่วงที่ตั้งไว้ กรุณาเลือกประเภทคิวเอง`);
+    if (manualPick()) openPick(p, null, `💊 ยา <b>${n}</b> รายการ — ไม่อยู่ในช่วงที่ตั้งไว้`, { drugCount: n });
+    return;
+  }
+  if (manualPick()) {
+    showNotice('wait', `✋ เลือกคิวเอง — ระบบแนะนำ <b>${escHtml(rule.name)}</b> (${escHtml(rule.prefix)})`);
+    openPick(p, { typeId: rule.typeId, reason: `💊 ยา ${n} รายการ` }, '', { drugCount: n });
     return;
   }
   showNotice('ok', `💊 ยา <b>${n}</b> รายการ → <b>${escHtml(rule.name)}</b> (${escHtml(rule.prefix)}) — กำลังออกคิว...`);
@@ -1350,8 +1512,30 @@ async function autoIssueByPay(p) {
       body: JSON.stringify({ vn: p.vn }) }).then(x => x.json());
   } catch (e) {}
   if (currentPatient !== p) return;   // staff already went back / looked up someone else
-  if (!r || !r.success) { showNotice('warn', `⚠ ตรวจค่าใช้จ่ายไม่สำเร็จ${r && r.message ? ' (' + escHtml(r.message) + ')' : ''} — กรุณาเลือกประเภทคิวเอง`); return; }
-  if (r.route === 'none') { showNotice('warn', '⚠ คนไข้ไม่มียาและค่าบริการ — เลือกประเภทคิวเอง หรือยกเลิก'); openNoItems(p, r); return; }
+  if (!r || !r.success) {
+    const why = `⚠ ตรวจค่าใช้จ่ายไม่สำเร็จ${r && r.message ? ' (' + escHtml(r.message) + ')' : ''}`;
+    showNotice('warn', why + ' — กรุณาเลือกประเภทคิวเอง');
+    if (manualPick()) openPick(p, null, why);
+    return;
+  }
+  if (r.route === 'none') {
+    showNotice('warn', r.noDrugs ? '💊 คนไข้ไม่มีรายการยา — ห้องยาไม่ออกคิวอัตโนมัติ เลือกประเภทคิวเอง หรือยกเลิก'
+                                 : '⚠ คนไข้ไม่มียาและค่าบริการ — เลือกประเภทคิวเอง หรือยกเลิก');
+    openPick(p, null, r.noDrugs
+        ? `<b class="nd-big">💊 คนไข้ไม่มียา</b><br>${(why => why && why !== 'ไม่มีรายการยา' ? escHtml(why) + '<br>' : '')(String(r.reason || '').replace(/^ไม่มีรายการยา · /, ''))}ห้องยาไม่ออกคิวให้อัตโนมัติ — ถ้าต้องไปชำระเงิน เลือกคิว "ไปการเงิน"`
+        : `<b class="nd-big">⚠ คนไข้ไม่มียาและไม่มีค่าบริการ</b><br>ยังไม่มีรายการใน HOSxP — เลือกประเภทคิวเอง หรือกดยกเลิก`, r,
+      { icon: "⚠", title: r.noDrugs ? "คนไข้ไม่มีรายการยา" : "คนไข้ไม่มียาและค่าบริการ" });
+    return;
+  }
+  if (manualPick()) {   // เลือกคิวเอง: show what the system would issue, staff decide
+    const rt = queueTypes.find(x => x.id === r.typeId);
+    const recName = r.noDrug ? r.noDrug.name : rt ? rt.name : '';
+    showNotice('wait', `✋ เลือกคิวเอง${recName ? ` — ระบบแนะนำ <b>${escHtml(recName)}</b>` : ''}`);
+    openPick(p, r.noDrug ? { noDrug: true, reason: r.reason }
+      : { typeId: r.typeId, route: r.route, reason: `${r.reason || ''}${r.drugSize ? ` · ยา ${Number(r.drugCount) || 0} รายการ` : ''}` },
+      rt || r.noDrug ? '' : '⚠ ยังไม่ได้ตั้งค่าประเภทคิวที่ระบบเลือก', r);
+    return;
+  }
   if (r.noDrug) {   // ไม่มียา แต่ต้องไปการเงิน → ticket goes straight to the cashier room
     showNotice('ok', `💰 ${escHtml(r.reason)} · ไม่มียา → <b>${escHtml(r.noDrug.name)}</b> คิว ${escHtml(r.noDrug.typeName)} (${escHtml(r.noDrug.prefix)}) — กำลังออกคิว...`);
     setTimeout(() => { if (currentPatient === p) getQueue(null, 'cash', { noDrug: true }); }, 500);
@@ -1365,14 +1549,18 @@ async function autoIssueByPay(p) {
 
 function openNoItems(p, r) {
   document.getElementById('niPt').innerHTML =
-    `<b>${escHtml(p.name || '')}</b><br>HN ${escHtml(p.hn || '-')} · QN ${escHtml(p.qn || '-')}<br>สิทธิ ${escHtml(r.pttypeName || p.pttypeName || '-')}`;
+    `<b>${escHtml(p.name || '')}</b><br>HN ${escHtml(p.hn || '-')} · QN ${escHtml(p.qn || '-')}<br>สิทธิ ${escHtml(r.pttypeName || p.pttypeName || '-')}` +
+    (r.noDrugs && r.reason ? `<br><small>${escHtml(r.reason)}</small>` : '');
+  document.getElementById('niTitle').textContent = r.noDrugs ? 'คนไข้ไม่มีรายการยา' : 'คนไข้ไม่มียาและค่าบริการ';
   // the two สิทธิ types first, then any other OPD type
   const opd = queueTypes.filter(t => (t.forMode || 'both') !== 'ipd' && !t.drugRule);
   const btn = (t, route, label) => `<button style="--c:${t.color}" onclick="pickNoItems(${t.id}${route ? `,'${route}'` : ''})"><b>${escHtml(t.prefix)}</b>${escHtml(label)}</button>`;
   // a patient of a ticked ห้องตรวจ keeps the room's prefix, whichever way staff send them
   const dept = opd.find(t => t.id === r.deptTypeId);
+  // one ห้องตรวจ button (no duplicate prefix): has a charge → ไปการเงิน, nothing billed → ไม่ผ่านการเงิน
+  // (with the pharmacy flow the route is decided again at the drug check)
   const payBtns = dept
-    ? [btn(dept, 'cash', `${dept.name} · ไปการเงิน`), btn(dept, 'free', `${dept.name} · ไม่ผ่านการเงิน`)]
+    ? [btn(dept, r.noDrugs ? 'cash' : 'free', dept.name)]
     : ['cash', 'free'].flatMap(route => opd
         .filter(t => t.payRule === route && paySizeTypeInUse(issueMode.pay, t))
         .sort((a, b) => (a.drugSize || '') > (b.drugSize || '') ? -1 : 1))   // ยาน้อย (S) before ยามาก (L)
@@ -1394,6 +1582,132 @@ function pickNoDrug() {
   showNotice('', '');
   getQueue(null, 'cash', { noDrug: true });
 }
+// ── เลือกคิวเอง popup ──────────────────────────────────────────────────────
+// every queue this room can issue in its mode, with the route a pay-mode ticket needs
+function pickChoices(r) {
+  const pay = issueMode.pay || {};
+  const opd = queueTypes.filter(t => (t.forMode || 'both') !== 'ipd');
+  const out = [];
+  if (issueMode.mode === 'pay') {
+    if (pay.noDrugOn && pay.noDrugTypeId)
+      out.push({ noDrug: true, route: 'cash', color: '#7c3aed', prefix: pay.noDrugPrefix || '', name: pay.noDrugName || 'ไม่มียา ไปการเงิน', sub: 'ไม่มียา · ไปห้องการเงินเลย' });
+    for (const route of ['cash', 'free'])
+      opd.filter(t => t.payRule === route && paySizeTypeInUse(pay, t))
+        .sort((a, b) => (a.drugSize || '') > (b.drugSize || '') ? -1 : 1)   // ยาน้อย (S) before ยามาก (L)
+        .forEach(t => out.push({ typeId: t.id, route, t }));
+    const pt = pay.ptOn && opd.find(t => t.payRule === 'pttype');
+    // สิทธิ queue: ไปการเงินทุกกรณี → cash; otherwise the route the charges gave (cash when unknown)
+    if (pt) {
+      const route = r && (r.route === 'cash' || r.route === 'free') ? r.route : 'cash';   // this patient's route (ไปการเงินทุกกรณี included)
+      out.push({ typeId: pt.id, route, t: pt, sub: route === 'cash' ? 'สิทธิที่เลือก · ไปการเงิน' : 'สิทธิที่เลือก · ไม่ผ่านการเงิน' });
+    }
+    const dept = pay.deptOn && opd.find(t => t.payRule === 'dept');
+    // one ห้องตรวจ button: it takes the money route the system worked out (cash when unknown, so no bill is missed);
+    // with the pharmacy flow the route is decided again at the drug check anyway
+    if (dept) {
+      const route = r && (r.route === 'cash' || r.route === 'free') ? r.route : 'cash';
+      out.push({ typeId: dept.id, route, t: dept, sub: 'ห้องตรวจที่เลือก' });
+    }
+  } else if (issueMode.mode === 'drug') {
+    opd.filter(t => t.drugRule).forEach(t => out.push({ typeId: t.id, t }));
+  }
+  opd.filter(t => !t.payRule && !t.drugRule).forEach(t => out.push({ typeId: t.id, t, sub: 'ประเภทคิวทั่วไป', other: true }));
+  return out;
+}
+let _pick = null;
+// สิทธิ · จำนวนยา · ยอดที่ต้องชำระ — to help staff decide (r = the pay-route result, or { drugCount } in ตามจำนวนยา)
+function pickStatsHtml(p, r) {
+  r = r || {};
+  const baht = v => Number(v).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const codes = v => (Array.isArray(v) ? v : String(v || '').split(',')).map(x => String(x).trim()).filter(Boolean);
+  const pay = issueMode.pay || {};
+  const cashC = codes(pay.cashCodes).length ? codes(pay.cashCodes) : ['01', '03'];
+  const debtC = codes(pay.debtCodes).length ? codes(pay.debtCodes) : ['02'];
+  const items = Array.isArray(r.items) ? r.items : null;
+  const sum = test => (items || []).filter(g => test(String(g.paidst || '').trim())).reduce((a, g) => a + (Number(g.total) || 0), 0);
+  const cash = sum(c => cashC.includes(c)), debt = sum(c => debtC.includes(c));
+  const other = sum(c => !cashC.includes(c) && !debtC.includes(c));
+  const drugN = r.drugCount ?? null;
+  const tile = (cls, lbl, val, sub) => `<div class="ps-tile ${cls}"><span>${lbl}</span><b>${val}</b>${sub ? `<small>${sub}</small>` : ''}</div>`;
+  return `<div class="pick-stats">` +
+    tile('pt', '🪪 สิทธิ', escHtml(r.pttypeName || p.pttypeName || '-')) +
+    // ไม่มียา: said in words, in red — not a small 0
+    (drugN != null && !(Number(drugN) > 0)
+      ? tile('drug none', '💊 จำนวนยา', 'ไม่มียา', 'ไม่มีรายการยาใน visit นี้')
+      : tile('drug', '💊 จำนวนยา', drugN == null ? '-' : `${Number(drugN)} <i>รายการ</i>`)) +
+    tile(cash > 0 ? 'cash due' : 'cash', '💰 ยอดที่ต้องชำระ', !items ? '-' : cash > 0 ? `${baht(cash)} <i>บาท</i>` : 'ไม่มีค่าใช้จ่าย',
+      items ? [debt > 0 ? `เบิกตามสิทธิ ${baht(debt)} บาท` : '', other > 0 ? `ไม่ระบุประเภท ${baht(other)} บาท` : ''].filter(Boolean).join(' · ') : '') +
+    `</div>`;
+}
+function openPick(p, rec, note, r, head) {
+  document.getElementById("pickIcon").textContent  = (head && head.icon)  || "✋";
+  document.getElementById("pickTitle").textContent = (head && head.title) || "เลือกประเภทคิว";
+  const choices = pickChoices(r);
+  const isRec = c => !!rec && (rec.noDrug ? !!c.noDrug
+    : c.typeId === rec.typeId && !c.noDrug && (!c.route || !rec.route || c.route === rec.route || (c.t && c.t.payRule === 'dept')));
+  _pick = { p, choices };
+  document.getElementById('pickPt').innerHTML =
+    `<div class="pk-who"><b>${escHtml(p.name || '')}</b><span>HN ${escHtml(p.hn || '-')} · QN ${escHtml(p.qn || '-')}</span></div>` + pickStatsHtml(p, r);
+  const recC = choices.find(isRec);
+  const recEl = document.getElementById('pickRec');
+  recEl.className = 'pick-rec' + (recC ? '' : ' warn');
+  recEl.innerHTML = recC
+    ? `⭐ ระบบแนะนำ: <b>${escHtml(recC.t ? recC.t.name : recC.name)}</b>${recC.sub && recC.t && recC.t.payRule === 'dept' ? ' · ' + escHtml(recC.sub) : ''}` +
+      (rec.reason ? `<br><small>${escHtml(rec.reason)}</small>` : '')
+    : (note || '⚠ คนไข้ไม่เข้าเงื่อนไขที่ตั้งไว้') + '<br><small>เลือกประเภทคิวเองด้านล่าง</small>';
+  // sorted by prefix (1 2 3 … then A B …); the suggestion stays in its place, highlighted
+  const pfxOf = c => String(c.t ? c.t.prefix : c.prefix || '');
+  const order = [...choices].sort((a, b) => (a.other === b.other ? 0 : a.other ? 1 : -1)
+    || pfxOf(a).localeCompare(pfxOf(b), 'th', { numeric: true }));
+  document.getElementById('pickTypes').innerHTML = order.map(c => {
+    const i = choices.indexOf(c), color = c.t ? c.t.color : c.color, name = c.t ? c.t.name : c.name;
+    // the same card look as the kiosk's type cards: tinted tile, big prefix, name, waiting count
+    const col = color || '#4353d6', waitN = c.t ? (Number(typeWaiting[c.t.id]) || 0) : null;
+    return `<button class="pk-card${c === recC ? ' rec' : ''}${c.other ? ' other' : ''}" style="--c:${col};--tc:${col}" onclick="choosePick(${i})">
+      <span class="pk-top"><span class="pk-icon" style="background:${col};color:${inkOn(col)}">${escHtml(c.t ? c.t.prefix : c.prefix)}</span>
+        ${c === recC ? '<span class="rec-tag">⭐ แนะนำ</span>' : '<span class="pk-go">→</span>'}</span>
+      <span class="pk-name">${escHtml(name)}</span>
+      ${c.sub ? `<span class="pk-sub">${escHtml(c.sub)}</span>` : ''}
+      ${waitN != null ? `<span class="pk-wait">คิวรอ <strong>${waitN}</strong> คน</span>` : ''}</button>`;
+  }).join('') || '<div class="im-edc-msg">ยังไม่มีประเภทคิว</div>';
+  // คิวประเภทอื่น (ทั่วไป / ด่วน ...) stay hidden unless the switch is on — or there is nothing else to pick
+  const nOther = choices.filter(c => c.other).length, onlyOther = nOther === choices.length;
+  const box = document.getElementById('pickTypes');
+  if (nOther && !onlyOther)
+    box.insertAdjacentHTML('beforeend', `<div class="pick-other-hint">มีคิวประเภทอื่นอีก ${nOther} ประเภท — เปิด "แสดงคิวประเภทอื่น" เพื่อเลือก</div>`);
+  document.querySelector('.pick-other-sw').style.display = nOther && !onlyOther ? '' : 'none';
+  chkPickOther.checked = pickOtherOn();
+  box.classList.toggle('show-other', onlyOther || chkPickOther.checked);
+  document.getElementById('pickOverlay').classList.add('show');
+}
+// "แสดงคิวประเภทอื่น" switch in the popup — remembered per machine and room
+const chkPickOther = document.getElementById('chkPickOther');
+const pickOtherKey = () => `qf_kiosk_pickother_${sysId}`;
+function pickOtherOn() { try { return localStorage.getItem(pickOtherKey()) === '1'; } catch (e) { return false; } }
+function onPickOtherChange() {
+  try { localStorage.setItem(pickOtherKey(), chkPickOther.checked ? '1' : '0'); } catch (e) {}
+  document.getElementById('pickTypes').classList.toggle('show-other', chkPickOther.checked);
+}
+function choosePick(i) {
+  const c = _pick && _pick.choices[i];
+  document.getElementById('pickOverlay').classList.remove('show');
+  if (!c || currentPatient !== _pick.p) return;
+  showNotice('', '');
+  if (c.noDrug) getQueue(null, 'cash', { noDrug: true });
+  else getQueue(c.typeId, c.route || null);
+}
+// Enter / Esc while the window is open = cancel (caught first, so it never issues a queue or starts a search)
+document.addEventListener('keydown', e => {
+  if ((e.key === 'Enter' || e.key === 'Escape') && document.getElementById('pickOverlay').classList.contains('show')) {
+    e.preventDefault(); e.stopPropagation(); cancelPick();
+  }
+}, true);
+function cancelPick() {
+  document.getElementById('pickOverlay').classList.remove('show');
+  backToScanner();
+  setStatus('ยกเลิกแล้ว — ไม่ได้ออกคิว', '#b45309');
+}
+
 function cancelNoItems() {
   document.getElementById('niOverlay').classList.remove('show');
   backToScanner();
@@ -1401,8 +1715,12 @@ function cancelNoItems() {
 }
 
 // ── "มีประวัติออกคิวแล้ว" popup ───────────────────────────────────────────
+// the visit already has a ticket: show it, reprint it if needed; Enter / Esc = ตกลง
+var _dup = null;
 function showDup(p, e) {
   p = p || {};
+  _dup = { p, e };
+  document.getElementById('dupPrinted').textContent = '';
   const isIpd = p.mode === 'ipd';
   document.getElementById('dupPt').innerHTML =
     `<b>${escHtml(p.name || '')}</b><br>HN ${escHtml(p.hn || '-')} · ${isIpd ? 'AN ' + escHtml(p.an || '-') : 'QN ' + escHtml(p.qn || '-')}`;
@@ -1414,11 +1732,26 @@ function showDup(p, e) {
   showNotice('', '');
   document.getElementById('dupOverlay').classList.add('show');
 }
+function reprintDup() {
+  if (!_dup) return;
+  const e = _dup.e, t = queueTypes.find(x => x.id === e.typeId) || {};
+  const ticket = { display: e.display, typeId: e.typeId, typeName: e.typeName || t.name || '', prefix: t.prefix || '', color: e.color || t.color,
+    issuedAt: e.issuedAt || '', date: new Date().toLocaleDateString('th-TH') };
+  const keep = currentPatient;
+  currentPatient = _dup.p;                       // the slip shows this patient's name / HN / QN
+  try { doPrint(ticket, { manual: true }); } finally { currentPatient = keep; }
+  document.getElementById('dupPrinted').textContent = '✓ ส่งพิมพ์บัตรคิว ' + (e.display || '') + ' แล้ว';
+}
+document.addEventListener('keydown', ev => {
+  if ((ev.key === 'Enter' || ev.key === 'Escape') && document.getElementById('dupOverlay').classList.contains('show')) {
+    ev.preventDefault(); ev.stopPropagation(); closeDup();
+  }
+}, true);
 function closeDup() {
   document.getElementById('dupOverlay').classList.remove('show');
   backToScanner();
   setStatus('ไม่ได้ออกคิว — คนไข้มีประวัติออกคิวแล้ว', '#b45309');
-  setTimeout(() => setStatus(chkIpd.checked ? 'พร้อมรับบัตรคิว — ยิงบาร์โค้ด AN หรือกรอกข้อมูลด้านล่าง' : 'พร้อมรับบัตรคิว — ยิงบาร์โค้ด HN หรือกรอกข้อมูลด้านล่าง'), 4000);
+  setTimeout(() => setStatus(chkIpd.checked ? 'พร้อมรับบัตรคิว — ยิงบาร์โค้ด AN หรือกรอกเลขในช่องค้นหา' : 'พร้อมรับบัตรคิว — ยิงบาร์โค้ด HN หรือกรอกเลขในช่องค้นหา'), 4000);
 }
 
 // ── Issue mode settings window ────────────────────────────────────────────
@@ -1426,6 +1759,7 @@ const ISSUE_MODE_LBL = { type: '📋 ตามประเภท', drug: '💊 �
 function updateIssueModeLbl() {
   const el = document.getElementById('issueModeLbl');
   if (el) el.textContent = ISSUE_MODE_LBL[issueMode.mode] || ISSUE_MODE_LBL.type;
+  syncManualPickPill();
 }
 let _imRules = [];
 let _pttypes = null, _edc = new Set();
@@ -1442,6 +1776,13 @@ function openIssueMode() {
   document.getElementById('payCashCodes').value  = (pay.cashCodes || ['01', '03']).join(',');
   document.getElementById('payDebtCodes').value  = (pay.debtCodes || ['02']).join(',');
   _edc = new Set(pay.edcPttypes || []);
+  // ไปการเงินทุกกรณี list — settings saved before it existed used the shared list
+  _cashPt = new Set(Array.isArray(pay.cashPttypes) ? pay.cashPttypes : (pay.edcPttypes || []));
+  const cs = document.getElementById('cashPtSearch'); if (cs) cs.value = '';
+  _income = new Set(pay.incomeCodes || []);
+  document.getElementById('payIncomeOn').checked = pay.incomeOn === true;
+  document.getElementById('incomeSearch').value = '';
+  syncIncomeUI();
   document.getElementById('edcSearch').value = '';
   setPickOpen('edcWrap', false);
   document.getElementById('payEdcOn').checked   = pay.edcOn !== false;
@@ -1450,6 +1791,7 @@ function openIssueMode() {
   document.getElementById('payPtPrefix').value  = pay.ptPrefix || 'R';
   syncPtUI();
   document.getElementById('payDeptOn').checked   = pay.deptOn === true;
+  document.getElementById('payDeptCheck').checked = pay.deptRouteCheck !== false;
   document.getElementById('payDeptName').value   = pay.deptName   || 'ห้องตรวจเฉพาะ';
   document.getElementById('payDeptPrefix').value = pay.deptPrefix || 'D';
   document.getElementById('deptSearch').value = '';
@@ -1459,7 +1801,7 @@ function openIssueMode() {
   document.getElementById('payDrugOn').checked = pay.drugOn === true;
   document.getElementById('payDrugMax').value  = pay.drugMax || 3;
   // settings saved before the minimum existed: suggest 1 (0 drugs is not ยาน้อย) — saved only when staff press บันทึก
-  document.getElementById('payDrugMin').value  = Number.isInteger(pay.drugMin) ? pay.drugMin : 1;
+  document.getElementById('payDrugMin').value  = Number.isInteger(pay.drugMin) && pay.drugMin >= 1 ? pay.drugMin : 1;
   document.getElementById('payDrugCash').checked = pay.drugCash !== false;
   document.getElementById('payDrugFree').checked = pay.drugFree !== false;
   for (const [k, cap, name, prefix] of DRUG_SPLIT_DEF) {
@@ -1483,7 +1825,7 @@ function syncIssueModeUI() {
   const mode = document.querySelector('input[name=imMode]:checked')?.value;
   document.getElementById('imRules').style.display = mode === 'drug' ? '' : 'none';
   document.getElementById('imPay').style.display   = mode === 'pay'  ? '' : 'none';
-  if (mode === 'pay') { loadPttypes(); loadDepartments(); }
+  if (mode === 'pay') { loadPttypes(); loadDepartments(); loadIncomes(); }
 }
 // role boxes (left column) — editable; shown as the tag in the call page's "สถานะ" column
 const PAY_LABEL_DEF = { cash: '💰 ไปการเงิน', free: '✓ ไม่ผ่านการเงิน', dept: '🏥 ห้องตรวจที่เลือก', pttype: '💳 สิทธิที่เลือก',
@@ -1510,7 +1852,7 @@ const DRUG_SPLIT_DEF = [['cashS', 'CashS', 'ไปการเงิน ยา�
 // is this ไปการเงิน / ไม่ผ่านการเงิน type handed out? split on → ยาน้อย / ยามาก (+ the single queue when there's a
 // ยาน้อย minimum above 0, for visits under it) · split off → the single queue only
 function paySizeTypeInUse(pay, t) {
-  return paySplit(pay, t.payRule) ? (!!t.drugSize || (Number((pay || {}).drugMin) || 0) > 0) : !t.drugSize;
+  return paySplit(pay, t.payRule) ? (!!t.drugSize || (Number((pay || {}).drugMin) || 0) > 1) : !t.drugSize;
 }
 function paySplit(pay, route) {
   return !!pay && pay.drugOn === true && pay[route === 'cash' ? 'drugCash' : 'drugFree'] !== false;
@@ -1522,33 +1864,48 @@ function syncDrugSplitUI() {
   // the size rows of an unticked route are hidden; its F / N row above stays in use
   for (const id of ['payCashSRow', 'payCashLRow']) document.getElementById(id).style.display = cash ? '' : 'none';
   for (const id of ['payFreeSRow', 'payFreeLRow']) document.getElementById(id).style.display = free ? '' : 'none';
-  // with a ยาน้อย minimum above 0, visits with fewer drugs (e.g. 0) still get the route's single queue — so it stays in use
-  const min = Number(document.getElementById('payDrugMin').value) || 0;
+  // ยา 0 รายการ never gets a pharmacy queue; the top row (F / N) is only used for 1..min-1 drugs when min > 1
+  const min = Math.max(1, Number(document.getElementById('payDrugMin').value) || 1);
   const max = Number(document.getElementById('payDrugMax').value) || 0;
-  const baseUsed = min > 0;
+  const baseUsed = min > 1;
   document.getElementById('payCashRow').classList.toggle('im-row-off', on && cash && !baseUsed);
   document.getElementById('payFreeRow').classList.toggle('im-row-off', on && free && !baseUsed);
+  // an unused top row may be left blank
+  for (const [k, off] of [['Cash', on && cash && !baseUsed], ['Free', on && free && !baseUsed]]) {
+    document.getElementById(`pay${k}Name`).placeholder   = off ? 'ไม่ได้ใช้ — เว้นว่างได้' : '';
+    document.getElementById(`pay${k}Prefix`).placeholder = off ? '-' : '';
+  }
   const off = [on && cash && 'ไปการเงิน', on && free && 'ไม่ผ่านการเงิน'].filter(Boolean);
   document.getElementById('payBaseOffNote').textContent = !off.length ? ''
-    : baseUsed ? `ℹ แถว ${off.join(' / ')} ใช้กับคนไข้ที่มียาน้อยกว่า ${min} รายการ (ไม่นับเป็นยาน้อย)`
+    : baseUsed ? `ℹ แถว ${off.join(' / ')} ใช้กับคนไข้ที่มียา 1${min > 2 ? '–' + (min - 1) : ''} รายการ (ไม่นับเป็นยาน้อย)`
     : `⏸ แถว ${off.join(' / ')} ไม่ได้ใช้ออกคิว ขณะแยกยาน้อย / ยามาก — ระบบจะกลับมาใช้เมื่อปิด`;
   const under = document.getElementById('payDrugUnder');
   under.className = 'im-drug-under' + (min > max && max ? ' bad' : '');
   under.textContent = min > max && max ? '⚠ "ตั้งแต่" ต้องไม่มากกว่า "ถึง"'
-    : min > 0 ? `ยาน้อย ${min}–${max} รายการ · ยามาก ${max + 1} รายการขึ้นไป · ยา 0${min > 1 ? '–' + (min - 1) : ''} รายการ ไม่แยก → ใช้คิวแถวบน (ไปการเงิน / ไม่ผ่านการเงิน)`
-    : `ยาน้อย 0–${max} รายการ (นับคนไข้ที่ไม่มียาเป็นยาน้อยด้วย) · ยามาก ${max + 1} รายการขึ้นไป`;
+    : `ยาน้อย ${min}–${max} รายการ · ยามาก ${max + 1} รายการขึ้นไป` +
+      (min > 1 ? ` · ยา 1${min > 2 ? '–' + (min - 1) : ''} รายการ → ใช้คิวแถวบน` : '') +
+      ` · ยา 0 รายการ → ไม่ออกคิวห้องยา (ขึ้นหน้าต่างให้เลือกเอง / ยกเลิก${document.getElementById('payNoDrugOn')?.checked ? ' · หรือไปห้องการเงินตามที่ตั้งไว้' : ''})`;
 }
 function syncPtUI() {
   const edcBox = document.getElementById('payEdcOn'), pt = document.getElementById('payPtOn').checked;
-  // แยก Prefix → these สิทธิ always go to การเงิน, so "ไปการเงินทุกกรณี" is on and locked
-  if (pt) edcBox.checked = true;
-  edcBox.disabled = pt;
+  // two independent switches, each with its own สิทธิ list:
+  // ไปการเงินทุกกรณี = the สิทธิ picked under it go to the cashier 100%; แยก Prefix = the ticked list below gets its own prefix
+  edcBox.disabled = false;
   const edc = edcBox.checked;
+  document.getElementById('cashPtBody').style.display = edc ? '' : 'none';
+  document.getElementById('ptRouteNote').textContent = !pt ? ''
+    : '→ สิทธิในรายการด้านล่าง: ได้ Prefix นี้ แล้วเช็คค่าใช้จ่าย — มีค่าใช้จ่ายไปการเงิน · ไม่มีไม่ผ่านการเงิน' +
+      (edc ? ' (ถ้าเป็นสิทธิที่ไปการเงิน 100% ด้วย → ไปการเงินเสมอ)' : '');
   document.getElementById('ptBody').style.display = pt ? '' : 'none';
-  document.getElementById('ptUnused').style.display = edc || pt ? 'none' : '';
+  document.getElementById('ptUnused').style.display = pt ? 'none' : '';
+  renderCashPt();
 }
 function syncDeptUI() {
   document.getElementById('deptBody').style.display = document.getElementById('payDeptOn').checked ? '' : 'none';
+  const chk = document.getElementById('payDeptCheck').checked;
+  document.getElementById('payDeptCheckNote').textContent = chk
+    ? 'เปิด: ออกคิวได้ทันทีแม้ยังไม่มียา/ค่าใช้จ่าย — หลังห้องยาตรวจยา (stamp) ระบบเช็คว่าไปการเงิน หรือไม่ผ่านการเงิน แล้วส่งต่อให้เอง'
+    : 'ปิด: เป็นคิวห้องยาธรรมดา — เรียกที่ห้องยาได้เลย ไม่เช็คค่าใช้จ่าย และไม่ส่งไปการเงิน';
 }
 async function loadDepartments() {
   if (_depts) return renderDeptList();
@@ -1587,7 +1944,86 @@ async function loadPttypes() {
   // first setup: suggest ข้าราชการ (hipdata OFC)
   if (!(issueMode.pay || {}).edcPttypes) _pttypes.filter(p => p.hipdata.toUpperCase() === 'OFC').forEach(p => _edc.add(p.code));
   renderEdcList();
+  renderCashPt();
 }
+
+// ── ไปการเงินทุกกรณี: its own สิทธิ list (search + pick; usually one สิทธิ) ──
+let _cashPt = new Set(), _cashPtPicked = [], _cashPtHits = [];
+function renderCashPt() {
+  const picked = document.getElementById('cashPtPicked');
+  if (!picked) return;
+  _cashPtPicked = [..._cashPt].sort().map(code => {
+    const p = (_pttypes || []).find(x => x.code === code);
+    return { code, label: p ? `${p.name} (${code})` : `รหัส ${code}` };
+  });
+  picked.innerHTML = pickedHtml(_cashPtPicked, 'untickCashPt');
+  document.getElementById('cashPtCount').textContent = _cashPt.size;
+  const q = document.getElementById('cashPtSearch').value.trim().toLowerCase();
+  const box = document.getElementById('cashPtResults');
+  if (!q) { box.innerHTML = ''; return; }
+  if (!_pttypes) { box.innerHTML = '<div class="im-edc-msg">กำลังโหลดรายการสิทธิ...</div>'; return; }
+  _cashPtHits = _pttypes.filter(p => !_cashPt.has(p.code) && `${p.code} ${p.name} ${p.hipdata}`.toLowerCase().includes(q)).slice(0, 8);
+  box.innerHTML = _cashPtHits.length
+    ? _cashPtHits.map((p, i) => `<button type="button" onclick="addCashPt(${i})">${escHtml(p.name)}<small>${escHtml(p.code)}${p.hipdata ? ' · ' + escHtml(p.hipdata) : ''}</small></button>`).join('')
+    : '<div class="im-edc-msg">ไม่พบสิทธิที่ค้นหา</div>';
+}
+function addCashPt(i) {
+  const p = _cashPtHits[i];
+  if (p) _cashPt.add(p.code);
+  document.getElementById('cashPtSearch').value = '';
+  renderCashPt();
+}
+function clearCashPt() { _cashPt.clear(); renderCashPt(); }
+function untickCashPt(i) {
+  if (_cashPtPicked[i]) _cashPt.delete(_cashPtPicked[i].code);
+  renderCashPt();
+}
+// ── ไปการเงินตามหมวดค่าใช้จ่าย: income codes picked from HOSxP's income table ──
+let _income = new Set(), _incomes = null, _incomePicked = [], _incomeHits = [];
+async function loadIncomes() {
+  if (_incomes) return renderIncome();
+  renderIncome();
+  const r = await fetch(`/api/sys/${sysId}/incomes`).then(x => x.json()).catch(() => ({ success: false, message: 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้' }));
+  if (!r.success) { document.getElementById('incomeResults').innerHTML = `<div class="im-edc-msg">⚠ โหลดหมวดค่าใช้จ่ายไม่สำเร็จ — ${escHtml(r.message || '')}</div>`; return; }
+  _incomes = r.incomes;
+  renderIncome();
+}
+function syncIncomeUI() {
+  document.getElementById('incomeBody').style.display = document.getElementById('payIncomeOn').checked ? '' : 'none';
+  renderIncome();
+}
+function renderIncome() {
+  const picked = document.getElementById('incomePicked');
+  if (!picked) return;
+  _incomePicked = [..._income].sort().map(code => {
+    const p = (_incomes || []).find(x => x.code === code);
+    return { code, label: p ? (p.name.startsWith(code) ? p.name : `${code} ${p.name}`) : `หมวด ${code}` };
+  });
+  picked.innerHTML = pickedHtml(_incomePicked, 'untickIncome');
+  document.getElementById('incomeCount').textContent = _income.size;
+  const inp = document.getElementById('incomeSearch'), q = inp.value.trim().toLowerCase();
+  const box = document.getElementById('incomeResults');
+  // only 20-ish หมวด: show them all while the box has focus, filtered as you type
+  if (!q && document.activeElement !== inp) { box.innerHTML = ''; return; }
+  if (!_incomes) { box.innerHTML = '<div class="im-edc-msg">กำลังโหลดหมวดค่าใช้จ่าย...</div>'; return; }
+  _incomeHits = _incomes.filter(p => !_income.has(p.code) && `${p.code} ${p.name}`.toLowerCase().includes(q)).slice(0, 30);
+  box.innerHTML = _incomeHits.length
+    ? _incomeHits.map((p, i) => `<button type="button" onmousedown="event.preventDefault()" onclick="addIncome(${i})">${escHtml(p.name)}<small>income ${escHtml(p.code)}</small></button>`).join('')
+    : '<div class="im-edc-msg">ไม่พบหมวดที่ค้นหา</div>';
+}
+function addIncome(i) {
+  const p = _incomeHits[i];
+  if (p) _income.add(p.code);
+  document.getElementById('incomeSearch').value = '';
+  renderIncome();
+}
+function clearIncome() { _income.clear(); renderIncome(); }
+function untickIncome(i) {
+  if (_incomePicked[i]) _income.delete(_incomePicked[i].code);
+  renderIncome();
+}
+document.addEventListener('focusout', e => { if (e.target && e.target.id === 'incomeSearch') setTimeout(renderIncome, 150); });
+
 // summary of what is ticked; pressing a name unticks it
 function pickedHtml(items, untick) {
   return items.length
@@ -1654,7 +2090,7 @@ function renderIssueRules() {
       <input value="${escHtml(r.name)}" placeholder="เช่น ยาน้อย" oninput="_imRules[${i}].name=this.value"/>
       <input type="number" min="0" value="${r.min}" oninput="_imRules[${i}].min=this.value"/>
       <input type="number" min="0" value="${r.max}" oninput="_imRules[${i}].max=this.value"/>
-      <input class="pfx" maxlength="3" value="${escHtml(r.prefix)}" oninput="_imRules[${i}].prefix=this.value.toUpperCase()"/>
+      <input class="pfx" maxlength="5" value="${escHtml(r.prefix)}" oninput="_imRules[${i}].prefix=this.value.toUpperCase()"/>
       <button class="im-del" title="ลบ" onclick="_imRules.splice(${i},1);renderIssueRules()">✕</button>
     </div>`).join('');
 }
@@ -1676,6 +2112,9 @@ async function saveIssueMode() {
     cashName: v('payCashName'), cashPrefix: v('payCashPrefix'), freeName: v('payFreeName'), freePrefix: v('payFreePrefix'),
     cashCodes: v('payCashCodes'), debtCodes: v('payDebtCodes'),
     edcPttypes: _pttypes ? [..._edc] : ((issueMode.pay || {}).edcPttypes || []),
+    cashPttypes: [..._cashPt],
+    incomeOn: document.getElementById('payIncomeOn').checked, incomeCodes: [..._income],
+    deptRouteCheck: document.getElementById('payDeptCheck').checked,
     deptOn: document.getElementById('payDeptOn').checked, deptName: v('payDeptName'), deptPrefix: v('payDeptPrefix'), deptCodes: [..._dept],
     edcOn: document.getElementById('payEdcOn').checked,
     ptOn: document.getElementById('payPtOn').checked, ptName: v('payPtName'), ptPrefix: v('payPtPrefix'),
@@ -1696,28 +2135,35 @@ async function saveIssueMode() {
 }
 
 // ── Steps ─────────────────────────────────────────────────────────────────
+// 3-column page: the search column always stays; the middle column shows empty / patient / issued
 function showStep(step) {
-  document.getElementById('scannerStep').style.display = step === 'scanner' ? '' : 'none';
   document.getElementById('typeStep').classList.toggle('show', step === 'type');
+  document.getElementById('paneEmpty').hidden = step === 'type' || !document.getElementById('paneDone').hidden;
+  if (step === 'type') { clearInterval(_doneTimer); document.getElementById('paneDone').hidden = true; }
   if (step !== 'result') document.getElementById('resultOverlay').classList.remove('show');
-  if (step === 'type') renderCards();
+  if (step === 'type') { _selType = null; renderCards(); renderConfirm(); }
 }
 
 function backToScanner() {
   stopScanner();
   currentPatient = null;
+  _selType = null; renderConfirm();
+  clearInterval(_doneTimer); document.getElementById('paneDone').hidden = true;
+  const sb = document.getElementById('searchInput'); if (sb) sb.value = '';
+  const ag = document.getElementById('ptAge'); if (ag) ag.textContent = '-';
   hnEl.value = ''; qnEl.value = '';
   hnEl.classList.remove('active-field','dim');
   qnEl.classList.remove('active-field','dim');
   const isIpd = chkIpd.checked;
   setStatus(isIpd
-    ? 'พร้อมรับบัตรคิว — ยิงบาร์โค้ด AN หรือกรอกข้อมูลด้านล่าง'
-    : 'พร้อมรับบัตรคิว — ยิงบาร์โค้ด HN หรือกรอกข้อมูลด้านล่าง');
+    ? 'พร้อมรับบัตรคิว — ยิงบาร์โค้ด AN หรือกรอกเลขในช่องค้นหา'
+    : 'พร้อมรับบัตรคิว — ยิงบาร์โค้ด HN หรือกรอกเลขในช่องค้นหา');
   const pttypeTag = document.getElementById('ptPttypeTag');
   if (pttypeTag) pttypeTag.style.display = 'none';
   const drugCard = document.getElementById('drugCard');
   if (drugCard) { drugCard.style.display = 'none'; drugCard.classList.remove('open'); }
   showNotice('', '');
+  document.getElementById('pickOverlay').classList.remove('show');
   showStep('scanner');
   if (chkAutoScan.checked) setTimeout(() => startScanner(), 400);
   // Focus ช่องเริ่มต้นของ mode ปัจจุบัน
@@ -1737,16 +2183,21 @@ function renderCards() {
   const filteredTypes = (byIssueMode.length ? byIssueMode : queueTypes).filter(t => {
     const m = t.forMode || 'both';
     return isIpd ? (m === 'ipd' || m === 'both') : (m === 'opd' || m === 'both');
-  });
+  }).sort((a, b) => String(a.prefix || '').localeCompare(String(b.prefix || ''), 'th', { numeric: true }));   // 1 2 3 … then A B …
+  renderWaitTile(filteredTypes);
   if (!filteredTypes.length) {
-    grid.innerHTML = `<div class="no-types">ยังไม่มีประเภทคิว — <a href="/settings.html?sys=${sysId}" style="color:#ffd54f">ตั้งค่า</a></div>`;
+    grid.innerHTML = `<div class="no-types">ยังไม่มีประเภทคิว — <a href="/settings.html?sys=${sysId}">ตั้งค่า</a></div>`;
     return;
   }
-  const card = t => `
-    <div class="q-card" onclick="getQueue(${t.id})" style="--c:${t.color}28">
-      <div class="qc-icon" style="background:${t.color}">${t.prefix}</div>
-      <div class="qc-name">${t.name}</div>
-      <div class="qc-wait">คิวรอ <strong>${typeWaiting[t.id] || 0}</strong> คน</div>
+  // bento: in a group of 3+ the first type gets a double-width tile
+  const card = (t, i, list) => `
+    <div class="q-card${_selType === t.id ? ' sel' : ''}" onclick="selectType(${t.id})" style="--tc:${t.color || '#4353d6'}">
+      <div class="qc-icon" style="background:${t.color || '#4353d6'};color:${inkOn(t.color)}">${t.prefix}</div>
+      <div class="qc-main">
+        <div class="qc-name">${t.name}</div>
+        <div class="qc-wait">คิวรอ <strong>${typeWaiting[t.id] || 0}</strong> คน</div>
+      </div>
+      <span class="qc-go">→</span>
     </div>`;
   // Group by the type's "ใช้กับ" setting so OPD and IPD are clearly separate sections
   const GROUPS = [
@@ -1764,6 +2215,185 @@ function renderCards() {
   }).join('');
 }
 
+// readable text (dark ink or white) on a queue type's own colour
+function inkOn(hex) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(String(hex || '').trim());
+  if (!m) return '#fff';
+  const n = parseInt(m[1], 16), ch = v => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; };
+  const lum = .2126 * ch(n >> 16 & 255) + .7152 * ch(n >> 8 & 255) + .0722 * ch(n & 255);
+  return lum > .4 ? '#1b2333' : '#fff';
+}
+
+// "คิวรอขณะนี้" tile on the scanner screen: total + one row per type shown on the kiosk
+function renderWaitTile(types) {
+  const box = document.getElementById('waitList'), tot = document.getElementById('waitTotal');
+  if (!box || !tot) return;
+  if (!types) {
+    const ipd = chkIpd.checked;
+    types = (queueTypes || []).filter(t => { const m = t.forMode || 'both'; return ipd ? m !== 'opd' : m !== 'ipd'; });
+  }
+  types = [...types].sort((a, b) => String(a.prefix || '').localeCompare(String(b.prefix || ''), 'th', { numeric: true }));
+  const rows = types.map(t => ({ t, n: Number(typeWaiting[t.id]) || 0 }));
+  tot.textContent = rows.reduce((s, r) => s + r.n, 0);
+  box.innerHTML = rows.length ? rows.map(({ t, n }) => `
+    <div class="wait-row" style="--wc:${t.color || '#4f46e5'}">
+      <span class="wp" style="background:${t.color || '#4353d6'};color:${inkOn(t.color)}">${escHtml(t.prefix)}</span>
+      <span class="wn">${escHtml(t.name)}</span>
+      <span class="wc">${n}<small>คน</small></span>
+    </div>`).join('') : '<div class="wait-empty">ยังไม่มีประเภทคิว</div>';
+}
+
+// ══ 3-column kiosk: one search box · select → preview → confirm · issued panel · device status ══
+var _selType = null, _lastIssued = null, _searchMode = 'auto';
+
+// one box for QN / HN (AN / HN in IPD): "อัตโนมัติ" = 6 digits or more → HN, fewer → QN
+function searchFromBox() {
+  const sb = document.getElementById('searchInput');
+  const v = (sb.value || '').trim();
+  if (!v) { setStatus('กรุณากรอก QN หรือ HN', '#c62828'); sb.focus(); return; }
+  let f = _searchMode;
+  if (f === 'auto') f = /^\d{6,}$/.test(v) || /\D/.test(v) && v.length >= 6 ? 'hn' : 'qn';
+  hnEl.value = f === 'hn' ? v : ''; qnEl.value = f === 'hn' ? '' : v;
+  doLookup();
+}
+function setSearchMode(m) {
+  _searchMode = m;
+  document.querySelectorAll('#searchSeg button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
+  try { localStorage.setItem(`qf_kiosk_search_${sysId}`, m); } catch (e) {}
+  const sb = document.getElementById('searchInput');
+  const ipd = chkIpd.checked, q = ipd ? 'AN' : 'QN';
+  sb.placeholder = m === 'hn' ? 'กรอก HN แล้วกด Enter' : m === 'qn' ? `กรอก ${q} แล้วกด Enter` : `กรอก ${q} หรือ HN แล้วกด Enter`;
+  sb.focus();
+}
+function syncSearchIpd() {
+  const segQ = document.getElementById('segQn'); if (segQ) segQ.textContent = chkIpd.checked ? 'AN' : 'QN';
+  setSearchMode(_searchMode || 'auto');
+}
+(() => {
+  const sb = document.getElementById('searchInput');
+  if (!sb) return;
+  document.querySelectorAll('#searchSeg button').forEach(b => b.onclick = () => setSearchMode(b.dataset.m));
+  sb.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); searchFromBox(); } });
+  try { const m = localStorage.getItem(`qf_kiosk_search_${sysId}`); if (['auto', 'qn', 'hn'].includes(m)) _searchMode = m; } catch (e) {}
+  syncSearchIpd();
+})();
+
+// choose a type → show the number it will get → confirm
+function selectType(id) {
+  if (!currentPatient) return;
+  _selType = id;
+  renderCards(); renderConfirm();
+}
+async function renderConfirm() {
+  const bar = document.getElementById('confirmBar');
+  if (!bar) return;
+  const t = _selType != null && (queueTypes || []).find(x => x.id === _selType);
+  bar.hidden = !t;
+  if (!t) return;
+  document.getElementById('previewType').textContent = `${t.prefix} · ${t.name}`;
+  document.getElementById('previewNum').textContent = '…';
+  const want = _selType;
+  const r = await fetch(`/api/sys/${sysId}/next-number?typeId=${t.id}`).then(x => x.json()).catch(() => null);
+  if (want !== _selType) return;
+  document.getElementById('previewNum').textContent = r && r.success ? r.display : t.prefix + '???';
+  document.getElementById('btnConfirm').focus();
+}
+function confirmIssue() {
+  if (_selType == null || !currentPatient) return;
+  const btn = document.getElementById('btnConfirm');
+  btn.disabled = true; setTimeout(() => { btn.disabled = false; }, 2500);   // no double ticket from a double click
+  getQueue(_selType);
+}
+
+// issued: the big number stays in the middle column until the next patient
+function showDone(t, who, toSys) {
+  _lastIssued = { ticket: t, patient: who };
+  const color = t.color || '#4f46e5';
+  document.getElementById('doneType').innerHTML = `<i style="background:${color};color:${inkOn(color)}">${escHtml(t.prefix || '')}</i>${escHtml(t.typeName || '')}`;
+  document.getElementById('doneNum').textContent = t.display;
+  document.getElementById('doneWho').textContent = [who && who.name, who && who.hn ? 'HN ' + who.hn : '', t.issuedAt ? 'เวลา ' + t.issuedAt : ''].filter(Boolean).join(' · ');
+  const auto = chkPrintEnabled.checked && printConfig.autoPrint;
+  const note = () => (toSys ? `ส่งไปที่ ${toSys.name} · ` : '') + (_printWarn || (auto ? 'พิมพ์บัตรคิวแล้ว' : 'ยังไม่ได้พิมพ์ — กด "พิมพ์บัตรคิว" เพื่อพิมพ์'));
+  document.getElementById('paneDone').hidden = false;
+  document.getElementById('paneEmpty').hidden = true;
+  // back to "ready" on its own — the next patient can be scanned / typed at any time meanwhile
+  clearInterval(_doneTimer);
+  let left = DONE_SECONDS;
+  const tick = () => {
+    const dn = document.getElementById('doneNote');
+    dn.textContent = `${note()} · กลับสู่หน้าพร้อมรับคิวใน ${left} วินาที`;
+    dn.classList.toggle('warn', !!_printWarn);
+    if (left-- <= 0) closeDone();
+  };
+  tick(); _doneTimer = setInterval(tick, 1000);
+}
+var _doneTimer = null;
+const DONE_SECONDS = 6;
+function closeDone() {
+  clearInterval(_doneTimer); _doneTimer = null;
+  document.getElementById('paneDone').hidden = true;
+  if (!document.getElementById('typeStep').classList.contains('show')) document.getElementById('paneEmpty').hidden = false;
+  focusPreferredField();
+}
+function reprintLast() {
+  if (!_lastIssued) return;
+  const keep = { p: currentPatient, on: chkPrintEnabled.checked, auto: printConfig.autoPrint };
+  currentPatient = _lastIssued.patient; chkPrintEnabled.checked = true; printConfig.autoPrint = true;
+  try { doPrint(_lastIssued.ticket, { manual: true }); } finally { currentPatient = keep.p; chkPrintEnabled.checked = keep.on; printConfig.autoPrint = keep.auto; }
+}
+
+// camera light + device status (bottom bar)
+function camState(kind, text) {
+  const dot = document.getElementById('camDot'); if (dot) dot.className = 'cam-dot ' + kind;
+  setDev('devCam', kind === 'scan' ? 'ok' : kind === 'err' ? 'bad' : '', text);
+}
+function setDev(id, cls, text) {
+  const el = document.getElementById(id); if (!el) return;
+  el.className = 'dev-item' + (cls ? ' ' + cls : ''); el.querySelector('b').textContent = text;
+}
+async function updatePrinterStatus() {
+  if (!chkPrintEnabled.checked) return setDev('devPrinter', 'warn', 'ปิดพิมพ์อัตโนมัติ');
+  const mode = localStorage.getItem('queuePrintMode') || 'host';
+  if (mode === 'local') {
+    const ok = await fetch('http://localhost:3001/api/print-config', { signal: AbortSignal.timeout(2500) }).then(r => r.ok).catch(() => false);
+    const name = localStorage.getItem('queueLocalPrinter') || '';
+    return setDev('devPrinter', ok && name ? 'ok' : 'bad', !ok ? 'ไม่พบ Print Agent' : name ? `เครื่องนี้ · ${name}` : 'ยังไม่ได้เลือกเครื่องพิมพ์');
+  }
+  setDev('devPrinter', printConfig.printerName ? 'ok' : 'bad', printConfig.printerName ? `Server · ${printConfig.printerName}` : 'ยังไม่ได้เลือกเครื่องพิมพ์');
+}
+socket.on('connect', () => setDev('devServer', 'ok', 'เชื่อมต่อแล้ว'));
+socket.on('disconnect', () => setDev('devServer', 'bad', 'ขาดการเชื่อมต่อ'));
+if (socket.connected) setDev('devServer', 'ok', 'เชื่อมต่อแล้ว');
+camState('ready', 'พร้อม (ปิดอยู่)');
+setTimeout(updatePrinterStatus, 1500); setInterval(updatePrinterStatus, 30000);
+chkPrintEnabled.addEventListener('change', updatePrinterStatus);
+
+// ── 📱 mobile mode — remembered per device; a phone gets it on its first visit ──
+function applyViewMode(on) {
+  document.body.classList.toggle('mobile', on);
+  const b = document.getElementById('btnViewMode');
+  if (b) { b.textContent = on ? '🖥 เดสก์ท็อป' : '📱 มือถือ'; b.title = on ? 'กลับเป็นหน้าจอเดสก์ท็อป' : 'สลับเป็นหน้าจอแบบมือถือ'; }
+}
+function toggleViewMode() {
+  const on = !document.body.classList.contains('mobile');
+  try { localStorage.setItem('qf_kiosk_view', on ? 'mobile' : 'desktop'); } catch (e) {}
+  applyViewMode(on);
+  window.scrollTo(0, 0);
+}
+(() => {
+  let v = null; try { v = localStorage.getItem('qf_kiosk_view'); } catch (e) {}
+  // a phone: judge by the screen — innerWidth grows when the desktop layout is zoomed out to fit
+  applyViewMode(v ? v === 'mobile' : Math.min(screen.width, window.innerWidth) < 820);
+})();
+
+// clock tile
+function tickClock() {
+  const now = new Date(), t = document.getElementById('clkTime'), d = document.getElementById('clkDate');
+  if (t) t.innerHTML = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}<small>:${String(now.getSeconds()).padStart(2, '0')}</small>`;
+  if (d) d.textContent = now.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}
+tickClock(); setInterval(tickClock, 1000);
+
 // ── Apply screen config ───────────────────────────────────────────────────
 // Colours are fixed in the stylesheet (light-blue kiosk theme); only font, sizes and visibility are configurable.
 function applyScreenConfig(cfg) {
@@ -1771,16 +2401,19 @@ function applyScreenConfig(cfg) {
 
   const font = cfg.fontFamily || 'Kanit';
   // minimum sizes so the kiosk stays readable from a distance, even if smaller sizes were saved
-  const titleFs    = Math.max(cfg.titleFontSize    || 0, 34);
-  const cardNameFs = Math.max(cfg.cardNameFontSize || 0, 24);
-  const waitFs     = Math.max(cfg.cardWaitFontSize || 0, 17);
+  // sizes kept within what the 3-column layout can hold
+  const clampN = (v, lo, hi, d) => Math.min(hi, Math.max(lo, Number(v) || d));
+  const titleFs    = clampN(cfg.titleFontSize, 20, 30, 22);
+  const cardNameFs = clampN(cfg.cardNameFontSize, 15, 20, 17);
+  const waitFs     = clampN(cfg.cardWaitFontSize, 13, 18, 14);
   const lblSz      = Math.max(cfg.barLabelSize     || 0, 15);
   const inputFs    = Math.max(cfg.barInputFontSize || 0, 26);
 
+  // card size → bento column width / padding / icon size
   const szMap = {
-    compact: { p:'16px 14px', minW:'120px', maxW:'170px', ics:'44px' },
-    normal:  { p:'26px 22px', minW:'148px', maxW:'200px', ics:'56px' },
-    large:   { p:'34px 28px', minW:'170px', maxW:'240px', ics:'68px' },
+    compact: { p:'8px 10px',  minW:'150px', ics:'40px' },
+    normal:  { p:'12px 14px', minW:'190px', ics:'48px' },
+    large:   { p:'16px 18px', minW:'230px', ics:'56px' },
   };
   const sz = szMap[cfg.cardSize] || szMap.normal;
 
@@ -1790,8 +2423,9 @@ function applyScreenConfig(cfg) {
     @import url('https://fonts.googleapis.com/css2?family=${font.replace(/ /g,'+')}:wght@300;400;600;700;900&display=swap');
     body, .bar-input, .btn-bar-search, .btn-back, .btn-help-kiosk { font-family:'${font}','Kanit','Leelawadee UI',sans-serif !important; }
     .kiosk-title { font-size:${titleFs}px !important; }
-    .q-card { min-width:${sz.minW} !important; max-width:${sz.maxW} !important; padding:${sz.p} !important; }
-    .qc-icon { width:${sz.ics} !important; height:${sz.ics} !important; }
+    .type-group-cards { --card-min:${sz.minW}; }
+    .q-card { padding:${sz.p} !important; }
+    .q-card:not(.wide) .qc-icon { width:${sz.ics} !important; height:${sz.ics} !important; }
     .qc-name { font-size:${cardNameFs}px !important; }
     .qc-wait { font-size:${waitFs}px !important; }
     .qc-wait strong { font-size:${Math.round(waitFs * 1.25)}px !important; }
@@ -1813,9 +2447,20 @@ function renderSlipHtml(cfg, d) {
 }
 
 // ── Print ─────────────────────────────────────────────────────────────────
-function doPrint(ticket) {
-  if (!chkPrintEnabled.checked) return;
-  if (!printConfig.autoPrint) return;
+// auto print (after issuing) never opens the browser's print dialog — with no printer set, or a failed print,
+// it warns instead; the 🖨 button (manual) may still fall back to the dialog
+var _printWarn = '';
+function printFail(msg, data, manual) {
+  if (manual) return browserPrint(data);
+  _printWarn = '⚠ ' + msg;
+  setDev('devPrinter', 'bad', msg);
+  setStatus('⚠ ไม่ได้พิมพ์บัตรคิว — ' + msg, '#c62828');
+}
+function doPrint(ticket, opts) {
+  const manual = !!(opts && opts.manual);
+  _printWarn = '';
+  if (!manual && !chkPrintEnabled.checked) return;
+  if (!manual && !printConfig.autoPrint) return;
   const data = {
     sysName:     sysInfo?.name || 'ระบบคิว',
     patientName: currentPatient?.name || null,
@@ -1839,10 +2484,10 @@ function doPrint(ticket) {
         body: JSON.stringify({ printerName: localPrinter, sysId, ticket: data }),
         signal: AbortSignal.timeout(15000),
       }).then(r => r.json()).then(r => {
-        if (!r.success) browserPrint(data);
-      }).catch(() => browserPrint(data));
+        if (!r.success) printFail('Print Agent พิมพ์ไม่สำเร็จ' + (r.message ? ' (' + r.message + ')' : ''), data, manual);
+      }).catch(() => printFail('ติดต่อ Print Agent ไม่ได้', data, manual));
     } else {
-      browserPrint(data);
+      printFail('ยังไม่ได้เลือกเครื่องพิมพ์ของเครื่องนี้ (ตั้งค่า → การพิมพ์)', data, manual);
     }
   } else {
     // HOST mode: use server-side PowerShell print if printer configured
@@ -1851,10 +2496,10 @@ function doPrint(ticket) {
         method: 'POST', headers: {'Content-Type':'application/json'},
         body: JSON.stringify(data),
       }).then(r => r.json()).then(r => {
-        if (!r.success) browserPrint(data);
-      }).catch(() => browserPrint(data));
+        if (!r.success) printFail('เครื่องพิมพ์ ' + printConfig.printerName + ' พิมพ์ไม่สำเร็จ' + (r.message ? ' (' + r.message + ')' : ''), data, manual);
+      }).catch(() => printFail('ติดต่อเซิร์ฟเวอร์เพื่อพิมพ์ไม่ได้', data, manual));
     } else {
-      browserPrint(data);
+      printFail('ยังไม่ได้เลือกเครื่องพิมพ์ (ตั้งค่า → การพิมพ์)', data, manual);
     }
   }
 }
@@ -1901,11 +2546,12 @@ function getQueue(typeId, payRoute, extra) {
   }).then(r => r.json()).then(d => {
     if (d.alreadyIssued) { showDup(currentPatient, d.existing); return; }
     if (!d.success) { setStatus('✗ ' + (d.message || 'เกิดข้อผิดพลาด'), '#c62828'); setTimeout(() => setStatus('กดปุ่มด้านล่างเพื่อเริ่มสแกน'), 3000); showStep('scanner'); return; }
-    const t = d.ticket;
+    const t = d.ticket, who = currentPatient;
     doPrint(t);
     backToScanner();
+    showDone(t, who, d.toSys);
     setStatus(`✓ ออกคิว ${t.display} — ${t.typeName}${d.toSys ? ' · ไปที่ ' + d.toSys.name : ''}`, '#15803d');
-    setTimeout(() => setStatus(chkIpd.checked ? 'พร้อมรับบัตรคิว — ยิงบาร์โค้ด AN หรือกรอกข้อมูลด้านล่าง' : 'พร้อมรับบัตรคิว — ยิงบาร์โค้ด HN หรือกรอกข้อมูลด้านล่าง'), 4000);
+    setTimeout(() => setStatus(chkIpd.checked ? 'พร้อมรับบัตรคิว — ยิงบาร์โค้ด AN หรือกรอกเลขในช่องค้นหา' : 'พร้อมรับบัตรคิว — ยิงบาร์โค้ด HN หรือกรอกเลขในช่องค้นหา'), 4000);
   }).catch(() => {
     setStatus('✗ เกิดข้อผิดพลาดในการออกคิว', '#c62828');
     setTimeout(() => setStatus('กดปุ่มด้านล่างเพื่อเริ่มสแกน'), 3000);
@@ -1918,5 +2564,6 @@ function closeResult() {
   backToScanner();
 }
 </script>
+<script src="/vendor/pwa.js"></script>
 </body>
 </html>

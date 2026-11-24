@@ -29,6 +29,27 @@ if (IS_PKG) {
   } catch {}
 }
 
+// Install as an app (PWA): one manifest per page + room, so a phone can install "ออกคิว · ห้อง X" and
+// "เรียกคิว · ห้อง Y" as separate apps that open straight to their page
+app.get('/manifest.webmanifest', (req, res) => {
+  const page = req.query.page === 'cashier' ? 'cashier' : 'queue';
+  const sysId = Number(req.query.sys) || null;
+  const room = sysId ? ((systems.find(x => x.id === sysId) || {}).name || '') : '';
+  const label = page === 'cashier' ? 'เรียกคิว' : 'ออกคิว';
+  const name = room ? `${label} · ${room}` : `${label} · ระบบคิว`;
+  const start = `/${page}.html${sysId ? `?sys=${sysId}` : ''}`;
+  res.type('application/manifest+json').send(JSON.stringify({
+    id: start, name, short_name: (room || label).slice(0, 12), description: `ระบบคิวโรงพยาบาล — ${name}`,
+    start_url: start, scope: '/', display: 'standalone', orientation: 'any', lang: 'th',
+    background_color: '#f2f4fa', theme_color: '#1e2a5a',
+    icons: [
+      { src: '/app-icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+      { src: '/app-icon.png', sizes: '256x256', type: 'image/png', purpose: 'any' },
+    ],
+  }));
+});
+// the service worker must be served from the site root to cover every page
+app.get('/sw.js', (req, res, next) => { res.setHeader('Service-Worker-Allowed', '/'); res.setHeader('Cache-Control', 'no-cache'); next(); });
 app.use(express.static(PUBLIC_DIR));
 app.use(express.json({ limit: '5mb' })); // print config may carry a logo image
 
@@ -222,6 +243,22 @@ app.use('/api/sys', requireApiToken);
 app.use('/api/systems', (req, res, next) => req.method === 'GET' ? next() : requireApiToken(req, res, next));
 app.use(['/api/server/restart', '/api/startup/set', '/api/local-print'], requireApiToken);
 app.post('/api/global-config', requireApiToken);
+
+// ── ชื่อโรงพยาบาล (หน้า Login): opdconfig.hospitalname จาก HOSxP — ยังไม่ได้ต่อฐานข้อมูลก็ส่ง "รพ." ──
+let _hospName = { name: '', at: 0 };
+app.get('/api/hospital-name', async (req, res) => {
+  const fresh = Date.now() - _hospName.at < (_hospName.name ? 10 * 60000 : 60000);
+  if (!fresh) {
+    _hospName.at = Date.now();
+    try {
+      if (loadDbConfig().host) {
+        const [rows] = await hosQuery([['SELECT hospitalname FROM opdconfig LIMIT 1', []]]);
+        _hospName.name = String((rows && rows[0] && rows[0].hospitalname) || '').trim();
+      } else _hospName.name = '';
+    } catch (e) { _hospName.name = ''; }
+  }
+  res.json({ success: true, name: _hospName.name || 'รพ.', fromHosxp: !!_hospName.name });
+});
 
 // ── DB helpers (fire-and-forget queue logging) ────────────────────────────
 function dbFire(fn) {
@@ -426,7 +463,30 @@ function broadcastCall(sysId, sys, called) {
 }
 
 // ── Socket rooms ──────────────────────────────────────────────────────────
+// ── 🖥 display presence: each open display.html says hello (mode / layout / sound) — the Staff Monitor lists them ──
+const displayPresence = {};          // sysId → { socketId → info }
+const displayList = sysId => Object.values(displayPresence[sysId] || {}).sort((a, b) => a.since - b.since);
+const emitDisplays = sysId => io.to('sys-' + sysId).emit('displays_updated', { sysId, displays: displayList(sysId) });
 io.on('connection', socket => {
+  socket.on('display_hello', info => {
+    const sysId = Number(info && info.sysId);
+    if (!sysId) return;
+    const map = displayPresence[sysId] = displayPresence[sysId] || {};
+    const prev = map[socket.id];
+    const ip = String(socket.handshake.address || '').replace(/^::ffff:/, '');
+    map[socket.id] = { id: socket.id, ip, since: prev ? prev.since : Date.now(), at: Date.now(),
+      mode: String(info.mode || 'opd').slice(0, 8), layout: String(info.layout || '').slice(0, 20),
+      sound: info.sound !== false, audio: !!info.audio, w: Number(info.w) || 0, h: Number(info.h) || 0 };
+    socket.data.displaySys = sysId;
+    emitDisplays(sysId);
+  });
+  socket.on('disconnect', () => {
+    const sysId = socket.data.displaySys;
+    if (sysId && displayPresence[sysId] && displayPresence[sysId][socket.id]) { delete displayPresence[sysId][socket.id]; emitDisplays(sysId); }
+  });
+  socket.on('displays_get', (sysId, cb) => { if (typeof cb === 'function') cb(displayList(Number(sysId))); });
+  // 🔄 the monitor's "รีเฟรชจอ" — every display of this system reloads itself
+  socket.on('display_reload_req', sysId => { if (Number(sysId)) io.to('sys-' + Number(sysId)).emit('display_reload', { sysId: Number(sysId) }); });
   socket.on('join_sys', sysId => {
     socket.join('sys-' + sysId);
     const sys = getSys(sysId);
@@ -537,11 +597,21 @@ app.get('/api/sys/:sysId/info', (req, res) => {
 // ── Queue Types API ───────────────────────────────────────────────────────
 app.get('/api/sys/:sysId/queue-types', requireSys, (req, res) => res.json(req.sys.queueTypes));
 
+// prefix: letters / digits, optionally ending with "-" → stored as "1 -" (the number is shown as "1 - 001")
+const normPrefix = p => String(p || '').toUpperCase().trim().replace(/\s*-+$/, ' -').replace(/^ -$/, '');
+const PREFIX_RE = /^[A-Z0-9]{1,3}( -)?$/;
+function queueDisplay(prefix, n) {
+  const num = String(n).padStart(3, '0');
+  return / -$/.test(prefix || '') ? `${prefix} ${num}` : (prefix || '') + num;
+}
+// the same queue whatever the staff typed: "1 - 001" = "1-001" = "1001"
+const dispKey = d => String(d || '').toUpperCase().replace(/[\s-]/g, '');
 app.post('/api/sys/:sysId/queue-types', requireSys, (req, res) => {
   const { sys, sysId } = req;
   const { name, prefix, color, forMode } = req.body;
   if (!name) return res.status(400).json({ success: false, message: 'ต้องระบุชื่อประเภทคิว' });
-  const p = (prefix || '').toUpperCase().trim();
+  const p = normPrefix(prefix);
+  if (p !== '' && !PREFIX_RE.test(p)) return res.status(400).json({ success: false, message: 'Prefix ต้องเป็นตัวอักษร/ตัวเลข 1–3 ตัว และลงท้ายด้วย - ได้ (เช่น 1 -)' });
   if (p !== '' && sys.queueTypes.find(t => t.prefix === p))
     return res.status(400).json({ success: false, message: `Prefix "${p}" ถูกใช้แล้ว` });
   const type = { id: sys.nextTypeId++, name: name.trim(), prefix: p, color: color || '#42a5f5', forMode: forMode || 'both' };
@@ -558,7 +628,8 @@ app.put('/api/sys/:sysId/queue-types/:id', requireSys, (req, res) => {
   if (idx === -1) return res.status(404).json({ success: false, message: 'ไม่พบประเภทคิว' });
   const { name, prefix, color, forMode } = req.body;
   if (prefix !== undefined && prefix !== null) {
-    const p = prefix.toUpperCase().trim();
+    const p = normPrefix(prefix);
+    if (p !== '' && !PREFIX_RE.test(p)) return res.status(400).json({ success: false, message: 'Prefix ต้องเป็นตัวอักษร/ตัวเลข 1–3 ตัว และลงท้ายด้วย - ได้ (เช่น 1 -)' });
     if (p !== '' && sys.queueTypes.find(t => t.id !== id && t.prefix === p))
       return res.status(400).json({ success: false, message: `Prefix "${p}" ถูกใช้แล้ว` });
     sys.queueTypes[idx].prefix = p;
@@ -653,6 +724,26 @@ app.get('/api/sys/:sysId/peek-next', requireSys, (req, res) => {
 });
 
 // ── Queue Operations ──────────────────────────────────────────────────────
+// the last number issued for this type — linked systems share one running number per prefix,
+// so a forwarded ticket never clashes
+function currentSerial(sysId, sys, type) {
+  let serial = (sys.state[type.id] && sys.state[type.id].serial) || 0;
+  for (const lid of linkedSysIds(sysId)) {
+    const other = getSys(lid);
+    if (!other) continue;
+    for (const ot of other.queueTypes)
+      if (ot.prefix === type.prefix && other.state[ot.id]) serial = Math.max(serial, other.state[ot.id].serial || 0);
+  }
+  return serial;
+}
+// the number the next ticket of a type will get — shown on the kiosk before staff confirm
+app.get('/api/sys/:sysId/next-number', requireSys, (req, res) => {
+  const type = req.sys.queueTypes.find(t => t.id === Number(req.query.typeId));
+  if (!type) return res.json({ success: false, message: 'ไม่พบประเภทคิว' });
+  const n = currentSerial(req.sysId, req.sys, type) + 1;
+  res.json({ success: true, display: queueDisplay(type.prefix, n), number: n });
+});
+
 app.post('/api/sys/:sysId/get-serial', requireSys, (req, res) => {
   const { sys: srcSys, sysId: srcSysId } = req;
   const { typeId, hn, qn, patientName, pttypeName, vn, vstdate, vsttime, mode, an } = req.body;
@@ -672,19 +763,10 @@ app.post('/api/sys/:sysId/get-serial', requireSys, (req, res) => {
   }
   initTypeState(sys, type.id);
   const s = sys.state[type.id];
-  // Linked systems share one running number per prefix, so a forwarded ticket never clashes
-  let serial = s.serial;
-  for (const lid of linkedSysIds(sysId)) {
-    const other = getSys(lid);
-    if (!other) continue;
-    for (const ot of other.queueTypes) {
-      if (ot.prefix === type.prefix && other.state[ot.id]) serial = Math.max(serial, other.state[ot.id].serial || 0);
-    }
-  }
-  s.serial = serial + 1;
+  s.serial = currentSerial(sysId, sys, type) + 1;
   const ticket = {
     number:      s.serial,
-    display:     type.prefix + String(s.serial).padStart(3, '0'),
+    display:     queueDisplay(type.prefix, s.serial),
     typeId:      type.id, typeName: type.name, prefix: type.prefix, color: type.color,
     issuedAt:    new Date().toLocaleTimeString('th-TH'),
     date:        new Date().toLocaleDateString('th-TH'),
@@ -706,7 +788,11 @@ app.post('/api/sys/:sysId/get-serial', requireSys, (req, res) => {
   // (no answer, e.g. a card picked by hand → การเงิน, rather than risk an unpaid bill)
   // (the same for a สิทธิ queue — payRule 'pttype')
   const groupRule = type.payRule === 'dept' || type.payRule === 'pttype';
-  if (groupRule) ticket.payRoute = req.body.payRoute === 'free' ? 'free' : 'cash';
+  // ห้องตรวจ with "เช็คไปการเงิน" off: a plain pharmacy queue — no money route, never sent to the cashier
+  const srcPay = (srcSys.issueMode && srcSys.issueMode.pay) || {};
+  const deptNoRoute = type.payRule === 'dept' && srcPay.deptRouteCheck === false;
+  if (deptNoRoute) ticket.forwardSkipped = true;
+  else if (groupRule) ticket.payRoute = req.body.payRoute === 'free' ? 'free' : 'cash';
   else if (type.payRule) ticket.payRoute = type.payRule;
   if (ticket.payRoute === 'free') ticket.forwardSkipped = true;
   // shown in the call page's "สถานะ" column (and kept when the ticket is forwarded)
@@ -726,7 +812,7 @@ app.post('/api/sys/:sysId/get-serial', requireSys, (req, res) => {
     ticket.forwardSkipped = true;   // already at the cashier — never auto-sent on (e.g. back to the pharmacy)
   }
   // เดินคิวตามสถานะ HOSxP: an OPD visit waits for the drug check before it can be called (or sent to การเงิน)
-  if (!toCashier && ticket.mode === 'opd' && ticket.vn && flowCashierOf(srcSysId, srcSys)) {
+  if (!toCashier && !deptNoRoute && ticket.mode === 'opd' && ticket.vn && flowCashierOf(srcSysId, srcSys)) {
     ticket.flow = 'check';
     ticket.forwardSkipped = true;   // the flow moves it — "เรียกคิวถัดไป" must never auto-send it as well
   }
@@ -777,11 +863,271 @@ app.get('/api/sys/:sysId/called-today', requireSys, (req, res) => {
   res.json({ success: true, list: [...(req.sys.calledLog || [])].reverse() });
 });
 
+// ══ Dashboard ระยะเวลารอคอย (ออกคิว → ตรวจยา → จ่ายยา) ═══════════════════════
+// rows from the queue history table (app_queue_opd: issued_at / called_at), the drug-check time from HOSxP
+// (rx_dispenser_detail type 3, first check of the visit); today's calls are filled in from the day's call log
+const pad2 = n => String(n).padStart(2, '0');
+const ymd = d => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+const hms = d => `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
+const toDate = v => v == null || v === '' ? null : v instanceof Date ? v : new Date(String(v).replace(' ', 'T'));
+const minsBetween = (a, b) => a && b && b >= a ? Math.round((b - a) / 600) / 100 : null;   // minutes, 2 decimals
+
+// trace (optional): every query run, with its parameters, row count and time — shown to admins on the dashboard
+async function waitReport(sysId, sys, from, to, trace) {
+  const run = async (title, sql, params) => {
+    const t0 = Date.now(), [rows] = await hosQuery([[sql, params]]);
+    if (trace) trace.push({ title, sql: sql.replace(/\n\s+/g, '\n  ').trim(), params, rows: rows.length, ms: Date.now() - t0 });
+    return rows;
+  };
+  const rows = await run("1. คิวที่ออกในช่วงวันที่ (ประวัติคิวของระบบ)",
+    `SELECT service_date, vn, type_id, type_name, prefix, display, hn, qn, patient_name, status, issued_at, called_at, counter_name
+       FROM app_queue_opd WHERE sys_id = ? AND service_date BETWEEN ? AND ? ORDER BY service_date, issued_at`, [sysId, from, to]);
+  // drug check (first stamp of the visit) for every VN in range — in chunks
+  const vns = [...new Set(rows.map(r => String(r.vn || '').trim()).filter(Boolean))];
+  // every pharmacy step HOSxP stamps (rx_dispenser_type): 1 ผู้บันทึกรายการใบสั่งยา · 2 ผู้จัดยา · 3 ผู้ตรวจสอบยา · 4 ผู้จ่ายยา
+  const steps = new Map();
+  for (let i = 0; i < vns.length; i += 500) {
+    const part = vns.slice(i, i + 500);
+    const at = n => `MIN(CASE WHEN r.rx_dispenser_type_id = ${n} THEN r.rx_dispenser_datetime END) AS t${n}`;
+    // staff = officer_login_name → the officer's name (the login itself if not found)
+    const by = n => `MAX(CASE WHEN r.rx_dispenser_type_id = ${n} THEN COALESCE(o.officer_name, r.staff) END) AS s${n}`;
+    const rx = await run(`2. เวลาแต่ละขั้นตอนห้องยาจาก HOSxP (rx_dispenser_type 1–4, VN ชุดที่ ${i / 500 + 1})`,
+      `SELECT r.vn, ${[1, 2, 3, 4].map(at).join(', ')}, ${[1, 2, 3, 4].map(by).join(', ')} FROM rx_dispenser_detail r
+      LEFT JOIN officer o ON o.officer_login_name = r.staff
+      WHERE r.rx_dispenser_type_id IN (1, 2, 3, 4) AND r.vn IN (${part.map(() => '?').join(',')}) GROUP BY r.vn`, part);
+    rx.forEach(r => {
+      const vn = String(r.vn).trim();
+      steps.set(vn, [1, 2, 3, 4].map(n => ({ at: toDate(r['t' + n]), by: String(r['s' + n] || '').trim() })));
+    });
+  }
+  // call times of the same VN in this room and in the flow partner (การเงิน ↔ ห้องยา) — from app_queue_events,
+  // e.sys_id = the room the event happened in (a queue sent to another room gets its own app_queue_opd row there)
+  const other = flowOtherOf(sysId), calls = new Map();
+  for (let i = 0; i < vns.length; i += 500) {
+    const part = vns.slice(i, i + 500);
+    const ev = await run(`4. เวลาเรียกคิวแยกห้อง: ห้องนี้ / ${other.label} (app_queue_events, VN ชุดที่ ${i / 500 + 1})`,
+      `SELECT o.vn, e.sys_id, e.event_type, MIN(e.event_at) AS t_first
+         FROM app_queue_opd o JOIN app_queue_events e ON e.ticket_id = o.id
+        WHERE o.service_date BETWEEN ? AND ? AND e.event_type IN ('issued', 'called')
+          AND o.vn IN (${part.map(() => '?').join(',')})
+        GROUP BY o.vn, e.sys_id, e.event_type`, [from, to, ...part]);
+    ev.forEach(r => {
+      const vn = String(r.vn).trim(), sid = Number(r.sys_id), mine = sid === Number(sysId);
+      if (!mine && other.ids.length && !other.ids.includes(sid)) return;
+      const c = calls.get(vn) || {}, t = toDate(r.t_first);
+      const keep = k => { if (t && (!c[k] || t < c[k])) c[k] = t; };
+      if (mine && r.event_type === 'called') keep('call1');
+      if (!mine && r.event_type === 'issued') keep('oIn');
+      if (!mine && r.event_type === 'called') keep('oCall');
+      calls.set(vn, c);
+    });
+  }
+  // today: the last call of each queue from the day's call log (the table may have missed a call)
+  const today = todayStr(), lastCall = new Map();
+  for (const e of sys.calledLog || []) if (e.calledTs && !e.notCalled) lastCall.set(e.display, new Date(e.calledTs));
+  if (trace && from <= today && today <= to) trace.push({ title: "3. เวลาเรียกคิวของวันนี้ (บันทึกการเรียกในโปรแกรม ไม่ใช่ SQL)",
+    sql: "-- วันนี้: ใช้เวลาเรียกล่าสุดของแต่ละคิวจากบันทึกการเรียกของวัน (calledLog) แทน called_at ถ้ามี", params: [], rows: lastCall.size, ms: 0 });
+  return rows.map(r => {
+    const date = r.service_date instanceof Date ? ymd(r.service_date) : String(r.service_date).slice(0, 10);
+    const issued = toDate(r.issued_at);
+    let called = toDate(r.called_at);
+    if (date === today && lastCall.has(r.display)) called = lastCall.get(r.display);
+    // รอตรวจ / รอจ่าย come from HOSxP's own stamps (the VN is the visit): บันทึกใบสั่งยา → ตรวจสอบยา → จ่ายยา
+    const st = steps.get(String(r.vn || '').trim()) || [{}, {}, {}, {}];
+    const [rec, prep, , disp] = st.map(x => x.at || null), chk3 = st[2].at || null, chk = chk3;
+    const cl = calls.get(String(r.vn || '').trim()) || {};
+    const call1 = cl.call1 || called, oIn = cl.oIn || null, oCall = cl.oCall || null;
+    return { date,
+      // first call in this room + when the partner room (การเงิน / ห้องยา) received and called the same VN
+      call1: call1 ? hms(call1) : '', call1Ts: call1 ? +call1 : null,
+      otherIn: oIn ? hms(oIn) : '', otherInTs: oIn ? +oIn : null, otherCall: oCall ? hms(oCall) : '', otherCallTs: oCall ? +oCall : null,
+      // HOSxP pharmacy steps (raw stamps of this VN) + the minutes between them
+      rxRecord: rec ? hms(rec) : '', rxPrepare: prep ? hms(prep) : '', rxCheck: chk3 ? hms(chk3) : '', rxDispense: disp ? hms(disp) : '',
+      rxRecordTs: rec ? +rec : null, rxPrepareTs: prep ? +prep : null, rxCheckTs: chk3 ? +chk3 : null, rxDispenseTs: disp ? +disp : null,
+      rxStaff: st.map(x => x.by || ''),
+      mRecPrep: minsBetween(rec, prep), mPrepCheck: minsBetween(prep, chk3), mRecCheck: minsBetween(rec, chk3),
+      mCheckDisp: minsBetween(chk3, disp), mRecDisp: minsBetween(rec, disp), display: r.display, typeId: Number(r.type_id) || null, typeName: r.type_name || '', prefix: r.prefix || '',
+      hn: r.hn || '', qn: r.qn || '', name: r.patient_name || '', status: r.status || '',
+      issued: issued ? hms(issued) : '', checked: chk ? hms(chk) : '', called: called ? hms(called) : '',
+      issuedTs: issued ? +issued : null, checkedTs: chk ? +chk : null, calledTs: called ? +called : null,
+      waitCheck: minsBetween(rec, chk), waitDispense: minsBetween(chk, disp), waitTotal: minsBetween(issued, called) };
+  });
+}
+
+// ── minimal .xlsx writer (stored zip, no extra library) ──
+const CRC_TABLE = (() => { const t = []; for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+const crc32 = buf => { let c = 0xFFFFFFFF; for (const b of buf) c = CRC_TABLE[(c ^ b) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+function zipStore(files) {
+  const parts = [], central = []; let offset = 0;
+  for (const [name, text] of files) {
+    const data = Buffer.from(text, 'utf8'), fname = Buffer.from(name, 'utf8'), crc = crc32(data);
+    const local = Buffer.alloc(30); local.writeUInt32LE(0x04034b50, 0); local.writeUInt16LE(20, 4); local.writeUInt16LE(0x0800, 6);
+    local.writeUInt32LE(crc, 14); local.writeUInt32LE(data.length, 18); local.writeUInt32LE(data.length, 22); local.writeUInt16LE(fname.length, 26);
+    const cen = Buffer.alloc(46); cen.writeUInt32LE(0x02014b50, 0); cen.writeUInt16LE(20, 4); cen.writeUInt16LE(20, 6); cen.writeUInt16LE(0x0800, 8);
+    cen.writeUInt32LE(crc, 16); cen.writeUInt32LE(data.length, 20); cen.writeUInt32LE(data.length, 24); cen.writeUInt16LE(fname.length, 28); cen.writeUInt32LE(offset, 42);
+    parts.push(local, fname, data); central.push(cen, fname); offset += 30 + fname.length + data.length;
+  }
+  const cd = Buffer.concat(central), end = Buffer.alloc(22);
+  end.writeUInt32LE(0x06054b50, 0); end.writeUInt16LE(files.length, 8); end.writeUInt16LE(files.length, 10);
+  end.writeUInt32LE(cd.length, 12); end.writeUInt32LE(offset, 16);
+  return Buffer.concat([...parts, cd, end]);
+}
+// sheets: [{ name, title, sub, header: [...], rows: [[cell…]…], totals: [row index…], center: [col index…], widths: [...] }]
+// TH SarabunPSK 18 throughout; title + sub-title on top, a dark header row, thin borders on every cell, banded rows,
+// highlighted totals, frozen header and filter buttons
+function buildXlsx(sheets) {
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
+  const col = i => { let s = ''; for (i++; i; i = Math.floor((i - 1) / 26)) s = String.fromCharCode(65 + (i - 1) % 26) + s; return s; };
+  const ST = { header: 1, body: 2, band: 3, total: 4, title: 5, sub: 6, bodyC: 7, bandC: 8, totalC: 9 };   // cellXfs ids below
+  const cell = (ref, v, st) => v == null || v === '' ? `<c r="${ref}" s="${st}"/>`
+    : typeof v === 'number' && isFinite(v) ? `<c r="${ref}" s="${st}"><v>${v}</v></c>`
+    : `<c r="${ref}" s="${st}" t="inlineStr"><is><t>${esc(v)}</t></is></c>`;
+  const sheetXml = sh => {
+    const n = sh.header.length, last = col(n - 1), HR = 4, first = HR + 1, lastRow = HR + sh.rows.length;
+    const totals = new Set(sh.totals || []), center = new Set(sh.center || []);
+    const rowsXml = sh.rows.map((row, i) => {
+      const r = first + i, kind = totals.has(i) ? 'total' : i % 2 ? 'band' : 'body';
+      return `<row r="${r}">${sh.header.map((_, c) => cell(col(c) + r, row[c], ST[kind + (center.has(c) ? 'C' : '')])).join('')}</row>`;
+    }).join('');
+    return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">` +
+      `<sheetViews><sheetView workbookViewId="0" showGridLines="0"><pane ySplit="${HR}" topLeftCell="A${first}" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>` +
+      `<sheetFormatPr defaultRowHeight="26"/>` +
+      `<cols>${(sh.widths || []).map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join('')}</cols>` +
+      `<sheetData>` +
+        `<row r="1" ht="38" customHeight="1">${cell('A1', sh.title || sh.name, ST.title)}</row>` +
+        `<row r="2">${cell('A2', sh.sub || '', ST.sub)}</row><row r="3" ht="8" customHeight="1"/>` +
+        `<row r="${HR}" ht="34" customHeight="1">${sh.header.map((h, c) => cell(col(c) + HR, h, ST.header)).join('')}</row>` +
+        rowsXml +
+      `</sheetData>` +
+      (sh.rows.length ? `<autoFilter ref="A${HR}:${last}${lastRow}"/>` : '') +
+      `<mergeCells count="2"><mergeCell ref="A1:${last}1"/><mergeCell ref="A2:${last}2"/></mergeCells>` +
+      `<pageMargins left="0.4" right="0.4" top="0.5" bottom="0.5" header="0.3" footer="0.3"/><pageSetup orientation="landscape"/>` +
+      `</worksheet>`;
+  };
+  const F = 'TH SarabunPSK', font = (extra, sz = 18) => `<font>${extra}<sz val="${sz}"/>${''}<name val="${F}"/><family val="2"/><charset val="222"/></font>`;
+  const solid = rgb => `<fill><patternFill patternType="solid"><fgColor rgb="${rgb}"/><bgColor indexed="64"/></patternFill></fill>`;
+  const xf = (fontId, fillId, borderId, align) => `<xf numFmtId="0" fontId="${fontId}" fillId="${fillId}" borderId="${borderId}" xfId="0"` +
+    ` applyFont="1" applyFill="1" applyBorder="1"${align ? ` applyAlignment="1"><alignment ${align}/></xf>` : '/>'}`;
+  const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">` +
+    `<fonts count="5">` +
+      font('') +                                         // 0 body (the workbook default: TH SarabunPSK 18)
+      font('<b/><color rgb="FFFFFFFF"/>') +              // 1 header — white bold
+      font('<b/><color rgb="FF1F3864"/>') +              // 2 total — navy bold
+      font('<b/><color rgb="FF1F3864"/>', 24) +          // 3 title
+      font('<color rgb="FF595959"/>') +                  // 4 sub-title — grey
+    `</fonts>` +
+    `<fills count="5"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>` +
+      solid('FF1F4E79') + solid('FFF2F7FC') + solid('FFFFF2CC') + `</fills>` +   // 2 header · 3 band · 4 total
+    `<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border>` +
+      `<border>${['left', 'right', 'top', 'bottom'].map(e => `<${e} style="thin"><color rgb="FFB7C9E2"/></${e}>`).join('')}<diagonal/></border></borders>` +
+    `<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>` +
+    `<cellXfs count="10">` +
+      `<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>` +           // 0 default
+      xf(1, 2, 1, 'horizontal="center" vertical="center" wrapText="1"') +          // 1 header
+      xf(0, 0, 1, 'vertical="center"') +                                           // 2 body
+      xf(0, 3, 1, 'vertical="center"') +                                           // 3 band
+      xf(2, 4, 1, 'vertical="center"') +                                           // 4 total
+      xf(3, 0, 0, 'vertical="center"') +                                           // 5 title
+      xf(4, 0, 0, 'vertical="center"') +                                           // 6 sub-title
+      xf(0, 0, 1, 'horizontal="center" vertical="center"') +                       // 7 body, centred
+      xf(0, 3, 1, 'horizontal="center" vertical="center"') +                       // 8 band, centred
+      xf(2, 4, 1, 'horizontal="center" vertical="center"') +                       // 9 total, centred
+    `</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+  const files = [
+    ['[Content_Types].xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${sheets.map((_, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}</Types>`],
+    ['_rels/.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`],
+    ['xl/workbook.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${sheets.map((s, i) => `<sheet name="${esc(s.name).slice(0, 31)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('')}</sheets></workbook>`],
+    ['xl/_rels/workbook.xml.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${sheets.map((_, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('')}<Relationship Id="rId${sheets.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`],
+    ['xl/styles.xml', styles],
+    ...sheets.map((s, i) => [`xl/worksheets/sheet${i + 1}.xml`, sheetXml(s)]),
+  ];
+  return zipStore(files);
+}
+
+app.get('/api/sys/:sysId/wait-report', requireSys, async (req, res) => {
+  const okDate = s => /^\d{4}-\d{2}-\d{2}$/.test(String(s || ''));
+  const from = okDate(req.query.from) ? req.query.from : todayStr(), to = okDate(req.query.to) ? req.query.to : from;
+  if (from > to) return res.json({ success: false, message: 'วันที่เริ่มต้องไม่มากกว่าวันที่สิ้นสุด' });
+  if ((new Date(to) - new Date(from)) / 864e5 > 366) return res.json({ success: false, message: 'เลือกช่วงได้ไม่เกิน 1 ปี' });
+  const typeIds = String(req.query.types || '').split(',').map(Number).filter(Boolean);
+  try {
+    const trace = [];
+    const all = await waitReport(req.sysId, req.sys, from, to, trace);
+    // every type seen in the range (names as they were issued) — for the filter chips
+    const types = [...new Map(all.map(r => [r.typeId, { id: r.typeId, name: r.typeName, prefix: r.prefix,
+      color: (req.sys.queueTypes.find(t => t.id === r.typeId) || {}).color || null }])).values()];
+    const rows = typeIds.length ? all.filter(r => typeIds.includes(r.typeId)) : all;
+    const otherLabel = flowOtherOf(req.sysId).label;
+    if (req.query.format !== 'xlsx') return res.json({ success: true, from, to, types, rows, otherLabel, queries: trace, dbType: loadDbConfig().type || '' });
+
+    const avg = a => { const v = a.filter(x => x != null); return v.length ? Math.round(v.reduce((s, x) => s + x, 0) / v.length * 10) / 10 : null; };
+    const max = a => { const v = a.filter(x => x != null); return v.length ? Math.round(Math.max(...v) * 10) / 10 : null; };
+    const groups = [...new Map(rows.map(r => [r.typeId, r.prefix ? `${r.prefix} ${r.typeName}` : r.typeName])).entries()]
+      .sort((a, b) => a[1].localeCompare(b[1], 'th', { numeric: true }));   // 1 2 3 … then A B …
+    const sumRow = (label, list) => [label, list.length, list.filter(r => r.calledTs).length, list.filter(r => r.checkedTs).length,
+      avg(list.map(r => r.waitCheck)), avg(list.map(r => r.waitDispense)), avg(list.map(r => r.waitTotal)), max(list.map(r => r.waitTotal))];
+    const sysName = (systems.find(x => x.id === req.sysId) || {}).name || '';
+    const thDate = d => { const [y, m, dd] = d.split('-').map(Number); return `${dd}/${m}/${y + 543}`; };
+    const range = from === to ? `วันที่ ${thDate(from)}` : `วันที่ ${thDate(from)} ถึง ${thDate(to)}`;
+    const typeNote = typeIds.length ? ` · เฉพาะประเภท: ${groups.map(([, l]) => l).join(', ')}` : ' · ทุกประเภทคิว';
+    const sub = `${sysName} · ${range}${typeNote} · ออกรายงาน ${thDate(todayStr())} ${hms(new Date()).slice(0, 5)} น.`;
+    const sumRows = [...groups.map(([id, label]) => sumRow(label, rows.filter(r => r.typeId === id))), sumRow('รวมทั้งหมด', rows)];
+    const buf = buildXlsx([
+      { name: 'สรุปตามประเภทคิว', title: 'สรุประยะเวลารอคอยตามประเภทคิว', sub,
+        widths: [36, 14, 16, 16, 34, 32, 19, 17], center: [1, 2, 3, 4, 5, 6, 7], totals: [sumRows.length - 1],
+        header: ['ประเภทคิว', 'จำนวนคิว', 'ตรวจยาแล้ว', 'จ่ายยาแล้ว', 'เฉลี่ยรอตรวจยา นาที (บันทึก→ตรวจ HOSxP)', 'เฉลี่ยรอจ่ายยา นาที (ตรวจ→จ่าย HOSxP)', 'เฉลี่ยรวม (นาที)', 'นานสุด (นาที)'],
+        rows: sumRows.map(r => [r[0], r[1], r[3], r[2], r[4], r[5], r[6], r[7]]) },
+      { name: 'ขั้นตอนห้องยา HOSxP', title: 'เวลาเฉลี่ยระหว่างขั้นตอนห้องยา (rx_dispenser_detail ใน HOSxP)', sub,
+        widths: [36, 14, 14, 14, 14, 14, 22, 22, 22, 22, 22], center: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], totals: [groups.length],
+        header: ['ประเภทคิว', 'บันทึกใบสั่งยา', 'จัดยา', 'ตรวจสอบยา', 'จ่ายยา', 'จำนวนคิว', 'บันทึก → จัดยา (นาที)', 'จัดยา → ตรวจสอบ (นาที)',
+          'บันทึก → ตรวจสอบ (นาที)', 'ตรวจสอบ → จ่ายยา (นาที)', 'บันทึก → จ่ายยา (นาที)'],
+        rows: [...groups.map(([id, label]) => [label, rows.filter(r => r.typeId === id)]), ['รวมทั้งหมด', rows]].map(([label, l]) => [label,
+          l.filter(r => r.rxRecordTs).length, l.filter(r => r.rxPrepareTs).length, l.filter(r => r.rxCheckTs).length, l.filter(r => r.rxDispenseTs).length, l.length,
+          avg(l.map(r => r.mRecPrep)), avg(l.map(r => r.mPrepCheck)), avg(l.map(r => r.mRecCheck)), avg(l.map(r => r.mCheckDisp)), avg(l.map(r => r.mRecDisp))]) },
+      { name: 'รายละเอียด', title: 'รายละเอียดระยะเวลารอคอยรายคิว', sub,
+        widths: [14, 12, 30, 14, 9, 32, 15, 24, 17, 18, 18, 20, 20, 20, 20, 32, 30, 28, 13, 30, 24, 28, 24],
+        center: [0, 1, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+        header: ['วันที่', 'เลขคิว', 'ประเภทคิว', 'HN', 'QN', 'ชื่อผู้รับบริการ', 'ออกคิว (คิว)', 'บันทึกใบสั่งยา (HOSxP)', 'จัดยา (HOSxP)', 'ตรวจยา (HOSxP)',
+          'จ่ายยา (HOSxP)', 'เรียกครั้งแรก (คิว)', `${otherLabel} รับคิว (คิว)`, `${otherLabel} เรียก (คิว)`, 'เรียกจ่ายยา (คิว)',
+          'รอตรวจยา นาที (บันทึกใบสั่งยา→ตรวจยา HOSxP)', 'รอจ่ายยา นาที (ตรวจยา→จ่ายยา HOSxP)', 'รวม นาที (ออกคิว→เรียก)', 'สถานะ',
+          'ผู้บันทึกใบสั่งยา (HOSxP)', 'ผู้จัดยา (HOSxP)', 'ผู้ตรวจสอบยา (HOSxP)', 'ผู้จ่ายยา (HOSxP)'],
+        rows: rows.map(r => [thDate(r.date), r.display, r.typeName, r.hn, r.qn, r.name, r.issued, r.rxRecord, r.rxPrepare, r.rxCheck, r.rxDispense,
+          r.call1, r.otherIn, r.otherCall, r.called,
+          r.waitCheck, r.waitDispense, r.waitTotal, { waiting: 'รอ', called: 'เรียกแล้ว', noshow: 'ไม่มา' }[r.status] || r.status, ...r.rxStaff]) },
+    ]);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="wait-report-${from}_${to}.xlsx"`);
+    res.send(buf);
+  } catch (err) {
+    res.json({ success: false, message: 'ดึงข้อมูลไม่สำเร็จ: ' + err.message });
+  }
+});
+
+// ⬇ Excel of one dashboard tile: the page sends the table it shows, the server styles it like the report above
+app.post('/api/sys/:sysId/xlsx', requireSys, (req, res) => {
+  const b = req.body || {};
+  const cellOk = v => v == null ? '' : typeof v === 'number' && isFinite(v) ? v : String(v).slice(0, 500);
+  const sheets = (Array.isArray(b.sheets) ? b.sheets : []).slice(0, 5).map((s, i) => {
+    const header = (Array.isArray(s.header) ? s.header : []).slice(0, 40).map(h => String(h ?? ''));
+    const rows = (Array.isArray(s.rows) ? s.rows : []).slice(0, 20000).map(r => header.map((_, c) => cellOk(Array.isArray(r) ? r[c] : '')));
+    const nums = a => (Array.isArray(a) ? a : []).map(Number).filter(n => Number.isInteger(n) && n >= 0);
+    return { name: String(s.name || `Sheet${i + 1}`).replace(/[\\/?*[\]:]/g, ' ').slice(0, 31), title: String(s.title || '').slice(0, 200),
+      sub: String(s.sub || '').slice(0, 300), header, rows, totals: nums(s.totals), center: nums(s.center),
+      widths: header.map((h, c) => Number((s.widths || [])[c]) || Math.min(45, Math.max(12, h.length * 1.4 + 4))) };
+  }).filter(s => s.header.length);
+  if (!sheets.length) return res.status(400).json({ success: false, message: 'ไม่มีข้อมูลสำหรับ Excel' });
+  const name = String(b.filename || 'export').replace(/[\\/:*?"<>|\r\n]/g, ' ').slice(0, 120) + '.xlsx';
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', `attachment; filename="export.xlsx"; filename*=UTF-8''${encodeURIComponent(name)}`);
+  res.send(buildXlsx(sheets));
+});
+
 function doCall(sys, sysId, ticket, s, counterId) {
   let counter = sys.counters.find(c => c.id === Number(counterId));
   if (!counter && sys.counters.length) counter = sys.counters[0]; // fallback to first counter
   const called  = {
     ...ticket,
+    parked:      undefined,   // calling a parked (เก็บคิว) queue un-parks it
     calledAt:    new Date().toLocaleTimeString('th-TH'),
     counterId:   counter?.id   || null,
     counterName: counter?.name || '',
@@ -810,8 +1156,8 @@ app.post('/api/sys/:sysId/call-next', requireSys, (req, res) => {
   const typeId    = req.body.typeId    ? Number(req.body.typeId)    : null;
   const counterId = req.body.counterId ? Number(req.body.counterId) : null;
   let ticket = null, s = null;
-  // a queue still waiting for the drug check (pharmacy flow) is never "next"
-  const callable = t => t.flow !== 'check';
+  // a queue still waiting for the drug check (pharmacy flow), or one staff parked (เก็บคิว), is never "next"
+  const callable = t => t.flow !== 'check' && !t.parked;
   const notReady = list => { const n = list.filter(t => !callable(t)).length; return n ? ` (รอตรวจสอบยา ${n} คิว)` : ''; };
   if (typeId) {
     s = sys.state[typeId];
@@ -839,7 +1185,7 @@ app.post('/api/sys/:sysId/call-number', requireSys, (req, res) => {
   const input     = (req.body.display || '').trim();
   const upper     = input.toUpperCase();
   const counterId = req.body.counterId ? Number(req.body.counterId) : null;
-  const match = t => t.display === upper || (t.qn && String(t.qn).trim() === input);
+  const match = t => t.display === upper || dispKey(t.display) === dispKey(upper) || (t.qn && String(t.qn).trim() === input);
   // การเงิน + เรียกแบบ manual: a QN still waiting for the drug check at a pharmacy is pulled here and called
   // (it comes back to the pharmacy once paid, and waits there for the check if it still hasn't been done)
   if (flowManualCall(sys) && !Object.values(sys.state).some(s => s.waiting.some(match))) {
@@ -896,8 +1242,11 @@ app.post('/api/sys/:sysId/uncall', requireSys, (req, res) => {
         ...ticket,
         issuedTs:    ticket.issuedTs || ticket._ts,
         _ts:         ticket.readyTs || ticket.issuedTs || ticket._ts,   // pharmacy flow: back to its "พร้อมจ่าย" place
-        returned:    true,
+        returned:    !req.body.park,
         returnedAt:  new Date().toLocaleTimeString('th-TH'),
+        // เก็บคิว: back in the list but skipped by "เรียกคิวถัดไป" until someone calls it on purpose
+        parked:      req.body.park ? { at: new Date().toLocaleTimeString('th-TH'), reason: String(req.body.reason || '').slice(0, 80),
+                                       by: ticket.counterName || '' } : undefined,
         returnCount: (ticket.returnCount || 0) + 1,
         calledAt:    undefined,
         counterId:   undefined,
@@ -905,7 +1254,7 @@ app.post('/api/sys/:sysId/uncall', requireSys, (req, res) => {
       };
       s.waiting.push(restored);
       s.waiting.sort((a, b) => a._ts - b._ts);
-      logMark(sys, display, { uncalledAt: restored.returnedAt });
+      logMark(sys, display, req.body.park ? { parkedAt: restored.returnedAt, parkReason: restored.parked.reason } : { uncalledAt: restored.returnedAt });
       saveQueueState(sysId, sys);
       dbReturnTicket(sysId, display);
       io.to('sys-' + sysId).emit('queue_uncalled', {
@@ -1387,10 +1736,10 @@ app.put('/api/sys/:sysId/issue-mode', requireSys, (req, res) => {
     const n = i + 1;
     const name = String(r.name || '').trim();
     const min = Number(r.min), max = Number(r.max);
-    const prefix = String(r.prefix || '').toUpperCase().trim();
+    const prefix = normPrefix(r.prefix);
     if (!name) return bad(`แถวที่ ${n}: ต้องระบุชื่อประเภท`);
     if (!Number.isInteger(min) || !Number.isInteger(max) || min < 0 || max < min) return bad(`แถวที่ ${n}: จำนวนยาต้องเป็นตัวเลข และ "ถึง" ต้องไม่น้อยกว่า "ตั้งแต่"`);
-    if (!/^[A-Z0-9]{1,3}$/.test(prefix)) return bad(`แถวที่ ${n}: Prefix ต้องเป็นตัวอักษร/ตัวเลข 1–3 ตัว`);
+    if (!PREFIX_RE.test(prefix)) return bad(`แถวที่ ${n}: Prefix ต้องเป็นตัวอักษร/ตัวเลข 1–3 ตัว (ลงท้าย - ได้)`);
     rules.push({ name, min, max, prefix, typeId: Number(r.typeId) || null });
   }
   for (let i = 0; i < rules.length; i++) for (let j = i + 1; j < rules.length; j++) {
@@ -1408,16 +1757,22 @@ app.put('/api/sys/:sysId/issue-mode', requireSys, (req, res) => {
   const payIn = (req.body || {}).pay || sys.issueMode.pay || {};
   const codes = v => [...new Set((Array.isArray(v) ? v : String(v || '').split(',')).map(x => String(x).trim()).filter(Boolean))];
   const pay = {
-    cashName: String(payIn.cashName || '').trim(), cashPrefix: String(payIn.cashPrefix || '').toUpperCase().trim(),
-    freeName: String(payIn.freeName || '').trim(), freePrefix: String(payIn.freePrefix || '').toUpperCase().trim(),
+    cashName: String(payIn.cashName || '').trim(), cashPrefix: normPrefix(payIn.cashPrefix),
+    freeName: String(payIn.freeName || '').trim(), freePrefix: normPrefix(payIn.freePrefix),
     cashCodes: codes(payIn.cashCodes), debtCodes: codes(payIn.debtCodes), edcPttypes: codes(payIn.edcPttypes),
+    // ไปการเงินทุกกรณี has its own สิทธิ list (usually one สิทธิ); settings saved before it existed: the shared list
+    cashPttypes: Array.isArray(payIn.cashPttypes) || typeof payIn.cashPttypes === 'string' ? codes(payIn.cashPttypes) : codes(payIn.edcPttypes),
     cashTypeId: Number(payIn.cashTypeId) || null, freeTypeId: Number(payIn.freeTypeId) || null,
     // ห้องตรวจที่ติ๊ก (ovst.main_dep) get their own prefix; ไปการเงิน / ไม่ผ่านการเงิน still applies per ticket
-    deptOn: payIn.deptOn === true, deptName: String(payIn.deptName || '').trim(), deptPrefix: String(payIn.deptPrefix || '').toUpperCase().trim(),
+    // ห้องตรวจ queue: check ไปการเงิน / ไม่ผ่านการเงิน after the pharmacy's drug check (off → plain pharmacy queue, sent nowhere)
+    deptRouteCheck: payIn.deptRouteCheck !== false,
+    deptOn: payIn.deptOn === true, deptName: String(payIn.deptName || '').trim(), deptPrefix: normPrefix(payIn.deptPrefix),
     deptCodes: codes(payIn.deptCodes), deptTypeId: Number(payIn.deptTypeId) || null,
     // the ticked สิทธิ (edcPttypes) can: send to the cashier for EDC (older settings: on) and/or get their own prefix
     edcOn: payIn.edcOn !== false,
-    ptOn: payIn.ptOn === true, ptName: String(payIn.ptName || '').trim(), ptPrefix: String(payIn.ptPrefix || '').toUpperCase().trim(),
+    // หมวดค่าใช้จ่ายที่ติ๊ก (opitemrece.income): any item of the visit in it → ไปการเงิน, whatever its paidst
+    incomeOn: payIn.incomeOn === true, incomeCodes: codes(payIn.incomeCodes),
+    ptOn: payIn.ptOn === true, ptName: String(payIn.ptName || '').trim(), ptPrefix: normPrefix(payIn.ptPrefix),
     ptTypeId: Number(payIn.ptTypeId) || null,
     // ยาน้อย / ยามาก inside each money route: 4 types (ไปการเงิน×2, ไม่ผ่านการเงิน×2)
     drugOn: payIn.drugOn === true, drugMax: Number(payIn.drugMax),
@@ -1427,56 +1782,79 @@ app.put('/api/sys/:sysId/issue-mode', requireSys, (req, res) => {
     drugCash: payIn.drugCash !== false, drugFree: payIn.drugFree !== false,
     // ไม่มียา แต่ต้องไปการเงิน → ticket issued straight into a cashier room (a system this one forwards to)
     noDrugOn: payIn.noDrugOn === true, noDrugSysId: Number(payIn.noDrugSysId) || null,
-    noDrugName: String(payIn.noDrugName || '').trim(), noDrugPrefix: String(payIn.noDrugPrefix || '').toUpperCase().trim(),
+    noDrugName: String(payIn.noDrugName || '').trim(), noDrugPrefix: normPrefix(payIn.noDrugPrefix),
     noDrugTypeId: Number(payIn.noDrugTypeId) || null,
   };
   for (const [k] of PAY_DRUG_SPLIT) {
     pay[k + 'Name']   = String(payIn[k + 'Name'] || '').trim();
-    pay[k + 'Prefix'] = String(payIn[k + 'Prefix'] || '').toUpperCase().trim();
+    pay[k + 'Prefix'] = normPrefix(payIn[k + 'Prefix']);
     pay[k + 'TypeId'] = Number(payIn[k + 'TypeId']) || null;
   }
   if (!Number.isInteger(pay.drugMax) || pay.drugMax < 1) pay.drugMax = pay.drugOn ? pay.drugMax : 3;
-  if (pay.ptOn) pay.edcOn = true;   // สิทธิที่ได้ Prefix แยก → ไปการเงินทุกกรณีเสมอ
+  // ไปการเงินทุกกรณี (edcOn) and แยก Prefix (ptOn) are independent: a สิทธิ prefix without edcOn still checks the charges
   const splitOn = route =>pay.drugOn && pay[route === 'cash' ? 'drugCash' : 'drugFree'];
   // role labels (left column in the settings window) — the call page shows them in "สถานะ"
   for (const k in PAY_LABEL_DEF) pay[k + 'Label'] = String(payIn[k + 'Label'] || '').trim().slice(0, 40) || PAY_LABEL_DEF[k];
   if (mode === 'pay') {
-    if (!pay.cashName || !pay.freeName) return bad('ต้องระบุชื่อประเภทคิวทั้ง 2 แบบ');
-    for (const p of [pay.cashPrefix, pay.freePrefix])
-      if (!/^[A-Z0-9]{1,3}$/.test(p)) return bad('Prefix ต้องเป็นตัวอักษร/ตัวเลข 1–3 ตัว');
-    if (pay.cashPrefix === pay.freePrefix) return bad('Prefix ของ 2 ประเภทต้องไม่ซ้ำกัน');
+    // the top row (F / N) of a route split into ยาน้อย / ยามาก issues nothing while ยาน้อย starts at 1
+    // (ยา 0 รายการ gets no pharmacy queue) — such a row may be left blank
+    const baseUsed = route => !splitOn(route) || (Number.isInteger(pay.drugMin) ? pay.drugMin : 1) > 1;
+    const baseRows = [['cash', 'ไปการเงิน'], ['free', 'ไม่ผ่านการเงิน']];
+    for (const [k, lbl] of baseRows) {
+      if (!baseUsed(k)) {
+        // unused: a blank prefix is fine (the name may stay); one that is filled in must still be valid
+        if (pay[k + 'Prefix'] && !PREFIX_RE.test(pay[k + 'Prefix'])) return bad(`Prefix ของคิว "${lbl}" ต้องเป็นตัวอักษร/ตัวเลข 1–3 ตัว (ลงท้าย - ได้) หรือเว้นว่าง`);
+        if (!pay[k + 'Prefix']) pay[k + 'Name'] = pay[k + 'Name'] || '';
+        continue;
+      }
+      // still issuing: say why it cannot be blank
+      const why = splitOn(k) ? `ใช้กับคนไข้ที่มียาน้อยกว่า ${pay.drugMin} รายการ`
+        : `ใช้ออกคิวให้คนไข้${lbl}ทุกคน เพราะไม่ได้ติ๊ก "แยกให้คนไข้ที่ ${lbl}" — ถ้าไม่ใช้แถวนี้ ให้ติ๊กแยกยาน้อย / ยามาก ของ${lbl}`;
+      if (!pay[k + 'Name']) return bad(`ต้องระบุชื่อคิว "${lbl}" — แถวนี้ยังใช้อยู่ (${why})`);
+      if (!PREFIX_RE.test(pay[k + 'Prefix'])) return bad(`ต้องใส่ Prefix ของคิว "${lbl}" (ตัวอักษร/ตัวเลข 1–3 ตัว (ลงท้าย - ได้)) — แถวนี้ยังใช้อยู่ (${why})`);
+    }
+    if (pay.cashPrefix && pay.cashPrefix === pay.freePrefix) return bad('Prefix ของ 2 ประเภทต้องไม่ซ้ำกัน');
     if (!pay.cashCodes.length) return bad('ต้องระบุรหัสการชำระเงินที่ "ต้องจ่ายเงิน" อย่างน้อย 1 รหัส');
+    if (pay.incomeOn && !pay.incomeCodes.length) return bad('ไปการเงินตามหมวดค่าใช้จ่าย: ต้องเลือกหมวด (income) อย่างน้อย 1 หมวด');
     if (pay.deptOn) {
       if (!pay.deptName) return bad('ต้องระบุชื่อคิวของห้องตรวจ');
-      if (!/^[A-Z0-9]{1,3}$/.test(pay.deptPrefix)) return bad('Prefix ของห้องตรวจต้องเป็นตัวอักษร/ตัวเลข 1–3 ตัว');
+      if (!PREFIX_RE.test(pay.deptPrefix)) return bad('Prefix ของห้องตรวจต้องเป็นตัวอักษร/ตัวเลข 1–3 ตัว (ลงท้าย - ได้)');
       if ([pay.cashPrefix, pay.freePrefix].includes(pay.deptPrefix)) return bad('Prefix ของห้องตรวจต้องไม่ซ้ำกับคิวไปการเงิน / ไม่ผ่านการเงิน');
       if (!pay.deptCodes.length) return bad('ต้องติ๊กห้องตรวจอย่างน้อย 1 ห้อง');
     }
     if (pay.ptOn) {
       if (!pay.ptName) return bad('ต้องระบุชื่อคิวของสิทธิที่เลือก');
-      if (!/^[A-Z0-9]{1,3}$/.test(pay.ptPrefix)) return bad('Prefix ของสิทธิที่เลือกต้องเป็นตัวอักษร/ตัวเลข 1–3 ตัว');
+      if (!PREFIX_RE.test(pay.ptPrefix)) return bad('Prefix ของสิทธิที่เลือกต้องเป็นตัวอักษร/ตัวเลข 1–3 ตัว (ลงท้าย - ได้)');
       if (!pay.edcPttypes.length) return bad('แยก Prefix ตามสิทธิ: ต้องติ๊กสิทธิอย่างน้อย 1 สิทธิ');
     }
     if (pay.drugOn) {
       if (!pay.drugCash && !pay.drugFree) return bad('แยกยาน้อย / ยามาก: ติ๊กอย่างน้อย 1 อย่าง (ไปการเงิน หรือ ไม่ผ่านการเงิน)');
       if (!Number.isInteger(pay.drugMax) || pay.drugMax < 1) return bad('จำนวนยาของ "ยาน้อย" ต้องเป็นตัวเลขตั้งแต่ 1 ขึ้นไป');
-      if (!Number.isInteger(pay.drugMin) || pay.drugMin < 0) return bad('จำนวนยา "ตั้งแต่" ของยาน้อย ต้องเป็นตัวเลขตั้งแต่ 0 ขึ้นไป');
+      if (!Number.isInteger(pay.drugMin) || pay.drugMin < 1) return bad('จำนวนยา "ตั้งแต่" ของยาน้อย ต้องเป็นตัวเลขตั้งแต่ 1 ขึ้นไป (คนไข้ไม่มียาไม่ได้คิวห้องยา)');
       if (pay.drugMin > pay.drugMax) return bad('จำนวนยาของ "ยาน้อย": "ตั้งแต่" ต้องไม่มากกว่า "ถึง"');
       for (const [k, route] of PAY_DRUG_SPLIT) {
         if (!splitOn(route)) continue;
         if (!pay[k + 'Name']) return bad('ต้องระบุชื่อคิวยาน้อย / ยามาก ให้ครบทั้ง 4 แบบ');
-        if (!/^[A-Z0-9]{1,3}$/.test(pay[k + 'Prefix'])) return bad('Prefix ของคิวยาน้อย / ยามาก ต้องเป็นตัวอักษร/ตัวเลข 1–3 ตัว');
+        if (!PREFIX_RE.test(pay[k + 'Prefix'])) return bad('Prefix ของคิวยาน้อย / ยามาก ต้องเป็นตัวอักษร/ตัวเลข 1–3 ตัว (ลงท้าย - ได้)');
       }
     }
     // every prefix in use must be different (each one is its own running number)
-    const used = [['cash', null, pay.cashPrefix], ['free', null, pay.freePrefix],
+    const used = [['cash', null, pay.cashPrefix], ['free', null, pay.freePrefix]].filter(u => u[2]).concat([
       ...(pay.deptOn ? [['dept', null, pay.deptPrefix]] : []),
       ...(pay.ptOn ? [['pttype', null, pay.ptPrefix]] : []),
-      ...PAY_DRUG_SPLIT.filter(([, route]) => splitOn(route)).map(([k, route, size]) => [route, size, pay[k + 'Prefix']])];
+      ...PAY_DRUG_SPLIT.filter(([, route]) => splitOn(route)).map(([k, route, size]) => [route, size, pay[k + 'Prefix']])]);
     for (const [i, [, , p]] of used.entries())
       if (used.findIndex(u => u[2] === p) !== i) return bad(`Prefix "${p}" ซ้ำกัน — ทุกคิวในโหมดนี้ต้องใช้ Prefix ไม่ซ้ำกัน`);
-    for (const [kind, size, p] of used) {
-      const clash = sys.queueTypes.find(t => t.prefix === p && !(t.payRule === kind && (t.drugSize || null) === size));
+    // compare against the prefixes types will have AFTER this save: a pay type still in use takes its new prefix
+    // from this form (so swapping prefixes between pay queues is fine); a switched-off one is dropped, unless
+    // today's tickets keep it (with its old prefix)
+    // a pay queue that issues nothing after this save (switched off / blank top row) gives its prefix up — even if
+    // today's tickets keep the type; its running number moves with the prefix (below), so no number repeats
+    const others = sys.queueTypes.filter(t => !t.payRule);
+    const retiring = sys.queueTypes.filter(t => t.payRule && t.prefix &&
+      !used.some(([kind, size]) => t.payRule === kind && (t.drugSize || null) === size));
+    for (const [, , p] of used) {
+      const clash = others.find(t => t.prefix === p);
       if (clash) return bad(`Prefix "${p}" ซ้ำกับประเภทคิว "${clash.name}" — เลือก prefix อื่น`);
       if (rules.some(r => r.prefix === p)) return bad(`Prefix "${p}" ซ้ำกับประเภทในโหมดตามจำนวนยา — เลือก prefix อื่น`);
     }
@@ -1486,9 +1864,9 @@ app.put('/api/sys/:sysId/issue-mode', requireSys, (req, res) => {
       if (!((me && me.forwardTo) || []).includes(pay.noDrugSysId) || !(ndSys = getSys(pay.noDrugSysId)))
         return bad('เลือกห้องการเงินที่ระบบนี้ส่งต่อไปได้ (ตั้งค่าการส่งต่อที่หน้าตั้งค่าระบบ)');
       if (!pay.noDrugName) return bad('ต้องระบุชื่อคิว "ไม่มียา ไปการเงิน"');
-      if (!/^[A-Z0-9]{1,3}$/.test(pay.noDrugPrefix)) return bad('Prefix ของคิว "ไม่มียา ไปการเงิน" ต้องเป็นตัวอักษร/ตัวเลข 1–3 ตัว');
+      if (!PREFIX_RE.test(pay.noDrugPrefix)) return bad('Prefix ของคิว "ไม่มียา ไปการเงิน" ต้องเป็นตัวอักษร/ตัวเลข 1–3 ตัว (ลงท้าย - ได้)');
       const p = pay.noDrugPrefix;
-      if (used.some(u => u[2] === p) || sys.queueTypes.some(t => t.prefix === p) || rules.some(r => r.prefix === p))
+      if (used.some(u => u[2] === p) || others.some(t => t.prefix === p) || rules.some(r => r.prefix === p))
         return bad(`Prefix "${p}" ของคิว "ไม่มียา ไปการเงิน" ซ้ำกับคิวของห้องนี้ — เลือก prefix อื่น`);
       const clash = ndSys.queueTypes.find(t => t.prefix === p && t.noDrugFrom !== sysId);
       if (clash) return bad(`Prefix "${p}" ซ้ำกับประเภทคิว "${clash.name}" ของห้องการเงิน — เลือก prefix อื่น`);
@@ -1516,7 +1894,9 @@ app.put('/api/sys/:sysId/issue-mode', requireSys, (req, res) => {
         t = { id: sys.nextTypeId++, name, prefix, color: kind === 'cash' ? '#ef6c00' : '#26a69a', forMode: 'opd', payRule: kind };
         sys.queueTypes.push(t); initTypeState(sys, t.id);
       }
-      t.name = name; t.prefix = prefix;
+      // a blank (unused) top row keeps the type's last name / prefix — it issues nothing until it is used again
+      if (name) t.name = name;
+      if (prefix) t.prefix = prefix;
       pay[kind + 'TypeId'] = t.id;
     }
     let dt = sys.queueTypes.find(x => x.payRule === 'dept');
@@ -1546,6 +1926,17 @@ app.put('/api/sys/:sysId/issue-mode', requireSys, (req, res) => {
       sys.queueTypes = sys.queueTypes.filter(x => x !== pt);
       delete sys.state[pt.id];
       pay.ptTypeId = null;
+    }
+    // a prefix taken over from a retired pay queue (still here for today's tickets): the new owner carries on
+    // its numbering (4001–4005 issued → next 4006), and the retired type lets the prefix go
+    for (const old of retiring) {
+      if (!sys.queueTypes.includes(old)) continue;   // dropped (no tickets today) — nothing to carry
+      const owner = sys.queueTypes.find(t => t !== old && t.prefix === old.prefix);
+      if (owner) {
+        initTypeState(sys, owner.id);
+        sys.state[owner.id].serial = Math.max(sys.state[owner.id].serial || 0, sys.state[old.id]?.serial || 0);
+        old.prefix = '';
+      }
     }
     // the "ไม่มียา" type lives in the cashier room; drop it from any room no longer chosen, unless used today
     for (const o of systems) {
@@ -1639,6 +2030,16 @@ app.get('/api/sys/:sysId/pttypes', requireSys, async (req, res) => {
   }
 });
 
+// หมวดค่าใช้จ่าย (income) — for ticking the ones that always go to the cashier (e.g. 17 ค่ายานอกบัญชียาหลักแห่งชาติ)
+app.get('/api/sys/:sysId/incomes', requireSys, async (req, res) => {
+  try {
+    const [rows] = await hosQuery([[`SELECT income, name FROM income ORDER BY income`]]);
+    res.json({ success: true, incomes: rows.map(r => ({ code: String(r.income || '').trim(), name: String(r.name || '').trim() })) });
+  } catch (err) {
+    res.json({ success: false, message: 'เกิดข้อผิดพลาด: ' + err.message });
+  }
+});
+
 // ห้องตรวจที่เปิดใช้ — for ticking which ones get their own queue prefix
 app.get('/api/sys/:sysId/departments', requireSys, async (req, res) => {
   try {
@@ -1684,6 +2085,15 @@ async function payRouteFor(sysId, sys, vn) {
       // รายการยาไม่ซ้ำ — the same count as "ตามจำนวนยา" and the call page's "จำนวนยา" column
       [`SELECT COUNT(DISTINCT op.icode) AS n FROM opitemrece op WHERE op.vn = ? AND op.icode LIKE '1%'`, [vn]],
     ]);
+    // หมวดค่าใช้จ่ายที่ติ๊ก (e.g. 17 ค่ายานอกบัญชียาหลักแห่งชาติ): ไปการเงินทุกเคส ไม่สนใจ paidst
+    const incomeCodes = pay.incomeOn ? (pay.incomeCodes || []) : [];
+    let incomeHits = [];
+    if (incomeCodes.length) {
+      const [rows] = await hosQuery([[`SELECT TRIM(op.income) AS income, MAX(i.name) AS name, COUNT(*) AS n FROM opitemrece op
+         LEFT JOIN income i ON i.income = op.income
+         WHERE op.vn = ? AND TRIM(op.income) IN (${incomeCodes.map(() => '?').join(',')}) GROUP BY TRIM(op.income)`, [vn, ...incomeCodes]]]);
+      incomeHits = rows.map(r => ({ code: String(r.income || '').trim(), name: String(r.name || '').trim(), n: Number(r.n) || 0 }));
+    }
     const drugCount = Number((drugRows[0] || {}).n) || 0;
     if (!visit.length) return { success: false, message: 'ไม่พบ visit นี้ในฐานข้อมูล' };
     const pttype = String(visit[0].pttype || '').trim();
@@ -1699,11 +2109,14 @@ async function payRouteFor(sysId, sys, vn) {
     const unknown = sum(c => !cashCodes.includes(c) && !debtCodes.includes(c));
     const ptTicked = (pay.edcPttypes || []).includes(pttype);
     // สิทธิที่ติ๊ก = สิทธิที่ต้องจ่าย / รูดบัตร EDC → ไปการเงินทุกกรณี (also when only แยก Prefix is on)
-    const edc  = (pay.edcOn !== false || pay.ptOn === true) && ptTicked;
+    // ไปการเงินทุกกรณี: its own สิทธิ list (older settings without it: the แยก Prefix list, as before)
+    const cashList = Array.isArray(pay.cashPttypes) ? pay.cashPttypes : (pay.edcPttypes || []);
+    const edc  = pay.edcOn !== false && cashList.includes(pttype);
     const baht = v => v.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     let route, reason;
     if (cash > 0)             { route = 'cash'; reason = `มีค่าใช้จ่ายที่ต้องชำระ ${baht(cash)} บาท`; }
     else if (unknown > 0)     { route = 'cash'; reason = `มีรายการ ${baht(unknown)} บาท ที่ยังไม่ระบุประเภทการชำระเงิน`; }
+    else if (incomeHits.length) { route = 'cash'; reason = `มีรายการหมวด ${incomeHits.map(h => h.name || 'หมวด ' + h.code).join(', ')} — ไปการเงินทุกเคส`; }
     // nothing ordered yet (or nothing needed) — the kiosk asks staff to pick a type or not issue at all
     else if (!drugs && !services) { route = 'none'; reason = 'คนไข้ไม่มียาและค่าบริการ'; }
     else if (edc)             { route = 'cash'; reason = `สิทธิ ${pttypeName} ต้องไปการเงิน (รูดบัตร EDC / ชำระเงิน)${debt > 0 ? ` ${baht(debt)} บาท` : ''}`; }
@@ -1731,8 +2144,22 @@ async function payRouteFor(sysId, sys, vn) {
     // ไม่มียา แต่ต้องไปการเงิน → straight to the cashier room's line (no pharmacy queue at all)
     const nd = route === 'cash' && drugCount === 0 ? noDrugTarget(sysId, sys) : null;
     const noDrug = nd ? { sysId: nd.sysId, name: (systems.find(x => x.id === nd.sysId) || {}).name || '', typeName: nd.type.name, prefix: nd.type.prefix } : null;
-    return { success: true, route, reason, typeId: groupType ? groupType.id : sizeType ? sizeType.id : (pay[route + 'TypeId'] || null),
-      deptTypeId: groupType ? groupType.id : null,   // ห้องตรวจ or สิทธิ queue — the kiosk keeps its prefix either way
+    // ห้องยาออกคิวให้เฉพาะคนไข้ที่มียา: ยา 0 รายการ never gets a pharmacy queue (not F / ไปการเงิน, not ยาน้อย) —
+    // unless it is a ticked ห้องตรวจ (its own queue) or "ไม่มียา → ห้องการเงิน" is set up. The kiosk asks staff instead.
+    let noDrugs = false;
+    if (drugCount === 0 && route === 'cash' && !deptType && !noDrug) {
+      noDrugs = true; route = 'none'; reason = `ไม่มีรายการยา · ${reason}`;
+      drugSize = null; sizeType = null;
+    }
+    // ห้องตรวจ: drugs / charges are usually keyed after the queue is issued — never ask staff (no "ไม่มียา" popup).
+    // เช็คไปการเงิน on → the route is decided after the pharmacy's drug check; off → a plain pharmacy queue
+    if (deptType) {
+      if (pay.deptRouteCheck === false) { route = 'dept'; reason = 'ห้องตรวจที่เลือก · ไม่เช็คไปการเงิน (คิวห้องยา)'; }
+      else if (route === 'none') { route = 'pending'; reason = 'ห้องตรวจที่เลือก · ยังไม่มีรายการ — เช็คไปการเงินหลังห้องยาตรวจยา'; }
+    }
+    const keepGroup = groupType && !noDrugs;   // a สิทธิ queue with 0 drugs is not issued either
+    return { success: true, route, reason, noDrugs, typeId: keepGroup ? groupType.id : sizeType ? sizeType.id : (pay[route + 'TypeId'] || null),
+      deptTypeId: keepGroup ? groupType.id : null,   // ห้องตรวจ or สิทธิ queue — the kiosk keeps its prefix either way
       noDrug, drugCount, drugSize, mainDep, mainDepName: String(visit[0].main_dep_name || '').trim(), pttype, pttypeName, drugs, services, items: groups };
   }
 }
@@ -1760,6 +2187,17 @@ function flowCashierOf(sysId, sys) {
 // the pharmacies whose flow sends queues into this cashier room
 function flowPharmaciesOf(cashId) {
   return systems.filter(s => s.id !== cashId && flowCashierOf(s.id, getSys(s.id)) === cashId).map(s => s.id);
+}
+// the partner room(s) of a room for the dashboard: ห้องยา → its cashier · การเงิน → its pharmacies
+// · not in a flow → any room the queue was sent to (ids = [] means "every other room")
+function flowOtherOf(sysId) {
+  const id = Number(sysId), cash = flowCashierOf(id, getSys(id));
+  if (cash) return { ids: [cash], label: 'การเงิน' };
+  const ph = flowPharmaciesOf(id);
+  if (ph.length) return { ids: ph, label: 'ห้องยา' };
+  const fwd = ((systems.find(s => s.id === id) || {}).forwardTo || []).filter(x => getSys(x));
+  const name = fwd.length === 1 ? (systems.find(s => s.id === fwd[0]) || {}).name : '';
+  return { ids: fwd, label: name || 'ห้องที่ส่งต่อ' };
 }
 const flowNow = () => new Date().toLocaleTimeString('th-TH');
 const flowHhmm = v => { const t = v ? new Date(v) : null; return t && !isNaN(t) ? t.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : ''; };
@@ -1909,11 +2347,11 @@ function flowView(sysId) {
     const inUse = (pharm, t) => {
       const im = pharm.issueMode || {}, pay = im.pay || {};
       if (im.mode !== 'pay') return false;
-      if (t.payRule === 'dept')   return pay.deptOn === true;
+      if (t.payRule === 'dept')   return pay.deptOn === true && pay.deptRouteCheck !== false;
       if (t.payRule === 'pttype') return pay.ptOn === true;
       // split on: ยาน้อย / ยามาก, plus the single ไปการเงิน queue when visits under the ยาน้อย minimum still get it
       if (t.payRule === 'cash') return pay.drugOn === true && pay.drugCash !== false
-        ? (!!t.drugSize || (Number(pay.drugMin) || 0) > 0) : !t.drugSize;
+        ? (!!t.drugSize || (Number(pay.drugMin) || 0) > 1) : !t.drugSize;
       return false;
     };
     const seen = new Set();
@@ -1975,7 +2413,10 @@ async function flowTick() {
         if (!rxAt.has(vn) && n > 0) continue;   // drugs not checked yet
         // checked → decide ไปการเงิน / ไม่ผ่านการเงิน again on the latest items (เช็คซ้ำตอนตรวจยาเสร็จ)
         let route = null;
-        if (!t.flowBack) try { const r = await payRouteFor(pharmId, pharm, vn); if (r.success && (r.route === 'cash' || r.route === 'free')) route = r.route; } catch {}
+        // (a ticket already here with 0 drugs that must pay — staff picked it, or its drugs were cancelled — still goes to the cashier)
+        if (!t.flowBack) try { const r = await payRouteFor(pharmId, pharm, vn);
+          if (r.success && (r.route === 'cash' || r.route === 'free')) route = r.route;
+          else if (r.success && r.noDrugs) route = 'cash'; } catch {}
         // no drugs at all: only a visit that must pay moves on (to the cashier, where it ends) — anything else is left to staff
         if (n === 0 && route !== 'cash' && !t.flowBack) continue;
         if (flowPass(pharmId, pharm, t.display, { route, drugCount: n, rxAt: rxAt.get(vn) })) changed = true;
@@ -2129,6 +2570,16 @@ function resetSys(sysId, sys) {
 })();
 
 // ── Patient lookup ────────────────────────────────────────────────────────
+// age from patient.birthday — '45 ปี' / '3 ปี 2 เดือน' / '5 เดือน' (null when unknown)
+function ageOf(b) {
+  const d = b instanceof Date ? b : b ? new Date(String(b).slice(0, 10) + 'T00:00:00') : null;
+  if (!d || isNaN(d)) return null;
+  const now = new Date(); let m = (now.getFullYear() - d.getFullYear()) * 12 + now.getMonth() - d.getMonth();
+  if (now.getDate() < d.getDate()) m--;
+  if (m < 0) return null;
+  const y = Math.floor(m / 12), mm = m % 12;
+  return y >= 6 ? y + ' ปี' : y ? y + ' ปี' + (mm ? ' ' + mm + ' เดือน' : '') : mm + ' เดือน';
+}
 app.post('/api/patient-lookup', requireApiToken, async (req, res) => {
   const { type, value, sysId: reqSysId, mode } = req.body;
   if (!value || !value.toString().trim()) return res.json({ success: false, message: 'กรุณาระบุข้อมูล' });
@@ -2183,7 +2634,7 @@ app.post('/api/patient-lookup', requireApiToken, async (req, res) => {
         const [rows] = await conn.execute(
           `SELECT i.hn, i.an,
              CONCAT(IFNULL(pt.pname,''), IFNULL(pt.fname,''), ' ', IFNULL(pt.lname,'')) AS patient_name,
-             p.name AS pttype_name, i.pttype
+             p.name AS pttype_name, i.pttype, pt.birthday
            FROM ipt i
            LEFT JOIN patient pt ON pt.hn = i.hn
            LEFT JOIN pttype  p  ON p.pttype = i.pttype
@@ -2200,7 +2651,7 @@ app.post('/api/patient-lookup', requireApiToken, async (req, res) => {
         const result = await client.query(
           `SELECT i.hn, i.an,
              COALESCE(pt.pname,'') || COALESCE(pt.fname,'') || ' ' || COALESCE(pt.lname,'') AS patient_name,
-             p.name AS pttype_name, i.pttype
+             p.name AS pttype_name, i.pttype, pt.birthday
            FROM ipt i
            LEFT JOIN patient pt ON pt.hn = i.hn
            LEFT JOIN pttype  p  ON p.pttype = i.pttype
@@ -2226,6 +2677,7 @@ app.post('/api/patient-lookup', requireApiToken, async (req, res) => {
           vstdate:    null,
           vsttime:    null,
           mode:       'ipd',
+          age:        ageOf(row.birthday),
         }
       });
     } catch (err) {
@@ -2247,7 +2699,7 @@ app.post('/api/patient-lookup', requireApiToken, async (req, res) => {
       const [rows] = await conn.execute(
         `SELECT o.hn, o.oqueue, o.vn, o.vstdate, o.vsttime,
            CONCAT(IFNULL(p.pname,''), IFNULL(p.fname,''), ' ', IFNULL(p.lname,'')) AS ptname,
-           pt.name AS pttype_name, o.pttype
+           pt.name AS pttype_name, o.pttype, p.birthday
          FROM ovst o
          LEFT JOIN patient p  ON p.hn      = o.hn
          LEFT JOIN pttype  pt ON pt.pttype = o.pttype
@@ -2265,7 +2717,7 @@ app.post('/api/patient-lookup', requireApiToken, async (req, res) => {
       const result = await client.query(
         `SELECT o.hn, o.oqueue, o.vn, o.vstdate, o.vsttime,
            COALESCE(p.pname,'') || COALESCE(p.fname,'') || ' ' || COALESCE(p.lname,'') AS ptname,
-           pt.name AS pttype_name, o.pttype
+           pt.name AS pttype_name, o.pttype, p.birthday
          FROM ovst o
          LEFT JOIN patient p  ON p.hn      = o.hn
          LEFT JOIN pttype  pt ON pt.pttype = o.pttype
@@ -2303,6 +2755,7 @@ app.post('/api/patient-lookup', requireApiToken, async (req, res) => {
         autoTypeId,
         vstdate:     row.vstdate,
         vsttime:     row.vsttime    || null,
+        age:         ageOf(row.birthday),
       }
     });
   } catch (err) {

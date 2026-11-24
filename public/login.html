@@ -5,178 +5,317 @@
   <link rel="icon" href="/favicon.ico" sizes="any"/>
   <link rel="apple-touch-icon" href="/app-icon.png"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>เข้าสู่ระบบ — Queue-Med</title>
+  <title>เข้าสู่ระบบ — ระบบบริหารจัดการคิวโรงพยาบาล</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <script src="/vendor/api-token.js"></script>
   <style>
     :root{
-      --sky-1:#eef7ff; --sky-2:#d9ecfd; --sky-3:#bfe0fb;
-      --ink:#123a5a; --ink-soft:#4f6f8a; --line:#cfe3f5;
-      --brand-1:#14c1b0; --brand-2:#0a8fc0; --brand-3:#1546b8;
-      --err-bg:#fff1f1; --err-line:#ffc9c9; --err-ink:#c62828;
+      --navy:#0b2559; --navy-2:#12387f; --blue:#1d64d8; --blue-2:#1554c0; --cyan:#e6f6fb; --cyan-2:#c9ecf6;
+      --teal:#0ea5a0; --teal-2:#0d8f8b; --ink:#0f2747; --ink-2:#51657f; --line:#d6e2ef; --field:#f6f9fd;
+      --err:#c62828; --err-bg:#fff2f2; --err-line:#ffcdd2;
     }
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Kanit','Leelawadee UI','Segoe UI',Tahoma,sans-serif;min-height:100vh;color:var(--ink);
-      display:flex;align-items:center;justify-content:center;padding:24px 16px;overflow-x:hidden;
-      background:radial-gradient(1200px 600px at 10% -10%,#ffffff 0,transparent 60%),
-                 linear-gradient(160deg,var(--sky-1) 0%,var(--sky-2) 45%,var(--sky-3) 100%)}
-    /* soft pastel bubbles */
-    .bubble{position:fixed;border-radius:50%;filter:blur(2px);opacity:.55;z-index:0;pointer-events:none}
-    .b1{width:340px;height:340px;left:-90px;bottom:-110px;background:radial-gradient(circle at 30% 30%,#ffffff,#a7d8f7)}
-    .b2{width:220px;height:220px;right:-60px;top:-50px;background:radial-gradient(circle at 30% 30%,#ffffff,#b9e6f0)}
-    .b3{width:120px;height:120px;right:12%;bottom:8%;background:radial-gradient(circle at 30% 30%,#ffffff,#c7dcfb)}
+    html,body{height:100%}
+    body{font-family:'Prompt','Leelawadee UI','Segoe UI',Tahoma,sans-serif;color:var(--ink);background:#fff;min-height:100vh}
+    .page{display:grid;grid-template-columns:55fr 45fr;min-height:100vh}
 
-    .wrap{position:relative;z-index:1;width:100%;max-width:430px}
-    .card{background:rgba(255,255,255,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
-      border:1px solid rgba(255,255,255,.9);border-radius:28px;padding:40px 36px 30px;
-      box-shadow:0 24px 60px rgba(21,70,184,.14),0 2px 8px rgba(21,70,184,.06)}
+    /* ── left: branding ── */
+    .brand{position:relative;overflow:hidden;color:#fff;padding:48px 56px;display:flex;flex-direction:column;justify-content:space-between;gap:28px;
+      background:radial-gradient(900px 500px at 85% 0%,rgba(56,189,248,.28),transparent 60%),
+                 radial-gradient(700px 500px at 0% 100%,rgba(14,165,160,.25),transparent 60%),
+                 linear-gradient(150deg,var(--navy) 0%,var(--navy-2) 55%,#1a4fa8 100%)}
+    .brand::before{content:'';position:absolute;inset:0;opacity:.09;pointer-events:none;
+      background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);background-size:44px 44px;
+      mask-image:linear-gradient(180deg,#000,transparent 85%);-webkit-mask-image:linear-gradient(180deg,#000,transparent 85%)}
+    .b-top{position:relative;display:flex;align-items:center;gap:12px}
+    .b-mark{width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);display:grid;place-items:center}
+    .b-org{font-size:.95rem;font-weight:500;line-height:1.3}
+    .b-org small{display:block;font-size:.78rem;font-weight:300;opacity:.75}
+    .b-mid{position:relative}
+    .b-title{font-size:clamp(1.9rem,2.9vw,2.7rem);font-weight:600;line-height:1.25}
+    .b-en{font-size:clamp(.95rem,1.25vw,1.15rem);font-weight:300;letter-spacing:.6px;color:#bfe3ff;margin-top:6px}
+    .b-welcome{display:inline-flex;align-items:center;gap:10px;margin-top:22px;padding:10px 16px;border-radius:14px;
+      background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);font-size:1.02rem;font-weight:400}
+    .b-welcome i{width:8px;height:8px;border-radius:50%;background:#5eead4;box-shadow:0 0 0 4px rgba(94,234,212,.25);flex:none}
+    .b-art{position:relative;width:100%;max-width:620px;align-self:center}
+    .b-art svg{width:100%;height:auto;display:block;filter:drop-shadow(0 30px 40px rgba(3,15,40,.35))}
+    .chip{position:absolute;display:flex;align-items:center;gap:10px;background:#fff;color:var(--ink);border-radius:16px;padding:10px 14px;
+      box-shadow:0 18px 36px -12px rgba(3,15,40,.45);animation:bob 6s ease-in-out infinite}
+    .chip b{font-size:1.45rem;font-weight:700;letter-spacing:.5px;line-height:1}
+    .chip span{font-size:.74rem;color:var(--ink-2);line-height:1.25}
+    .chip .dot{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:#fff;font-weight:600;font-size:.9rem;flex:none}
+    .chip.c1{left:-2%;top:6%}.chip.c2{right:-2%;top:30%;animation-delay:-2s}.chip.c3{left:8%;bottom:-4%;animation-delay:-4s}
+    @keyframes bob{50%{transform:translateY(-8px)}}
+    .b-feat{position:relative;display:flex;flex-wrap:wrap;gap:10px 22px;font-size:.88rem;color:#d4e8ff}
+    .b-feat span{display:inline-flex;align-items:center;gap:8px}
+    .b-feat svg{flex:none}
 
-    .brand{text-align:center;margin-bottom:28px}
-    .brand-icon{width:92px;height:92px;border-radius:24px;display:block;margin:0 auto 14px;
-      box-shadow:0 14px 30px rgba(10,143,192,.32);animation:float 5s ease-in-out infinite}
-    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
-    .brand-name{font-size:2.35rem;font-weight:800;letter-spacing:.5px;line-height:1.1;
-      background:linear-gradient(120deg,var(--brand-1),var(--brand-2) 45%,var(--brand-3));
-      -webkit-background-clip:text;background-clip:text;color:transparent}
-    .brand-sub{font-size:.98rem;font-weight:500;color:var(--ink-soft);margin-top:6px}
-    .brand-pill{display:inline-block;margin-top:12px;font-size:.72rem;font-weight:600;letter-spacing:1px;
-      color:var(--brand-2);background:#e3f4fd;border:1px solid #c6e6f8;border-radius:999px;padding:3px 12px}
-
+    /* ── right: form ── */
+    .side{background:linear-gradient(180deg,#fbfdff,var(--cyan) 140%);display:flex;align-items:center;justify-content:center;padding:40px 24px;position:relative}
+    .form{width:100%;max-width:420px}
+    .logo{display:flex;align-items:center;justify-content:center;margin:0 auto 22px;width:96px;height:96px;border-radius:24px;background:#fff;
+      border:1px solid var(--line);box-shadow:0 12px 30px -12px rgba(15,39,71,.25);overflow:hidden}
+    .logo img{width:100%;height:100%;object-fit:contain}
+    h1{font-size:1.85rem;font-weight:600;text-align:center;color:var(--navy)}
+    .lead{text-align:center;color:var(--ink-2);font-size:.98rem;margin:6px 0 28px;font-weight:300}
     .field{margin-bottom:16px}
-    .field label{display:block;font-size:.82rem;font-weight:600;color:var(--ink);margin-bottom:6px}
-    .input-wrap{position:relative}
-    .input-wrap .ic{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:1rem;opacity:.6}
-    .field input{width:100%;background:#f6fbff;border:1.5px solid var(--line);border-radius:14px;
-      padding:13px 16px 13px 42px;color:var(--ink);font-size:1rem;font-family:inherit;transition:all .2s}
-    .field input:focus{outline:none;border-color:var(--brand-2);background:#fff;box-shadow:0 0 0 4px rgba(10,143,192,.12)}
-    .field input::placeholder{color:#9db4c8;font-weight:300}
-
-    .btn-login{width:100%;border:none;border-radius:14px;padding:14px;margin-top:6px;cursor:pointer;
-      font-family:inherit;font-size:1.05rem;font-weight:600;letter-spacing:.3px;color:#fff;
-      background:linear-gradient(120deg,var(--brand-2),var(--brand-3));
-      box-shadow:0 10px 22px rgba(21,70,184,.25);transition:transform .15s,box-shadow .15s,opacity .2s}
-    .btn-login:hover{transform:translateY(-1px);box-shadow:0 14px 26px rgba(21,70,184,.3)}
-    .btn-login:disabled{opacity:.55;cursor:not-allowed;transform:none}
-
-    .err{background:var(--err-bg);border:1px solid var(--err-line);color:var(--err-ink);border-radius:12px;
-      padding:10px 14px;font-size:.88rem;margin-top:12px;display:none;line-height:1.5}
-    .err.show{display:block}
-
-    .or{display:flex;align-items:center;gap:12px;margin:22px 0 14px;color:#8aa6bd;font-size:.8rem;font-weight:500}
-    .or::before,.or::after{content:'';flex:1;height:1px;background:var(--line)}
-
-    .btn-bms{width:100%;background:#fff;border:1.5px solid #bfe6d2;color:#1f7a4d;border-radius:14px;padding:12px;
-      font-family:inherit;font-size:.95rem;font-weight:600;cursor:pointer;transition:all .2s;
-      display:flex;align-items:center;justify-content:center;gap:8px}
-    .btn-bms:hover{background:#f1fbf5;border-color:#7fd1a7}
-    #bmsBox .btn-login{background:linear-gradient(120deg,#2fbf71,#1f8a54);box-shadow:0 10px 22px rgba(31,138,84,.22)}
-
-    .btn-cfg{width:100%;margin-top:18px;background:transparent;border:1.5px dashed #b9d6ee;color:var(--ink-soft);
-      border-radius:14px;padding:11px;font-size:.9rem;font-weight:500;cursor:pointer;font-family:inherit;
-      transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px}
-    .btn-cfg:hover{border-color:var(--brand-2);border-style:solid;color:var(--brand-2);background:#f3faff}
-
-    .foot{text-align:center;margin-top:18px;font-size:.75rem;color:#7f9bb3}
-
-    .spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.4);
-      border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:7px}
+    .field label{display:block;font-size:.9rem;font-weight:500;margin-bottom:7px;color:var(--ink)}
+    .iw{position:relative}
+    .iw .ic{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#7b8fa8;pointer-events:none;display:flex}
+    .iw input{width:100%;height:52px;border-radius:14px;border:1.5px solid var(--line);background:var(--field);color:var(--ink);
+      font:inherit;font-size:1rem;padding:0 48px 0 46px;transition:border-color .2s,box-shadow .2s,background .2s}
+    .iw input::placeholder{color:#9aacc1;font-weight:300}
+    .iw input:focus{outline:none;border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(29,100,216,.13)}
+    .iw input:focus + .ic,.iw:focus-within .ic{color:var(--blue)}
+    .field.bad input{border-color:#ef9a9a;background:#fffafa}
+    .field.bad .ic{color:var(--err)}
+    .f-err{display:none;color:var(--err);font-size:.82rem;margin-top:6px}
+    .field.bad .f-err{display:block}
+    .eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:36px;height:36px;border:none;background:none;border-radius:10px;
+      color:#7b8fa8;cursor:pointer;display:grid;place-items:center}
+    .eye:hover{background:#e8f0fb;color:var(--blue)}
+    .row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 0 20px;flex-wrap:wrap}
+    .ck{display:inline-flex;align-items:center;gap:9px;font-size:.92rem;color:var(--ink-2);cursor:pointer;user-select:none}
+    .ck input{width:18px;height:18px;accent-color:var(--blue);cursor:pointer}
+    .link{background:none;border:none;font:inherit;font-size:.88rem;color:var(--blue);cursor:pointer;padding:2px 0}
+    .link:hover{text-decoration:underline}
+    .btn{width:100%;height:54px;border:none;border-radius:14px;cursor:pointer;font:inherit;font-size:1.08rem;font-weight:500;color:#fff;
+      display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(120deg,var(--blue),var(--blue-2));
+      box-shadow:0 14px 26px -12px rgba(21,84,192,.6);transition:transform .15s,box-shadow .15s,opacity .2s}
+    .btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 18px 30px -12px rgba(21,84,192,.65)}
+    .btn:disabled{opacity:.7;cursor:progress}
+    .btn.teal{background:linear-gradient(120deg,var(--teal),var(--teal-2));box-shadow:0 14px 26px -12px rgba(13,143,139,.55)}
+    .spin{width:18px;height:18px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
+    .alert{display:none;align-items:flex-start;gap:10px;margin-top:14px;background:var(--err-bg);border:1px solid var(--err-line);color:var(--err);
+      border-radius:12px;padding:11px 14px;font-size:.9rem;line-height:1.5}
+    .alert.show{display:flex;animation:shake .35s}
+    .alert svg{flex:none;margin-top:2px}
+    @keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+    .or{display:flex;align-items:center;gap:12px;margin:24px 0 14px;color:#90a3ba;font-size:.82rem}
+    .or::before,.or::after{content:'';flex:1;height:1px;background:var(--line)}
+    .btn-alt{width:100%;height:48px;border-radius:14px;border:1.5px solid #b7e3df;background:#fff;color:var(--teal-2);font:inherit;font-size:.95rem;font-weight:500;
+      cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .2s,border-color .2s}
+    .btn-alt:hover{background:#effaf9;border-color:var(--teal)}
+    #bmsBox{display:none;margin-top:14px;padding:16px;border-radius:16px;background:#fff;border:1px solid var(--line)}
+    .btn-cfg{width:100%;margin-top:12px;height:44px;border-radius:12px;border:1.5px dashed #c3d4e8;background:transparent;color:var(--ink-2);
+      font:inherit;font-size:.88rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+    .btn-cfg:hover{border-style:solid;border-color:var(--blue);color:var(--blue);background:#f3f8ff}
+    .foot{text-align:center;margin-top:22px;font-size:.78rem;color:#8a9cb2}
 
-    /* Department selection modal */
-    .modal-overlay{position:fixed;inset:0;background:rgba(18,58,90,.25);display:flex;align-items:center;justify-content:center;
-      z-index:100;backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .25s;padding:16px}
-    .modal-overlay.show{opacity:1;pointer-events:all}
-    .modal{background:#fff;border-radius:24px;padding:32px 28px;width:100%;max-width:420px;
-      box-shadow:0 24px 60px rgba(21,70,184,.2);transform:translateY(16px);transition:transform .25s}
-    .modal-overlay.show .modal{transform:translateY(0)}
-    .modal-title{font-size:1.3rem;font-weight:700;color:var(--brand-3);margin-bottom:4px;text-align:center}
-    .modal-sub{font-size:.88rem;color:var(--ink-soft);text-align:center;margin-bottom:20px}
-    .dept-list{display:flex;flex-direction:column;gap:10px;max-height:340px;overflow-y:auto}
-    .dept-btn{background:#f6fbff;border:1.5px solid var(--line);border-radius:14px;color:var(--ink);
-      font-size:1rem;font-family:inherit;font-weight:500;padding:13px 16px;text-align:left;cursor:pointer;
-      transition:all .18s;display:flex;align-items:center;gap:10px}
-    .dept-btn:hover{border-color:var(--brand-2);background:#eaf6fe}
-    .dept-icon{font-size:1.1rem;flex-shrink:0}
-    .dept-loading{text-align:center;color:var(--ink-soft);font-size:.92rem;padding:20px 0}
-    .dept-err{color:var(--err-ink);font-size:.9rem;text-align:center;padding:10px 0}
+    /* department picker */
+    .ov{position:fixed;inset:0;background:rgba(11,37,89,.35);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;padding:16px;
+      z-index:50;opacity:0;pointer-events:none;transition:opacity .25s}
+    .ov.show{opacity:1;pointer-events:auto}
+    .modal{width:100%;max-width:440px;background:#fff;border-radius:22px;padding:28px 24px;box-shadow:0 30px 60px -20px rgba(11,37,89,.45);transform:translateY(14px);transition:transform .25s}
+    .ov.show .modal{transform:none}
+    .m-title{font-size:1.3rem;font-weight:600;text-align:center;color:var(--navy)}
+    .m-sub{font-size:.9rem;color:var(--ink-2);text-align:center;margin:4px 0 18px}
+    .dept-list{display:flex;flex-direction:column;gap:10px;max-height:360px;overflow:auto}
+    .dept-btn{display:flex;align-items:center;gap:12px;text-align:left;width:100%;padding:13px 16px;border-radius:14px;border:1.5px solid var(--line);
+      background:var(--field);color:var(--ink);font:inherit;font-size:1rem;cursor:pointer;transition:border-color .15s,background .15s}
+    .dept-btn:hover{border-color:var(--blue);background:#eef5ff}
+    .dept-btn i{width:34px;height:34px;border-radius:10px;background:#e0efff;color:var(--blue);display:grid;place-items:center;font-style:normal;flex:none}
+    .dept-loading{text-align:center;color:var(--ink-2);padding:20px 0;display:flex;align-items:center;justify-content:center;gap:10px}
+    .dept-loading .spin{border-color:#cfe0f5;border-top-color:var(--blue)}
+    .dept-err{color:var(--err);text-align:center;padding:10px 0;font-size:.92rem}
 
-    @media (max-width:420px){ .card{padding:32px 22px 24px} .brand-name{font-size:2rem} }
+    @media (max-width:1100px){ .brand{padding:36px 36px} .chip.c2{right:0} }
+    @media (max-width:900px){
+      .page{grid-template-columns:1fr}
+      .brand{padding:26px 20px 30px;gap:14px}
+      .b-art,.b-feat{display:none}
+      .b-title{font-size:1.6rem}
+      .b-welcome{margin-top:14px;font-size:.92rem}
+      .side{padding:28px 16px 36px;align-items:flex-start}
+    }
   </style>
 </head>
 <body>
-<div class="bubble b1"></div><div class="bubble b2"></div><div class="bubble b3"></div>
-
-<!-- Department selection modal -->
-<div class="modal-overlay" id="deptOverlay">
-  <div class="modal">
-    <div class="modal-title">เลือกห้องตรวจ</div>
-    <div class="modal-sub" id="deptWelcome">กรุณาเลือกห้องตรวจที่ต้องการใช้งาน</div>
-    <div class="dept-list" id="deptList">
-      <div class="dept-loading">กำลังโหลด...</div>
+<div class="page">
+  <!-- ── Branding ── -->
+  <section class="brand" aria-hidden="false">
+    <div class="b-top">
+      <div class="b-mark">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="18" rx="1.5" fill="#fff"/><rect x="3" y="9" width="18" height="6" rx="1.5" fill="#fff"/></svg>
+      </div>
+      <div class="b-org" id="hospName">รพ.</div>
     </div>
-  </div>
+
+    <div class="b-mid">
+      <div class="b-title">ระบบบริหารจัดการคิว<br/>โรงพยาบาล</div>
+      <div class="b-en">Hospital Queue Management System</div>
+      <div class="b-welcome"><i></i>ยกระดับการให้บริการ ด้วยระบบคิวที่มีประสิทธิภาพ</div>
+    </div>
+
+    <div class="b-art">
+      <!-- illustration: service counter, queue board, staff and patient -->
+      <svg viewBox="0 0 620 360" role="img" aria-label="ภาพประกอบเคาน์เตอร์บริการและจอเรียกคิว">
+        <defs>
+          <linearGradient id="gBoard" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e3f1fb"/></linearGradient>
+          <linearGradient id="gCounter" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#d4e7f7"/></linearGradient>
+          <linearGradient id="gTop" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#14b8a6"/><stop offset="1" stop-color="#0ea5e9"/></linearGradient>
+          <linearGradient id="gScreen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0b2559"/><stop offset="1" stop-color="#1d4ed8"/></linearGradient>
+        </defs>
+        <!-- floor -->
+        <ellipse cx="310" cy="338" rx="290" ry="18" fill="#04122e" opacity=".35"/>
+        <!-- queue board -->
+        <rect x="150" y="18" width="320" height="120" rx="16" fill="url(#gScreen)"/>
+        <rect x="150" y="18" width="320" height="120" rx="16" fill="none" stroke="#5eead4" stroke-opacity=".5"/>
+        <text x="172" y="50" fill="#9fd3ff" font-family="Prompt,sans-serif" font-size="14">กำลังเรียก · NOW SERVING</text>
+        <text x="172" y="104" fill="#fff" font-family="Prompt,sans-serif" font-size="50" font-weight="700" letter-spacing="2">A001</text>
+        <rect x="340" y="66" width="110" height="52" rx="12" fill="#14b8a6"/>
+        <text x="395" y="90" fill="#ecfeff" font-family="Prompt,sans-serif" font-size="12" text-anchor="middle">ช่องบริการ</text>
+        <text x="395" y="110" fill="#fff" font-family="Prompt,sans-serif" font-size="20" font-weight="700" text-anchor="middle">3</text>
+        <rect x="300" y="138" width="20" height="26" fill="#9db7d6"/>
+        <!-- counter -->
+        <rect x="70" y="196" width="480" height="20" rx="8" fill="url(#gTop)"/>
+        <rect x="84" y="214" width="452" height="118" rx="10" fill="url(#gCounter)"/>
+        <rect x="110" y="238" width="130" height="10" rx="5" fill="#bcd6ee"/>
+        <rect x="110" y="256" width="90" height="10" rx="5" fill="#d3e5f5"/>
+        <circle cx="490" cy="270" r="22" fill="#e0f2fe"/>
+        <path d="M483 270h14M490 263v14" stroke="#0ea5e9" stroke-width="5" stroke-linecap="round"/>
+        <!-- monitor on counter -->
+        <rect x="250" y="160" width="62" height="40" rx="6" fill="#0b2559"/>
+        <rect x="255" y="165" width="52" height="30" rx="3" fill="#38bdf8" opacity=".8"/>
+        <rect x="274" y="198" width="14" height="6" fill="#0b2559"/>
+        <!-- staff (behind counter) -->
+        <circle cx="390" cy="150" r="19" fill="#f5c7a9"/>
+        <path d="M371 146c0-14 9-22 19-22s19 8 19 22c-6-7-12-9-19-9s-13 2-19 9z" fill="#1f2a44"/>
+        <path d="M356 198c2-20 16-30 34-30s32 10 34 30z" fill="#ffffff"/>
+        <path d="M380 170l10 16 10-16" fill="none" stroke="#14b8a6" stroke-width="4" stroke-linejoin="round"/>
+        <rect x="402" y="178" width="12" height="8" rx="2" fill="#93c5fd"/>
+        <!-- patient (front) -->
+        <circle cx="168" cy="196" r="20" fill="#e9b48f"/>
+        <path d="M148 193c0-15 9-23 20-23s20 8 20 23c-5-6-12-8-20-8s-15 2-20 8z" fill="#3b2f2f"/>
+        <path d="M128 338c0-62 16-104 40-104s40 42 40 104z" fill="#60a5fa"/>
+        <rect x="186" y="262" width="34" height="22" rx="4" fill="#fff"/>
+        <text x="203" y="278" fill="#1d4ed8" font-family="Prompt,sans-serif" font-size="11" font-weight="700" text-anchor="middle">W025</text>
+      </svg>
+      <div class="chip c1"><span class="dot" style="background:#1d64d8">A</span><div><b>A001</b><br/><span>เรียกแล้ว · ช่อง 3</span></div></div>
+      <div class="chip c2"><span class="dot" style="background:#0ea5a0">W</span><div><b>W025</b><br/><span>คิวถัดไป · รอ 4 นาที</span></div></div>
+      <div class="chip c3"><span class="dot" style="background:#f59e0b">B</span><div><b>B012</b><br/><span>กำลังเตรียมยา</span></div></div>
+    </div>
+
+    <div class="b-feat">
+      <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5eead4" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>เรียกคิวแบบ Real-time</span>
+      <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5eead4" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>เชื่อมต่อข้อมูล HOSxP</span>
+      <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5eead4" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>จอแสดงผลและเสียงเรียกคิว</span>
+    </div>
+  </section>
+
+  <!-- ── Login form ── -->
+  <section class="side">
+    <form class="form" id="loginForm" novalidate onsubmit="doLogin();return false;">
+      <!-- โลโก้โรงพยาบาล: วางไฟล์จริงที่ public/hospital-logo.png (ถ้าไม่มีจะใช้ไอคอนระบบแทน) -->
+      <div class="logo"><img src="/hospital-logo.png" alt="โลโก้โรงพยาบาล" onerror="this.onerror=null;this.src='/app-icon.png'"/></div>
+      <h1>เข้าสู่ระบบ</h1>
+      <p class="lead">กรุณากรอกข้อมูลเพื่อเข้าใช้งานระบบ</p>
+
+      <div class="field" id="fUser">
+        <label for="username">ชื่อผู้ใช้งาน</label>
+        <div class="iw">
+          <input type="text" id="username" placeholder="ชื่อผู้ใช้ HOSxP" autocomplete="username"/>
+          <span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></span>
+        </div>
+        <div class="f-err">กรุณากรอกชื่อผู้ใช้งาน</div>
+      </div>
+      <div class="field" id="fPass">
+        <label for="password">รหัสผ่าน</label>
+        <div class="iw">
+          <input type="password" id="password" placeholder="รหัสผ่าน" autocomplete="current-password"/>
+          <span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
+          <button type="button" class="eye" id="eyeBtn" onclick="togglePw()" aria-label="แสดงรหัสผ่าน" title="แสดง / ซ่อนรหัสผ่าน"></button>
+        </div>
+        <div class="f-err">กรุณากรอกรหัสผ่าน</div>
+      </div>
+
+      <div class="row">
+        <label class="ck"><input type="checkbox" id="remember"/> จดจำการเข้าสู่ระบบ</label>
+        <button type="button" class="link" onclick="toggleBmsBox()">เข้าสู่ระบบด้วย BMS Session</button>
+      </div>
+
+      <button type="submit" class="btn" id="loginBtn"></button>
+      <div class="alert" id="errMsg" role="alert"></div>
+
+      <div id="bmsBox">
+        <div class="field" id="fBms">
+          <label for="bmsSessionId">BMS Session ID</label>
+          <div class="iw">
+            <input type="text" id="bmsSessionId" placeholder="วาง Session ID ที่นี่"/>
+            <span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M15 8l2 2"/></svg></span>
+          </div>
+        </div>
+        <button type="button" class="btn teal" id="bmsLoginBtn" onclick="doBmsLogin()"></button>
+        <div class="alert" id="bmsErrMsg" role="alert"></div>
+      </div>
+
+      <div class="or">ตั้งค่าระบบ</div>
+      <button type="button" class="btn-cfg" onclick="location.href='/db-config.html'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>
+        ตั้งค่าการเชื่อมต่อฐานข้อมูล
+      </button>
+      <div class="foot">© <span id="hospFoot">รพ.</span> · เชื่อมต่อข้อมูลผู้ใช้งานจาก HOSxP</div>
+    </form>
+  </section>
 </div>
 
-<div class="wrap">
-  <div class="card">
-    <div class="brand">
-      <img class="brand-icon" src="/app-icon.png" alt="Queue-Med"/>
-      <div class="brand-name">Queue-Med</div>
-      <div class="brand-sub">ระบบบริหารจัดการคิวโรงพยาบาล</div>
-      <span class="brand-pill">HOSPITAL QUEUE SYSTEM</span>
-    </div>
-
-    <div class="field">
-      <label for="username">ชื่อผู้ใช้งาน</label>
-      <div class="input-wrap"><span class="ic">👤</span>
-        <input type="text" id="username" placeholder="ชื่อผู้ใช้ HOSxP" autocomplete="username"/></div>
-    </div>
-    <div class="field">
-      <label for="password">รหัสผ่าน</label>
-      <div class="input-wrap"><span class="ic">🔒</span>
-        <input type="password" id="password" placeholder="รหัสผ่าน" autocomplete="current-password"/></div>
-    </div>
-
-    <button class="btn-login" id="loginBtn" onclick="doLogin()">เข้าสู่ระบบ</button>
-    <div class="err" id="errMsg"></div>
-
-    <div class="or">หรือ</div>
-    <div id="bmsToggleWrap">
-      <button class="btn-bms" onclick="toggleBmsBox()">🔑 เข้าสู่ระบบด้วย BMS Session</button>
-    </div>
-    <div id="bmsBox" style="display:none;margin-top:14px">
-      <div class="field">
-        <label for="bmsSessionId">BMS Session ID</label>
-        <div class="input-wrap"><span class="ic">🔑</span>
-          <input type="text" id="bmsSessionId" placeholder="วาง Session ID ที่นี่"/></div>
-      </div>
-      <button class="btn-login" id="bmsLoginBtn" onclick="doBmsLogin()">เข้าสู่ระบบด้วย BMS Session</button>
-      <div class="err" id="bmsErrMsg"></div>
-    </div>
-
-    <button class="btn-cfg" onclick="location.href='/db-config.html'">⚙️ ตั้งค่าการเชื่อมต่อฐานข้อมูล</button>
+<!-- Department selection -->
+<div class="ov" id="deptOverlay">
+  <div class="modal">
+    <div class="m-title">เลือกห้องตรวจ</div>
+    <div class="m-sub" id="deptWelcome">กรุณาเลือกห้องตรวจที่ต้องการใช้งาน</div>
+    <div class="dept-list" id="deptList"><div class="dept-loading"><span class="spin"></span>กำลังโหลด...</div></div>
   </div>
-  <div class="foot">Queue-Med · เชื่อมต่อข้อมูลผู้ใช้งานจาก HOSxP</div>
 </div>
 
 <script>
+  const ICON = {
+    login: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>',
+    eye: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+    eyeOff: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.9 17.9A10.4 10.4 0 0 1 12 19C5 19 1 12 1 12a18.5 18.5 0 0 1 5.1-5.9M9.9 5.2A9.7 9.7 0 0 1 12 5c7 0 11 7 11 7a18.6 18.6 0 0 1-2.2 3.2M1 1l22 22"/><path d="M14.1 14.1a3 3 0 1 1-4.2-4.2"/></svg>',
+    warn: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>',
+  };
+  const $ = id => document.getElementById(id);
+  const setBtn = (btn, busy, label) => {
+    btn.disabled = busy;
+    btn.innerHTML = busy ? '<span class="spin"></span>กำลังตรวจสอบข้อมูล...' : ICON.login + label;
+  };
+  const showErr = (el, msg) => { el.innerHTML = ICON.warn + '<span>' + escHtml(msg) + '</span>'; el.classList.remove('show'); void el.offsetWidth; el.classList.add('show'); };
+  // ชื่อโรงพยาบาล: "รพ." until the database is connected, then opdconfig.hospitalname from HOSxP
+  fetch('/api/hospital-name').then(r => r.json()).then(d => {
+    if (d && d.name) { $('hospName').textContent = d.name; $('hospFoot').textContent = d.name; }
+  }).catch(() => {});
+  setBtn($('loginBtn'), false, 'เข้าสู่ระบบ');
+  setBtn($('bmsLoginBtn'), false, 'เข้าสู่ระบบด้วย BMS Session');
+  $('eyeBtn').innerHTML = ICON.eye;
+
+  // จดจำการเข้าสู่ระบบ: remembers the user name on this computer (the password is never stored)
+  try {
+    const saved = localStorage.getItem('qm_login_user');
+    if (saved) { $('username').value = saved; $('remember').checked = true; }
+  } catch (e) {}
+  (($('username').value ? $('password') : $('username'))).focus();
+
+  function togglePw() {
+    const p = $('password'), show = p.type === 'password';
+    p.type = show ? 'text' : 'password';
+    $('eyeBtn').innerHTML = show ? ICON.eyeOff : ICON.eye;
+    $('eyeBtn').setAttribute('aria-label', show ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน');
+    p.focus();
+  }
+  ['username', 'password'].forEach(id => $(id).addEventListener('input', () => $(id === 'username' ? 'fUser' : 'fPass').classList.remove('bad')));
+
   // Auto-redirect if already logged in
   const _tok = sessionStorage.getItem('authToken');
   if (_tok) {
     fetch('/api/auth/verify', {
       method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ token: _tok })
-    }).then(r => r.json()).then(d => { if (d.success) location.href = '/'; });
+    }).then(r => r.json()).then(d => { if (d.success) location.href = '/'; }).catch(() => {});
   }
-
-  document.getElementById('username').addEventListener('keydown', e => {
-    if (e.key === 'Enter') document.getElementById('password').focus();
-  });
-  document.getElementById('password').addEventListener('keydown', e => {
-    if (e.key === 'Enter') doLogin();
-  });
 
   // ── BMS Session login (ดู BMS-SESSION-SPECIFICATION.md) ────────────────
   // รองรับ 3 ทาง: URL parameter (?bms-session-id=), Cookie (7 วัน), และกรอกเอง
@@ -191,36 +330,22 @@
   function clearBmsCookie() {
     document.cookie = 'bms_session_id=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
   }
-
-  function toggleBmsBox() {
-    const box = document.getElementById('bmsBox');
-    box.style.display = box.style.display === 'none' ? 'block' : 'none';
-    if (box.style.display === 'block') document.getElementById('bmsSessionId').focus();
+  function toggleBmsBox(open) {
+    const box = $('bmsBox');
+    const show = open === true || box.style.display !== 'block';
+    box.style.display = show ? 'block' : 'none';
+    if (show) $('bmsSessionId').focus();
   }
-
-  document.getElementById('bmsSessionId').addEventListener('keydown', e => {
-    if (e.key === 'Enter') doBmsLogin();
-  });
+  $('bmsSessionId').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); doBmsLogin(); } });
 
   function doBmsLogin(sessionIdArg) {
-    const sessionId = sessionIdArg || document.getElementById('bmsSessionId').value.trim();
-    const btn   = document.getElementById('bmsLoginBtn');
-    const errEl = document.getElementById('bmsErrMsg');
+    const sessionId = sessionIdArg || $('bmsSessionId').value.trim();
+    const btn = $('bmsLoginBtn'), errEl = $('bmsErrMsg');
     errEl.classList.remove('show');
-
-    if (!sessionId) {
-      errEl.textContent = 'กรุณากรอก BMS Session ID';
-      errEl.classList.add('show');
-      return;
-    }
-
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span>กำลังเข้าสู่ระบบ...';
-
+    if (!sessionId) { showErr(errEl, 'กรุณากรอก BMS Session ID'); return; }
+    setBtn(btn, true);
     fetch('/api/auth/bms-login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sessionId })
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId })
     })
     .then(r => r.json())
     .then(d => {
@@ -231,19 +356,12 @@
         fetchDepts(d.token, d.officer.name);
       } else {
         clearBmsCookie();
-        errEl.textContent = d.message;
-        errEl.classList.add('show');
-        btn.disabled = false;
-        btn.textContent = 'เข้าสู่ระบบด้วย BMS Session';
-        document.getElementById('bmsBox').style.display = 'block';
+        showErr(errEl, d.message || 'เข้าสู่ระบบไม่สำเร็จ');
+        setBtn(btn, false, 'เข้าสู่ระบบด้วย BMS Session');
+        toggleBmsBox(true);
       }
     })
-    .catch(() => {
-      errEl.textContent = 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง';
-      errEl.classList.add('show');
-      btn.disabled = false;
-      btn.textContent = 'เข้าสู่ระบบด้วย BMS Session';
-    });
+    .catch(() => { showErr(errEl, 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง'); setBtn(btn, false, 'เข้าสู่ระบบด้วย BMS Session'); });
   }
 
   // ตรวจ URL parameter ก่อน (ล้างออกจาก URL ทันที) จากนั้นค่อยตรวจ Cookie
@@ -252,114 +370,76 @@
     const urlSid = params.get('bms-session-id');
     if (urlSid) {
       params.delete('bms-session-id');
-      const clean = location.pathname + (params.toString() ? '?' + params.toString() : '');
-      history.replaceState({}, '', clean);
-      toggleBmsBox();
-      doBmsLogin(urlSid);
+      history.replaceState({}, '', location.pathname + (params.toString() ? '?' + params.toString() : ''));
+      toggleBmsBox(true); doBmsLogin(urlSid);
       return;
     }
     const cookSid = getBmsCookie();
-    if (cookSid) {
-      toggleBmsBox();
-      doBmsLogin(cookSid);
-    }
+    if (cookSid) { toggleBmsBox(true); doBmsLogin(cookSid); }
   })();
 
   function doLogin() {
-    const username = document.getElementById('username').value.trim();
-    const password = document.getElementById('password').value;
-    const btn      = document.getElementById('loginBtn');
-    const errEl    = document.getElementById('errMsg');
+    const username = $('username').value.trim(), password = $('password').value;
+    const btn = $('loginBtn'), errEl = $('errMsg');
     errEl.classList.remove('show');
-
+    $('fUser').classList.toggle('bad', !username);
+    $('fPass').classList.toggle('bad', !password);
     if (!username || !password) {
-      errEl.textContent = 'กรุณากรอกชื่อผู้ใช้งานและรหัสผ่าน';
-      errEl.classList.add('show');
+      showErr(errEl, !username && !password ? 'กรุณากรอกชื่อผู้ใช้งานและรหัสผ่าน' : !username ? 'กรุณากรอกชื่อผู้ใช้งาน' : 'กรุณากรอกรหัสผ่าน');
+      (!username ? $('username') : $('password')).focus();
       return;
     }
-
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span>กำลังเข้าสู่ระบบ...';
-
+    setBtn(btn, true);
     fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password })
     })
     .then(r => r.json())
     .then(d => {
       if (d.success) {
+        try { if ($('remember').checked) localStorage.setItem('qm_login_user', username); else localStorage.removeItem('qm_login_user'); } catch (e) {}
         sessionStorage.setItem('authToken', d.token);
         sessionStorage.setItem('officerName', d.officer.name);
         fetchDepts(d.token, d.officer.name);
       } else {
-        errEl.textContent = d.message;
-        errEl.classList.add('show');
-        btn.disabled = false;
-        btn.textContent = 'เข้าสู่ระบบ';
+        showErr(errEl, d.message || 'ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง');
+        setBtn(btn, false, 'เข้าสู่ระบบ');
+        $('password').select();
       }
     })
-    .catch(() => {
-      errEl.textContent = 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง';
-      errEl.classList.add('show');
-      btn.disabled = false;
-      btn.textContent = 'เข้าสู่ระบบ';
-    });
+    .catch(() => { showErr(errEl, 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง'); setBtn(btn, false, 'เข้าสู่ระบบ'); });
   }
 
   function fetchDepts(token, officerName) {
-    const overlay  = document.getElementById('deptOverlay');
-    const listEl   = document.getElementById('deptList');
-    const welcomeEl = document.getElementById('deptWelcome');
-    welcomeEl.textContent = officerName + ' — กรุณาเลือกห้องตรวจ';
-    listEl.innerHTML = '<div class="dept-loading">กำลังโหลด...</div>';
+    const overlay = $('deptOverlay'), listEl = $('deptList');
+    $('deptWelcome').textContent = officerName + ' — กรุณาเลือกห้องตรวจ';
+    listEl.innerHTML = '<div class="dept-loading"><span class="spin"></span>กำลังโหลด...</div>';
     overlay.classList.add('show');
-
     fetch('/api/officer/departments', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token })
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token })
     })
-    .then(r => {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    })
+    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(d => {
-      if (!d.success) {
-        listEl.innerHTML = '<div class="dept-err">' + escHtml(d.message || 'โหลดข้อมูลไม่สำเร็จ') + '</div>';
-        return;
-      }
+      if (!d.success) { listEl.innerHTML = '<div class="dept-err">' + escHtml(d.message || 'โหลดข้อมูลไม่สำเร็จ') + '</div>'; return; }
       const depts = d.departments || [];
-      if (depts.length === 0) {
-        listEl.innerHTML = '<div class="dept-err">ไม่พบห้องตรวจที่กำหนด</div>';
-        return;
-      }
-      if (depts.length === 1) {
-        selectDept(token, depts[0].depcode, depts[0].name);
-        return;
-      }
+      if (!depts.length) { listEl.innerHTML = '<div class="dept-err">ไม่พบห้องตรวจที่กำหนด</div>'; return; }
+      if (depts.length === 1) { selectDept(token, depts[0].depcode, depts[0].name); return; }
       listEl.innerHTML = '';
       depts.forEach(dept => {
-        const btn = document.createElement('button');
-        btn.className = 'dept-btn';
-        btn.innerHTML = '<span class="dept-icon">🏥</span>' + escHtml(dept.name);
-        btn.onclick = () => selectDept(token, dept.depcode, dept.name);
-        listEl.appendChild(btn);
+        const b = document.createElement('button');
+        b.className = 'dept-btn';
+        b.innerHTML = '<i>🏥</i>' + escHtml(dept.name);
+        b.onclick = () => selectDept(token, dept.depcode, dept.name);
+        listEl.appendChild(b);
       });
     })
-    .catch(err => {
-      listEl.innerHTML = '<div class="dept-err">เกิดข้อผิดพลาด: ' + escHtml(err.message) + '</div>';
-    });
+    .catch(err => { listEl.innerHTML = '<div class="dept-err">เกิดข้อผิดพลาด: ' + escHtml(err.message) + '</div>'; });
   }
 
   function selectDept(token, depcode, deptName) {
-    const listEl = document.getElementById('deptList');
-    listEl.innerHTML = '<div class="dept-loading">กำลังโหลด...</div>';
-
+    const listEl = $('deptList');
+    listEl.innerHTML = '<div class="dept-loading"><span class="spin"></span>กำลังเข้าสู่ระบบ...</div>';
     fetch('/api/auth/select-dept', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, depcode, deptName })
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token, depcode, deptName })
     })
     .then(r => r.json())
     .then(d => {
@@ -367,19 +447,15 @@
         sessionStorage.setItem('currentDepcode', d.depcode);
         sessionStorage.setItem('currentDeptName', d.deptName);
         location.href = '/';
-      } else {
-        listEl.innerHTML = '<div class="dept-err">' + (d.message || 'เกิดข้อผิดพลาด') + '</div>';
-      }
+      } else listEl.innerHTML = '<div class="dept-err">' + escHtml(d.message || 'เกิดข้อผิดพลาด') + '</div>';
     })
-    .catch(() => {
-      listEl.innerHTML = '<div class="dept-err">เกิดข้อผิดพลาด กรุณาลองใหม่</div>';
-    });
+    .catch(() => { listEl.innerHTML = '<div class="dept-err">เกิดข้อผิดพลาด กรุณาลองใหม่</div>'; });
   }
 
   function escHtml(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 </script>
-<!-- login page keeps its own pastel colours: the shared brightness/saturation panel is not applied here -->
+<!-- login page keeps its own colours: the shared brightness/saturation panel is not applied here -->
 </body>
 </html>

@@ -250,7 +250,12 @@ function DrawNumBox($g,$box,$x,$y,$w,$h){
 $script:drawContent = {
   param($g)
   $g.PageUnit = [System.Drawing.GraphicsUnit]::Millimeter
-  [float]$pw=$script:d.paperMm-6.0; [float]$m=3.0; [float]$y=$m
+  # shift the whole slip (mm) — set in the slip designer
+  $g.TranslateTransform([float]$script:d.offX, [float]$script:d.offY)
+  # fit the printer's real printable width (e.g. an "80mm" Xprinter that prints 72mm) — else the right side is cut off
+  [float]$avail=$script:d.paperMm
+  if($script:fitMm -gt 10 -and $script:fitMm -lt $avail){ $avail=[float]$script:fitMm }
+  [float]$pw=$avail-6.0; [float]$m=3.0; [float]$y=$m
   for($i=0; $i -lt $script:d.lines.Count; $i++){
     $line = $script:d.lines[$i]
     if($line.t -eq 'div'){
@@ -306,6 +311,7 @@ $script:drawContent = {
   }
 }
 
+$script:fitMm = 0
 function DoPrint {
   if ($script:isZPL) {
     # ZPL path: render to bitmap at printer DPI → convert to ^GFA hex → send raw ZPL
@@ -348,12 +354,23 @@ function DoPrint {
     $pd = New-Object System.Drawing.Printing.PrintDocument
     $pd.PrinterSettings.PrinterName = $script:d.printerName
     $pd.PrinterSettings.Copies = [int16]1
+    # the printer's own printable width — read BEFORE the custom paper size below, which would report 80mm back
+    $script:fitMm = [float]($pd.PrinterSettings.DefaultPageSettings.PrintableArea.Width * 0.254)
     $customSize = New-Object System.Drawing.Printing.PaperSize('Custom',$pw100,$ph100)
     $customSize.RawKind = 256
     $pd.DefaultPageSettings.PaperSize = $customSize
     $pd.DefaultPageSettings.Landscape = $false
     $pd.DefaultPageSettings.Margins = New-Object System.Drawing.Printing.Margins(0,0,0,0)
-    $pd.add_PrintPage({ param($s,$e); & $script:drawContent $e.Graphics })
+    $pd.add_PrintPage({ param($s,$e)
+      # fixed height: thermal drivers cut right after the last printed dot (blank trimming) — one tiny dot at the
+      # bottom makes the paper feed to the set length before the cut
+      if($script:d.fixedH -and $script:d.paperHmm -gt 10){
+        $e.Graphics.PageUnit = [System.Drawing.GraphicsUnit]::Millimeter
+        $e.Graphics.FillRectangle([System.Drawing.Brushes]::Black, [float]2.0, [float]($script:d.paperHmm - 1.5), [float]0.3, [float]0.3)
+      }
+      [float]$pa = $e.PageSettings.PrintableArea.Width * 0.254   # 1/100 inch → mm
+      if($pa -gt 10 -and ($script:fitMm -le 10 -or $pa -lt $script:fitMm)){ $script:fitMm = $pa }
+      & $script:drawContent $e.Graphics })
     $pd.Print()
   }
 }
@@ -364,14 +381,14 @@ for($i=0; $i -lt [int]$script:d.copies; $i++){
 }
 `;
 
-function runSlipPrint({ printerName, paperMm, paperHmm, copies, fontFamily, lines }, callback, timeoutMs = 30000) {
+function runSlipPrint({ printerName, paperMm, paperHmm, copies, fontFamily, lines, offX, offY, fixedH }, callback, timeoutMs = 30000) {
   const ts       = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   const dataFile = path.join(os.tmpdir(), `qslip_data_${ts}.json`);
   const ps1File  = path.join(os.tmpdir(), `qslip_print_${ts}.ps1`);
   const safeFont = (fontFamily || 'Segoe UI').replace(/['"]/g, '');
   fs.writeFileSync(dataFile, JSON.stringify({
     printerName, paperMm, paperHmm: paperHmm || 300, copies: Math.max(1, Number(copies) || 1),
-    fontFamily: safeFont, lines,
+    fontFamily: safeFont, lines, offX: clampOff(offX), offY: clampOff(offY), fixedH: !!fixedH,
   }), 'utf8');
   fs.writeFileSync(ps1File, PS_SCRIPT, 'utf8');
   exec(`powershell -NoProfile -ExecutionPolicy Bypass -File "${ps1File}"`,
@@ -383,12 +400,16 @@ function runSlipPrint({ printerName, paperMm, paperHmm, copies, fontFamily, line
     });
 }
 
+function clampOff(v) { const n = Number(v) || 0; return Math.max(-20, Math.min(20, Math.round(n * 2) / 2)); }
+
 // One-call helper: config + ticket → print
 function printSlip(cfg, ticket, printerName, callback, timeoutMs) {
   const paperMm  = paperWidthMm(cfg);
   const lines    = buildPrintLines(cfg, ticket || {});
   const paperHmm = paperHeightMm(cfg, lines, paperMm);
-  runSlipPrint({ printerName, paperMm, paperHmm, copies: cfg.copies || 1, fontFamily: cfg.fontFamily || '', lines },
+  runSlipPrint({ printerName, paperMm, paperHmm, copies: cfg.copies || 1, fontFamily: cfg.fontFamily || '', lines,
+                 offX: cfg.offsetX, offY: cfg.offsetY,
+                 fixedH: cfg.paperSize === 'a4' || (cfg.paperSize === 'custom' && Number(cfg.customHeight) > 0) },
                callback, timeoutMs);
 }
 

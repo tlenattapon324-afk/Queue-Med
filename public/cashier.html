@@ -26,7 +26,7 @@
       --cs-stat-w:#b6752f;--cs-stat-s:#4d8760;--cs-stat-n:#a8524d;
       --cs-nav-txt:#1a6ba8;--cs-logo-clr:#1a6ba8;
       --cs-nav-fs:.86rem;
-      --wq-cols:44px 118px minmax(170px,1.3fr) 104px 84px minmax(140px,1.5fr) minmax(110px,1fr) 104px 64px 98px;
+      --wq-cols:44px minmax(128px,auto) minmax(170px,1.3fr) 104px 84px minmax(140px,1.4fr) minmax(150px,1.15fr) 104px 64px 98px;
       --wq-th-fs:.72rem;--wq-patient-fs:1.0rem;--wq-hn-fs:1.0rem;
       --wq-thead-bg:#1f83d1;--wq-thead-clr:#ffffff;
       --cs-call-type-clr:#1f83d1;--cs-call-ctr-clr:#ab6c32;
@@ -99,6 +99,46 @@
     .ttab.active{color:#1e3a8a;border-bottom-color:#1e40af;background:#ffffff99}
     .ttab .tpfx{width:20px;height:20px;border-radius:5px;display:flex;align-items:center;
       justify-content:center;font-size:.7rem;font-weight:900;color:#000}
+    /* pinned call (top of the waiting list) */
+    .call-pin{margin:10px 8px 0;border:2px solid #f59e0b;background:linear-gradient(180deg,#fffbeb,#fff);border-radius:16px;padding:10px 14px;box-shadow:0 6px 18px -8px rgba(245,158,11,.6)}
+    .call-pin[hidden]{display:none}
+    .cp-head{display:flex;align-items:center;gap:8px;font-size:.82rem;font-weight:800;color:#b45309;margin-bottom:6px}
+    .cp-head small{margin-left:auto;font-weight:600;color:#92400e}
+    .cp-dot{width:10px;height:10px;border-radius:50%;background:#f59e0b;animation:cpPulse 1.2s infinite}
+    @keyframes cpPulse{50%{box-shadow:0 0 0 6px rgba(245,158,11,.25)}}
+    .cp-body{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .cp-badge{width:44px;height:44px;border-radius:12px;color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex:none}
+    .cp-info{flex:1;min-width:150px;display:flex;flex-direction:column}
+    .cp-info b{font-size:2rem;line-height:1.05;font-weight:900}
+    .cp-info span{color:#475569;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .cp-btns{display:flex;gap:8px;flex-wrap:wrap}
+    .cp-btns button{border:none;border-radius:12px;padding:12px 16px;font:inherit;font-size:1rem;font-weight:800;cursor:pointer;white-space:nowrap}
+    .cp-ok{background:#16a34a;color:#fff}
+    .cp-re{background:#fff;color:#1d4ed8;border:2px solid #93c5fd!important}
+    .cp-ns{background:#dc2626;color:#fff}
+    .fl-lane.l-park .fl-ic{background:#fef3c7}
+    .fl-lane.l-park.on{border-color:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,.2)}
+    .cp-park{background:#fff;color:#b45309;border:2px solid #fbbf24!important}
+    .call-pin.cp-shake{animation:cpShake .45s}
+    @keyframes cpShake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+    .wq-item.wq-parked{background:#fffbeb!important;border-left:5px solid #f59e0b!important}
+    .st-tag.st-parked{background:#fef3c7;color:#92400e;border:1px solid #fcd34d;font-weight:800}
+    .park-ov{position:fixed;inset:0;z-index:1000;background:rgba(15,23,42,.5);display:none;align-items:center;justify-content:center;padding:14px}
+    .park-ov.show{display:flex}
+    .park-box{background:#fff;border-radius:18px;max-width:460px;width:100%;padding:18px 20px;box-shadow:0 30px 60px -20px rgba(0,0,0,.5)}
+    .park-box h3{font-size:1.15rem;color:#92400e;margin-bottom:6px}
+    .park-box p{font-size:.88rem;color:#475569;line-height:1.55;margin-bottom:10px}
+    .park-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+    .park-chips button{border:1px solid #fcd34d;background:#fffbeb;color:#92400e;border-radius:999px;padding:5px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+    .park-box input{width:100%;border:1.5px solid #cbd5e1;border-radius:10px;padding:9px 12px;font:inherit}
+    .park-btns{display:flex;gap:8px;margin-top:12px}
+    .park-btns button{flex:1;border:none;border-radius:12px;padding:11px;font:inherit;font-weight:800;cursor:pointer}
+    .park-cancel{background:#f1f5f9;color:#334155}
+    .park-ok{background:#f59e0b;color:#fff}
+    body.mobile .call-pin{margin:0 0 8px}
+    body.mobile .cp-btns{width:100%}
+    body.mobile .cp-btns button{flex:1;padding:12px 6px}
+    .ttab .tchk{font-weight:900;margin-right:2px}
     .ttab .tbcnt{background:#e5eefa;color:#1a6ba8;border-radius:8px;padding:1px 7px;font-size:.72rem;font-weight:700}
 
     /* ── MAIN LAYOUT ── */
@@ -213,11 +253,13 @@
     .wq-item > *:last-child{border-right:none}
 
     /* Col 1: queue number */
-    .wq-num-cell{gap:6px;justify-content:center}
+    .wq-num-cell{gap:5px;justify-content:center;padding-left:6px !important;padding-right:6px !important}
     .wq-badge{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;
       justify-content:center;font-size:.7rem;font-weight:900;color:#fff;flex-shrink:0;
       box-shadow:0 2px 6px rgba(0,0,0,.22)}
-    .wq-num{font-size:var(--cs-wq-fs,1.25rem);font-weight:900;letter-spacing:1px;line-height:1}
+    .wq-num{font-size:var(--cs-wq-fs,1.25rem);font-weight:900;letter-spacing:.3px;word-spacing:-.14em;line-height:1;white-space:nowrap}
+    .wq-num-cell{flex-wrap:nowrap}
+    .wq-badge{flex:none;white-space:nowrap}
 
     /* Col 2-3: type / time */
     .wq-type-cell{flex-direction:column;align-items:center;justify-content:center;gap:4px}
@@ -245,8 +287,9 @@
     .wq-pttype{display:inline-block;
       background:linear-gradient(135deg,rgba(251,191,36,.18),rgba(245,158,11,.08));
       border:1px solid rgba(217,119,6,.35);color:#92400e;
-      border-radius:8px;padding:4px 10px;font-size:.68rem;font-weight:700;
-      white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;text-align:center;
+      border-radius:10px;padding:5px 12px;font-size:.92rem;font-weight:700;line-height:1.3;
+      white-space:normal;max-width:100%;overflow:hidden;text-align:center;
+      display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
       box-shadow:inset 0 1px 0 rgba(255,255,255,.5)}
 
     /* Col 6-7: HN / QN */
@@ -638,7 +681,7 @@
     .wq-item.wq-ret,.wq-item.wq-next.wq-ret{border-left:4px solid #f97316}
     .wq-badge{border-radius:8px;box-shadow:none}
     .wq-patient{color:var(--ui-ink);font-weight:600}
-    .wq-pttype{background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:999px;box-shadow:none;font-weight:600}
+    .wq-pttype{background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:12px;box-shadow:none;font-weight:600}
     .wq-drug{border-radius:999px;background:#eff6ff;border-color:#bfdbfe}
     .wq-hn-val,.wq-time{color:#1e293b;font-weight:600;font-variant-numeric:tabular-nums}
     .wq-del-cell{border-right:none}
@@ -722,7 +765,7 @@
       background:linear-gradient(180deg,#f5f3ff,#faf5ff);border:1px solid #ddd6fe;color:#4c1d95}
     .fwd-flow-note b{display:block;font-size:.84rem}
     .flow-hos small{display:block;opacity:.8;font-size:.74rem}
-    .flow-bar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:12px 14px;
+    .flow-bar{display:grid;grid-template-columns:repeat(var(--fl-n,4),minmax(0,1fr));gap:10px;padding:12px 14px;
       background:linear-gradient(180deg,#f5f9ff,#eef5ff);border-bottom:1px solid #dbeafe}
     .fl-lane{--c:#2563eb;--c-bg:#eff6ff;position:relative;display:flex;align-items:center;gap:12px;min-width:0;
       padding:11px 14px 12px;border:1.5px solid #dbe5f3;border-radius:14px;background:#fff;cursor:pointer;
@@ -735,15 +778,27 @@
     .fl-ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none;font-size:1.15rem;
       background:var(--c-bg);color:var(--c);border:1px solid color-mix(in srgb,var(--c) 25%,transparent)}
     .fl-txt{min-width:0;flex:1;display:flex;flex-direction:column;gap:1px}
-    .fl-name{font-size:.82rem;font-weight:800;color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .fl-name{font-size:.82rem;font-weight:800;color:#334155;line-height:1.15;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
     .fl-sub{font-size:.72rem;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .fl-sub.warn{color:#c2410c;font-weight:700}
     .fl-n{font-size:1.9rem;font-weight:900;line-height:1;color:var(--c);font-variant-numeric:tabular-nums}
     .fl-lane.l-check{--c:#7c3aed;--c-bg:#f5f3ff}
     .fl-lane.l-ready,.fl-lane.l-done{--c:#16a34a;--c-bg:#f0fdf4}
     .fl-lane.l-away,.fl-lane.l-paying{--c:#ea580c;--c-bg:#fff7ed}
-    .fl-lane.l-wait{--c:#2563eb;--c-bg:#eff6ff}
+    .fl-lane.l-wait{--c:#16a34a;--c-bg:#f0fdf4}
     .fl-lane.l-hist{--c:#475569;--c-bg:#f1f5f9}
+    .fl-lane.l-ns{--c:#dc2626;--c-bg:#fef2f2}
+    /* 💊 พร้อมจ่ายยา (ห้องยา) / 🔔 รอเรียก (การเงิน): always a clear green box — the lane staff call from */
+    .fl-lane.l-ready,.fl-lane.l-wait{background:#dcfce7;border-color:#4ade80}
+    .fl-lane.l-ready.on,.fl-lane.l-wait.on{background:linear-gradient(180deg,#bbf7d0,#86efac);border-color:#16a34a}
+    .fl-lane.l-ready .fl-name,.fl-lane.l-wait .fl-name{color:#14532d}
+    .fl-lane.l-ready .fl-sub,.fl-lane.l-wait .fl-sub{color:#166534}
+    .fl-lane.l-ready .fl-ic,.fl-lane.l-wait .fl-ic{background:#fff}
+    .fl-lane.l-ready .fl-n,.fl-lane.l-wait .fl-n{color:#15803d}
+    .wq-item.fl-ns{background:#fff !important;border-left:5px solid #fca5a5 !important}
+    .wq-item.fl-ns:nth-child(even){background:#fffafa !important}
+    .fl-ns-acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+    .btn-fl-more.ns-clear{color:#64748b}
     /* ยอดที่ต้องชำระ (การเงิน) */
     .wq-amt{display:block;margin-bottom:4px;font-size:1.02rem;font-weight:900;color:#b45309;font-variant-numeric:tabular-nums;white-space:nowrap}
     .wq-amt.zero{color:#94a3b8;font-weight:700;font-size:.85rem}
@@ -771,7 +826,7 @@
     @media (max-width:900px){.flow-bar{grid-template-columns:1fr}.fl-lane{padding:9px 12px}}
 
     /* rows */
-    .wq-item.fl-held{background:repeating-linear-gradient(135deg,#fbfaff 0 12px,#f6f3ff 12px 24px) !important}
+    .wq-item.fl-held{background:#fbfaff !important}   /* plain — no stripes */
     .wq-item.fl-held .wq-num{opacity:.75}
     .wq-item.fl-held .wq-badge{filter:saturate(.55)}
     .wq-item.fl-away{background:#fffaf5 !important}
@@ -854,6 +909,52 @@
     .sp-flow-row{display:flex;align-items:center;gap:8px;margin:8px 0 4px 26px;font-size:.8rem;color:#334155}
     .sp-flow-row select{flex:1;min-width:0;border:1px solid #cbd5e1;border-radius:8px;padding:5px 8px;font:inherit;font-size:.8rem}
     .sp-flow-hint{margin:6px 0 0 26px;font-size:.72rem;line-height:1.55;color:#64748b}
+
+    /* ══ 📱 Mobile mode (button in the top menu) — one column, the page scrolls, waiting rows become cards ══ */
+    .btn-view{background:#fff7ed;border:1px solid #fdba74;color:#c2410c;border-radius:18px;padding:0 10px;height:32px;font:inherit;
+      font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:4px}
+    body.mobile .btn-view{background:#f97316;border-color:#f97316;color:#fff}
+    body.mobile{height:auto;min-height:100vh;overflow:auto}
+    body.mobile nav{height:auto;flex-wrap:wrap;gap:6px;padding:8px 10px;row-gap:6px}
+    body.mobile nav a{padding:5px 8px;font-size:.85rem}
+    body.mobile .nav-officer,body.mobile .btn-mini,body.mobile #navLinked{display:none!important}
+    body.mobile .btn-gear{margin-left:0}
+    body.mobile .nav-ipd-lbl{font-size:.75rem}
+    body.mobile .cbar{flex-wrap:wrap;padding:8px 10px;gap:6px}
+    body.mobile .cbar-sel{flex:1;min-width:0}
+    body.mobile .btn-clear-disp{font-size:.75rem}
+    /* the filter above the waiting list: every tab visible (wraps), tap to tick several */
+    body.mobile .right-panel > #typeTabs{display:flex;flex-wrap:wrap;gap:6px;padding:10px;margin:0 0 8px;border:1px solid #e2e8f0;border-radius:14px;background:#fff;overflow:visible}
+    body.mobile .right-panel > #typeTabs::before{content:'กรองประเภทคิว (เลือกได้หลายประเภท)';flex-basis:100%;font-size:.78rem;font-weight:700;color:#64748b}
+    body.mobile .right-panel > #typeTabs .ttab{padding:6px 10px;font-size:.85rem}
+    body.mobile #btnWaitDash{padding:0 10px!important;font-size:.75rem!important}
+    body.mobile #btnHistLink{padding:0 10px!important;font-size:.75rem!important}
+    body.mobile .layout{display:flex;flex-direction:column;overflow:visible;padding:10px;gap:10px;max-width:560px;width:100%;margin:0 auto;flex:none}
+    body.mobile .left-panel,body.mobile .right-panel{overflow:visible}
+    body.mobile .called-box{padding:14px 14px 12px}
+    body.mobile .action-area{gap:8px}
+    body.mobile .btn-next{font-size:1.15rem;padding:14px}
+    body.mobile .stats-area{padding:8px 10px}
+    body.mobile .rp-header{margin:0;flex-wrap:wrap;gap:6px}
+    body.mobile .flow-bar{grid-template-columns:1fr 1fr;padding:8px;gap:8px}
+    body.mobile .waiting-list{overflow:visible;padding:6px}
+    /* a waiting row: number + status on top, name full width, the other details as small chips, the action button at the end */
+    body.mobile .wq-thead{display:none}
+    body.mobile .wq-item{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:10px 12px;border:1px solid #e2e8f0;border-radius:14px;
+      margin:0 0 8px;box-shadow:0 1px 3px rgba(15,23,42,.06)}
+    body.mobile .wq-item > *{min-height:0;padding:0;border:none;justify-content:flex-start}
+    body.mobile .wq-num-cell{order:1}
+    body.mobile .wq-status-cell{order:2;flex:1 1 auto;min-width:0}
+    body.mobile .wq-action-cell{order:3;margin-left:auto}
+    body.mobile .wq-patient-cell{order:4;flex:1 1 100%}
+    body.mobile .wq-drug-cell,body.mobile .wq-time-cell,body.mobile .wq-pttype-cell,body.mobile .wq-hn-cell,body.mobile .wq-qn-cell{order:5;font-size:.82rem}
+    body.mobile .wq-hn-cell::before{content:'HN ';color:#94a3b8;font-size:.75rem}
+    body.mobile .wq-qn-cell::before{content:'QN ';color:#94a3b8;font-size:.75rem}
+    body.mobile .wq-del-cell{order:6;margin-left:auto}
+    body.mobile .wq-num{font-size:1.5rem}
+    body.mobile .wq-patient{font-size:1rem}
+    body.mobile .toast{max-width:92vw;white-space:normal;text-align:center}
+    @media (min-width:700px){ body.mobile{background:#dfe3ee} }
   </style>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
@@ -877,6 +978,7 @@
     </div>
   </label>
   <button class="btn-logout" onclick="doLogout()">⏻ ออกจากระบบ</button>
+  <button class="btn-view" id="btnViewMode" onclick="toggleViewMode()" title="สลับหน้าจอแบบมือถือ / เดสก์ท็อป (จำไว้ในเครื่องนี้)">📱 มือถือ</button>
   <button class="btn-gear btn-mini" onclick="openMiniWindow()" title="เปิดหน้าจอขนาดเล็ก" style="width:auto;padding:0 10px;font-size:.75rem;font-weight:700;border-radius:18px;gap:4px;display:flex;align-items:center">🪟 Mini</button>
   <button class="btn-gear btn-copy-link" id="btnCopyLink" onclick="copyCashierLink()" title="คัดลอกลิงค์หน้านี้ เพื่อส่งให้เครื่องอื่น / ทำ shortcut" style="width:auto;padding:0 10px;font-size:.75rem;font-weight:700;border-radius:18px;gap:4px;display:flex;align-items:center">🔗 ลิงค์</button>
   <button class="btn-gear" onclick="openStylePanel()" title="ตั้งค่าการแสดงผล">⚙</button>
@@ -898,6 +1000,24 @@
       ทั้งหมด <span class="tbcnt" id="cnt-all">0</span>
     </div>
   </div>
+  <!-- 🖥 Staff Monitor: what is on the display, every counter, no-shows, next queues — opens in a new tab -->
+  <a id="btnMonitor" href="#" onclick="window.open('/monitor.html?sys=' + sysId + '&mode=' + cashierMode, '_blank');return false;"
+     style="display:flex;align-items:center;gap:6px;margin:6px 8px 6px 0;padding:0 16px;flex-shrink:0;border-radius:12px;
+            font-size:.85rem;font-weight:700;color:#fff;text-decoration:none;white-space:nowrap;
+            background:linear-gradient(135deg,#0f766e,#0891b2);box-shadow:0 4px 12px rgba(8,145,178,.3);transition:transform .15s"
+     onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''"
+     title="มอนิเตอร์สถานะคิว · จอแสดงผล · ทุกช่องบริการ · คิวไม่มา · คิวถัดไป (Real-time)">
+    🖥 Monitor
+  </a>
+  <!-- Dashboard ระยะเวลารอคอย (ออกคิว → ตรวจยา → จ่ายยา) — opens in a new tab -->
+  <a id="btnWaitDash" href="#" onclick="window.open('/wait-dashboard.html?sys=' + sysId, '_blank');return false;"
+     style="display:flex;align-items:center;gap:6px;margin:6px 4px 6px 0;padding:0 16px;flex-shrink:0;border-radius:12px;
+            font-size:.85rem;font-weight:700;color:#fff;text-decoration:none;white-space:nowrap;
+            background:linear-gradient(135deg,#4353d6,#7a55d8);box-shadow:0 4px 12px rgba(67,83,214,.3);transition:transform .15s"
+     onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''"
+     title="สรุปคิวและระยะเวลารอคอย · กรองวันที่ / ประเภทคิว · Export Excel">
+    📊 Dashboard ระยะเวลารอ
+  </a>
   <a id="btnHistLink" href="#" onclick="goHistory();return false;"
      style="display:flex;align-items:center;gap:5px;padding:0 18px;flex-shrink:0;
             font-size:.8rem;font-weight:700;color:#1a6ba8;text-decoration:none;
@@ -965,6 +1085,8 @@
       <div class="rp-title"><span id="rpTitleTxt">📋 คิวรอเรียก</span> <span class="rp-cnt" id="rpCnt">0</span></div>
       <div class="rp-type-filter" id="rpFilter">ทั้งหมด</div>
     </div>
+    <!-- the queue just called stays here until staff mark it: มาแล้ว / เรียกซ้ำ / ไม่มา -->
+    <div class="call-pin" id="callPin" hidden></div>
     <div class="flow-hos" id="flowHos" hidden></div>
     <div class="flow-bar" id="flowBar" hidden></div>
     <div class="wq-thead">
@@ -1099,6 +1221,10 @@
             · การเงินเรียกคิวและออกใบเสร็จหรือใบแจ้งหนี้แล้ว → ส่งกลับมาพร้อมจ่ายยา · เปิดที่หน้าเรียกคิวของห้องยาเท่านั้น</div>
         </div>
         <div class="sp-flow-hint" id="spFlowCashNote" style="margin-left:0"></div>
+        <label class="sp-ck" id="spFlowFwdRow" style="margin-top:8px">
+          <input type="checkbox" id="cs_flowShowFwd" onchange="toggleFlowShowFwd(this.checked)">
+          <span>แสดงปุ่ม "➜ ส่งต่อ" เอง (กรณีพิเศษ) — ปกติซ่อนไว้เมื่อเดินคิวอัตโนมัติ</span>
+        </label>
       </div>
       <div class="sp-sec">
         <div class="sp-sec-lbl">🔤 ขนาดตัวอักษร — แถบเมนู</div>
@@ -1448,7 +1574,9 @@ let noShows         = [];
 let clearedNoShows  = [];
 let nsActiveTab     = 'active';
 let lastCalled   = null;
-let activeTab    = 'all';
+// tabs: tick several at once — an empty set = ทั้งหมด (remembered per room on this device)
+let activeTabs   = new Set();
+try { (JSON.parse(localStorage.getItem('qf_cashier_tabs_' + (new URLSearchParams(location.search).get('sys') || 1)) || '[]')).forEach(x => activeTabs.add(String(x))); } catch (e) {}
 let myCounterId  = Number(localStorage.getItem('qf_counter_id_' + sysId)) || null;
 let pendingCall  = null; // { type: 'next'|'display', display, typeId }
 let skipConfirm  = localStorage.getItem('qf_skip_confirm_' + sysId) === 'true';
@@ -1470,6 +1598,7 @@ socket.on('queue_called', ({ calledQueue, typeWaiting: tw, allWaiting: aw, allSe
   typeWaiting = tw; allWaiting = aw; allServed = as; noShows = ns || noShows;
   if (lbc) curByCounter = lbc;
   lastCalled  = calledQueue;
+  if (myCall && calledQueue && calledQueue.display === myCall.display) setMyCall(calledQueue);
   showCalled(calledQueue);
   renderTabs(); renderWaiting(); renderCalledHist(); renderNoShowHist(); updateStats();
 });
@@ -1575,12 +1704,16 @@ fetch(`/api/sys/${sysId}/status`).then(r=>r.json()).then(d => {
   clearedNoShows = d.clearedNoShows || [];
   lastCalled  = d.lastCalled;
   if (lastCalled) showCalled(lastCalled);
-  if (d.sysInfo) document.title = `เรียกคิว — ${d.sysInfo.name}`;
+  if (d.sysInfo) { document.title = `เรียกคิว — ${d.sysInfo.name}`; roomName = d.sysInfo.name || ''; }
   // validate stored counter ID against current counter list
   if (myCounterId && !counters.find(c => c.id === myCounterId)) {
     myCounterId = null;
     localStorage.removeItem('qf_counter_id_' + sysId);
   }
+  // this counter's own last call (shown in กำลังให้บริการ and the กำลังเรียก bar) — not just the room's latest
+  if (d.lastCalledByCounter) curByCounter = d.lastCalledByCounter;
+  const mine = myCounterId && d.lastCalledByCounter && d.lastCalledByCounter[myCounterId];
+  if (mine) { lastCalled = mine; showCalled(mine); }
   renderTabs(); renderWaiting(); renderCalledHist(); renderNoShowHist();
   updateStats(); renderCbar();
   document.getElementById('cbSkip').checked = skipConfirm;
@@ -1604,6 +1737,13 @@ function pickCtrSelect(val) {
   else localStorage.removeItem('qf_counter_id_' + sysId);
   document.getElementById('cbarDot').classList.toggle('on', !!id);
   document.getElementById('btnClearDisp').disabled = !id;
+  showMyLastCall();
+}
+// switching counter: show that counter's own last call (and its กำลังเรียก bar)
+function showMyLastCall() {
+  const mine = myCounterId && curByCounter && curByCounter[myCounterId];
+  if (pinTicket()) { renderPin(); toast(`เปลี่ยนเป็น ${(counters.find(c => c.id === Number(myCounterId)) || {}).name || 'ช่องนี้'} — กด ↺ เรียกซ้ำ เพื่อเรียกคิว ${myCall.display} มาที่ช่องนี้`, 'ok'); return; }
+  if (mine) { lastCalled = mine; showCalled(mine); } else renderPin();
 }
 function buildCtrGrid() {
   document.getElementById('ctrGrid').innerHTML = counters.map(c => `
@@ -1617,7 +1757,7 @@ function pickCtr(id)   {
   localStorage.setItem('qf_counter_id_' + sysId, id);
   document.getElementById('pickerOverlay').classList.remove('open');
   document.getElementById('btnClearDisp').disabled = false;
-  renderCbar(); buildCtrGrid();
+  renderCbar(); buildCtrGrid(); showMyLastCall();
 }
 
 // ── Type tabs ─────────────────────────────────────────────────────────────
@@ -1633,11 +1773,14 @@ function cashFlowTabs() {
   });
   return list;
 }
-function tabMatch(t) {
-  if (activeTab === 'all') return true;
-  const id = String(activeTab);
+function tabMatchOne(t, id) {
   if (id.startsWith('p:')) return !!t.flowFrom && t.prefix === id.slice(2);
-  return t.typeId == activeTab && !(cashFlowTabs().length && t.flowFrom);
+  return t.typeId == id && !(cashFlowTabs().length && t.flowFrom);
+}
+function tabMatch(t) {
+  if (!activeTabs.size) return true;
+  for (const id of activeTabs) if (tabMatchOne(t, id)) return true;
+  return false;
 }
 function tabInfo(id) {
   id = String(id);
@@ -1651,17 +1794,17 @@ function renderTabs() {
   bar.querySelectorAll('[data-type]').forEach(e => e.remove());
   const fTabs = cashFlowTabs();
   // the open tab may belong to a list that's gone (flow switched off) — fall back to ทั้งหมด
-  if (activeTab !== 'all' && !tabInfo(activeTab)) activeTab = 'all';
+  for (const id of [...activeTabs]) if (!tabInfo(id)) activeTabs.delete(id);
   const addTab = (id, color, prefix, name, cnt, title, extraCls) => {
     const tab = document.createElement('div');
     tab.className = 'ttab' + (extraCls ? ' ' + extraCls : ''); tab.dataset.id = id; tab.dataset.type = '1';
     if (title) tab.title = title;
     tab.onclick = () => selectTab(id, tab);
-    const isA = String(activeTab) === String(id);
+    const isA = activeTabs.has(String(id));
     tab.classList.toggle('active', isA);
     tab.style.borderBottomColor = isA ? color : 'transparent';
     const e = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';');   // renderTabs may run before flEsc exists
-    tab.innerHTML = `<div class="tpfx" style="background:${color}">${e(prefix)}</div> ${e(name)} <span class="tbcnt">${cnt}</span>`;
+    tab.innerHTML = (isA ? '<span class="tchk">✓</span>' : '') + `<div class="tpfx" style="background:${color}">${e(prefix)}</div> ${e(name)} <span class="tbcnt">${cnt}</span>`;
     bar.appendChild(tab);
   };
   // 1) the pharmacy's money-related types (ไปการเงิน · ห้องตรวจ · สิทธิ), in the pharmacy's own colours
@@ -1672,12 +1815,14 @@ function renderTabs() {
   const own = w => !(fTabs.length && w.flowFrom);
   // การเงินที่รับคิวจากห้องยา: its own types show only while they hold queues of their own (or the ไม่มียา line)
   const showOwn = t => fTabs.length
-    ? !!t.noDrugFrom || String(activeTab) === String(t.id) || modeList.some(w => w.typeId == t.id && own(w))
-    : inUse.has(t.id) || String(activeTab) === String(t.id) || modeList.some(w => w.typeId == t.id);
+    ? !!t.noDrugFrom || activeTabs.has(String(t.id)) || modeList.some(w => w.typeId == t.id && own(w))
+    : inUse.has(t.id) || activeTabs.has(String(t.id)) || modeList.some(w => w.typeId == t.id);
   queueTypes.filter(showOwn).forEach((t, i) =>
     addTab(t.id, t.color, t.prefix, t.name, modeList.filter(w => w.typeId == t.id && own(w)).length,
       fTabs.length ? 'คิวของห้องนี้เอง (ไม่ได้มาจากห้องยา)' : '', fTabs.length && i === 0 ? 'ttab-own-first' : ''));
-  bar.querySelector('[data-id="all"]').classList.toggle('active', activeTab === 'all');
+  bar.querySelector('[data-id="all"]').classList.toggle('active', !activeTabs.size);
+  const rf = document.getElementById('rpFilter');
+  if (rf) rf.textContent = !activeTabs.size ? 'ทั้งหมด' : [...activeTabs].map(id => (tabInfo(id) || {}).name || '').filter(Boolean).join(' + ');
 }
 // which queue types the issue page gives out under the current ⚙ ออกคิว settings (same rule as its buttons)
 var issueMode = null;   // var: renderTabs may run before this line is reached
@@ -1689,7 +1834,7 @@ function tabTypesInUse() {
     : issueMode.mode === 'drug' ? t => !!t.drugRule
     : issueMode.mode === 'pay'  ? t => !!t.payRule && (t.payRule === 'dept' ? pay.deptOn === true : t.payRule === 'pttype' ? pay.ptOn === true
         // แยกยาน้อย / ยามาก may be ticked for one money route only — the other keeps its single queue
-        : (pay.drugOn === true && pay[t.payRule === 'cash' ? 'drugCash' : 'drugFree'] !== false) ? (!!t.drugSize || (Number(pay.drugMin) || 0) > 0) : !t.drugSize)
+        : (pay.drugOn === true && pay[t.payRule === 'cash' ? 'drugCash' : 'drugFree'] !== false) ? (!!t.drugSize || (Number(pay.drugMin) || 0) > 1) : !t.drugSize)
     : t => !t.drugRule && !t.payRule;
   const list = queueTypes.filter(t => forMode(t) && rule(t));
   return new Set((list.length ? list : queueTypes.filter(forMode)).map(t => t.id));
@@ -1699,19 +1844,20 @@ function loadIssueMode() {
 }
 socket.on('issue_mode_updated', m => { issueMode = m; renderTabs(); });
 loadIssueMode();
+// tap a tab to tick / untick it (several at once); ทั้งหมด clears the ticks
 function selectTab(id, el) {
-  activeTab = id;
-  document.querySelectorAll('.ttab').forEach(t => { t.classList.remove('active'); t.style.borderBottomColor = 'transparent'; });
-  el.classList.add('active');
-  if (id !== 'all') { const t = tabInfo(id); if (t) el.style.borderBottomColor = t.color; }
+  id = String(id);
+  if (id === 'all') activeTabs.clear();
+  else if (activeTabs.has(id)) activeTabs.delete(id); else activeTabs.add(id);
+  try { localStorage.setItem('qf_cashier_tabs_' + sysId, JSON.stringify([...activeTabs])); } catch (e) {}
+  renderTabs();
   renderWaiting(); renderCalledHist(); renderNoShowHist(); updateStats();
-  document.getElementById('rpFilter').textContent = id === 'all' ? 'ทั้งหมด' : (tabInfo(id)?.name || '');
 }
 
 // ── Waiting list ──────────────────────────────────────────────────────────
 function getFilteredWaiting() {
   let list = allWaiting.filter(t => (t.mode || 'opd') === cashierMode);
-  if (activeTab !== 'all') list = list.filter(tabMatch);
+  if (activeTabs.size) list = list.filter(tabMatch);
   return list;
 }
 function renderWaiting() {
@@ -1723,7 +1869,9 @@ function renderWaiting() {
   document.getElementById('rpCnt').textContent = list.length;
   const el = document.getElementById('waitingList');
   if (!list.length) {
-    el.innerHTML = held
+    el.innerHTML = flowLane === 'park' && flowRole()
+      ? `<div class="wq-empty"><div class="wq-empty-icon">📥</div>ไม่มีคิวกำลังตรวจสอบ<span class="fl-empty-sub">กด 📥 เก็บคิว ที่แถบ “กำลังเรียก” เมื่อต้องพักคิวไว้ (เช่น ยามีปัญหา) แล้วเรียกใหม่จากช่องนี้</span></div>`
+      : held
       ? `<div class="wq-empty"><div class="wq-empty-icon">🔍</div>ไม่มีคิวรอตรวจสอบยา<span class="fl-empty-sub">คิวใหม่จะมารอที่นี่จนกว่า HOSxP จะบันทึกผู้ตรวจสอบยา</span></div>`
       : flowLaneIs('ready')
         ? `<div class="wq-empty"><div class="wq-empty-icon">💊</div>ยังไม่มีคิวพร้อมจ่ายยา<span class="fl-empty-sub">คิวจะขึ้นที่นี่เมื่อตรวจสอบยาแล้ว หรือกลับมาจากการเงิน</span></div>`
@@ -1731,8 +1879,9 @@ function renderWaiting() {
     loadDrugCounts(all); loadRcptStatus(all); loadPayAmounts(all);
     return;
   }
-  el.innerHTML = list.map((t, i) => { const tn = typeTone(t.color) || { bg: t.color + '22', bd: t.color + '66', fg: t.color, num: t.color }; i = held ? -1 : i; return `
-    <div class="wq-item ${i===0?'wq-next':''} ${t.returned?'wq-ret':''} ${held?'fl-held':''} ${t.flowBack && !held?'fl-paid':''}"
+  const parked = list.filter(t => t.parked), rest = list.filter(t => !t.parked);
+  el.innerHTML = [...parked, ...rest].map((t, i) => { const tn = typeTone(t.color) || { bg: t.color + '22', bd: t.color + '66', fg: t.color, num: t.color }; i = held || t.parked ? -1 : i - parked.length; return `
+    <div class="wq-item ${i===0?'wq-next':''} ${t.parked?'wq-parked':''} ${t.returned?'wq-ret':''} ${held?'fl-held':''} ${t.flowBack && !held?'fl-paid':''}"
       ${t.flowBack && !held ? `title="ผ่านการเงินแล้ว — ${flEsc((t.flowBack.cashier || 'การเงิน') + ' ส่งกลับมาเวลา ' + String(t.flowBack.at).slice(0, 5))}"` : ''}>
       <div class="wq-del-cell">
         <button class="btn-del-item" onclick="deleteWaiting('${t.display}',${JSON.stringify(t).replace(/"/g,'&quot;')})">🗑</button>
@@ -1785,13 +1934,32 @@ function setFlow(f) {
   const before = flowRole();
   flow = f || null;
   const after = flowRole();
-  if (after !== before) flowLane = after === 'cashier' ? 'wait' : 'ready';
+  if (after !== before) {
+    flowLane = after === 'cashier' ? 'wait' : 'ready';
+    try { renderFwd(); renderPendingFwd(); } catch {}   // flow switched on / off: hide / show the manual ➜ ส่งต่อ
+  }
 }
 function flOn() { return cashierMode === 'opd' && !!flowRole(); }   // a declaration: renderWaiting may run before this line
 function flowLaneIs(l) { return flowRole() === 'pharmacy' && cashierMode === 'opd' && flowLane === l; }
 function flowLaneList(list) {
-  if (flowRole() !== 'pharmacy' || cashierMode !== 'opd') return list;
-  return list.filter(t => flowLane === 'check' ? t.flow === 'check' : t.flow !== 'check');
+  const role = flowRole();
+  if (!role || cashierMode !== 'opd') return list;
+  if (flowLane === 'park') return list.filter(t => t.parked);          // 📥 กำลังตรวจสอบ
+  if (role === 'pharmacy') return list.filter(t => !t.parked && (flowLane === 'check' ? t.flow === 'check' : t.flow !== 'check'));
+  return list.filter(t => !t.parked);
+}
+// "กำลังตรวจสอบ" lane box (queues kept with 📥 เก็บคิว)
+function parkLane(opd) {
+  const p = opd.filter(t => t.parked);
+  const oldest = p.length ? Math.max(...p.map(t => flMinFromHm(t.parked.at))) : 0;
+  return { k: 'park', ic: '📥', name: 'กำลังตรวจสอบ', n: p.length,
+    sub: p.length ? `เก็บไว้นานสุด ${oldest} นาที` : 'ไม่มีคิวที่เก็บไว้', warn: oldest >= 30 };
+}
+// minutes since "HH:MM:SS" today
+function flMinFromHm(hm) {
+  const m = /^(\d{1,2}):(\d{2})/.exec(String(hm || '')); if (!m) return 0;
+  const d = new Date(); d.setHours(+m[1], +m[2], 0, 0);
+  return Math.max(0, Math.floor((Date.now() - d) / 60000));
 }
 const flEsc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const flHm  = s => String(s || '').slice(0, 5);
@@ -1827,7 +1995,7 @@ function renderFlowBar() {
   const opd = allWaiting.filter(t => (t.mode || 'opd') === 'opd' && flTab(t));
   let lanes, side;
   if (role === 'pharmacy') {
-    const check = opd.filter(t => t.flow === 'check'), ready = opd.filter(t => t.flow !== 'check');
+    const check = opd.filter(t => t.flow === 'check'), ready = opd.filter(t => t.flow !== 'check' && !t.parked);
     const away = (flow.pharmacy.away || []).filter(flTab);
     const oldest = check.length ? flMin(Math.min(...check.map(t => t.issuedTs || t._ts))) : 0;
     const back = ready.filter(t => t.flowBack).length;
@@ -1838,20 +2006,21 @@ function renderFlowBar() {
       { k: 'away', ic: '💰', name: `อยู่ที่${flow.pharmacy.cashierName || 'การเงิน'}`, n: away.length,
         sub: late ? `ยังไม่ออกใบเสร็จเกิน ${FL_LATE_MIN} นาที ${late} คิว` : `รอเรียก ${away.filter(a => a.at && a.at.st === 'waiting').length} · เรียกแล้ว ${away.filter(a => a.at && a.at.st === 'called').length}`, warn: late > 0 },
     ];
-    lanes.push(histLane());
+    lanes.push(parkLane(opd), nsLane(), histLane());
     side = `ส่งไป / รับกลับจาก <b>${flEsc(flow.pharmacy.cashierName)}</b>`;
   } else {
     const paying = cashPaying(), done = cashDone();
     const late = paying.filter(t => flMin(t._ts) >= FL_LATE_MIN).length;
     const back = done.filter(t => !t.flowDone.end).length, ended = done.length - back;
     lanes = [
-      { k: 'wait', ic: '🔔', name: 'รอเรียก', n: opd.length, sub: `จากห้องยา ${opd.filter(t => t.flowFrom).length} คิว` },
+      { k: 'wait', ic: '🔔', name: 'รอเรียก', n: opd.filter(t => !t.parked).length, sub: `จากห้องยา ${opd.filter(t => t.flowFrom && !t.parked).length} คิว` },
       { k: 'paying', ic: '🧾', name: 'รอออกใบเสร็จ', n: paying.length, sub: late ? `เกิน ${FL_LATE_MIN} นาที ${late} คิว` : 'ออกแล้วส่งกลับห้องยาเอง', warn: late > 0 },
       { k: 'done', ic: '✓', name: 'ชำระแล้ว', n: done.length, sub: done.length ? `กลับห้องยา ${back} · จบที่การเงิน ${ended}` : 'ยังไม่มี' },
     ];
-    lanes.push(histLane());
+    lanes.push(parkLane(opd), nsLane(), histLane());
     side = `รับคิวจาก <b>${flEsc(flow.cashier.from.map(x => x.name).join(', '))}</b>`;
   }
+  bar.style.setProperty('--fl-n', lanes.length);
   bar.innerHTML = lanes.map(l => `
     <button type="button" class="fl-lane l-${l.k}${flowLane === l.k ? ' on' : ''}" onclick="selectLane('${l.k}')" aria-pressed="${flowLane === l.k}">
       <span class="fl-ic">${l.ic}</span>
@@ -1876,6 +2045,38 @@ function loadCalledToday() {
   }, 250);
 }
 const histList = () => calledToday.filter(e => (e.mode || 'opd') === cashierMode && flTab(e));
+// ✕ เรียกแล้วไม่มา: no-shows of this room today (still on the no-show list, not cleared)
+const nsList = () => noShows.filter(t => (t.mode || 'opd') === cashierMode && flTab(t));
+function nsLane() {
+  const list = nsList();
+  return { k: 'ns', ic: '✕', name: 'เรียกแล้วไม่มา', n: list.length,
+    sub: list.length ? `ล่าสุด ${flHm(list[list.length - 1].noShowAt)} น.` : 'ไม่มีคิวไม่มา' };
+}
+function nsRow(t) {
+  const tn = typeTone(t.color) || { num: t.color };
+  const tag = (cls, txt) => `<span class="st-tag fl-t ${cls}">${flEsc(txt)}</span>`;
+  const dash = '<span style="color:#94a3b8">—</span>';
+  const d = flEsc(t.display);
+  return `
+    <div class="wq-item fl-ns">
+      <div class="wq-del-cell"></div>
+      <div class="wq-num-cell" title="${flEsc(t.typeName)}">
+        <div class="wq-badge" style="background:${t.color}">${flEsc(t.prefix)}</div>
+        <span class="wq-num" style="color:${tn.num}">${d}</span>
+      </div>
+      <div class="wq-status-cell">${tag('fl-t-ns', '✕ ไม่มา ' + flHm(t.noShowAt))}${t.calledAt ? tag('fl-t-gone', '🔔 เรียก ' + flHm(t.calledAt) + (t.counterName ? ' · ' + t.counterName : '')) : ''}</div>
+      <div class="wq-drug-cell">${t.vn && t.mode !== 'ipd' ? drugCell(t) : dash}</div>
+      <div class="wq-time-cell"><span class="fl-hist-time" title="เวลาที่กดไม่มา">✕ ${flEsc(flHm(t.noShowAt))}</span>${t.noShowAt ? `<div class="fl-ago">${flMinFromHm(t.noShowAt)} นาทีที่แล้ว</div>` : ''}</div>
+      <div class="wq-patient-cell">${t.patientName ? `<div class="wq-patient">👤 ${flEsc(t.patientName)}</div>` : dash}</div>
+      <div class="wq-pttype-cell">${t.pttypeName ? `<span class="wq-pttype">${flEsc(t.pttypeName)}</span>` : dash}</div>
+      <div class="wq-hn-cell">${t.hn ? `<span class="wq-hn-val">${flEsc(t.hn)}</span>` : dash}</div>
+      <div class="wq-qn-cell">${t.qn ? `<span class="wq-hn-val">${flEsc(t.qn)}</span>` : dash}</div>
+      <div class="wq-action-cell"><div class="fl-ns-acts">
+        <button class="btn-fl-more" title="เรียกคิวนี้อีกครั้งที่ช่องของเครื่องนี้" onclick="recallNoShow('${d}')">↺ เรียกซ้ำ</button>
+        <button class="btn-fl-more ns-clear" title="เอาออกจากจอแสดงคิวไม่มา" onclick="clearNoShowDisplay('${d}')">🧹 เคลีย</button>
+      </div></div>
+    </div>`;
+}
 function histLane() {
   const list = histList();
   return { k: 'hist', ic: '📋', name: 'เรียกแล้ววันนี้', n: list.length, sub: list.length ? `ล่าสุด ${flHm(list[0].calledAt)} น.` : 'ยังไม่มีการเรียก' };
@@ -1896,6 +2097,7 @@ function histRow(e) {
   if (e.recalls) tags.push(tag('fl-t-call', `↺ เรียกซ้ำ ${e.recalls} ครั้ง${e.lastRecallAt ? ' · ' + flHm(e.lastRecallAt) : ''}`));
   if (e.noShowAt !== undefined) tags.push(tag('fl-t-ns', `✕ ไม่มา${e.noShowAt ? ' ' + flHm(e.noShowAt) : ''}`));
   if (e.uncalledAt) tags.push(tag('fl-t-gone', `↩ คืนคิว ${flHm(e.uncalledAt)}`));
+  if (e.parkedAt) tags.push(tag('fl-t-wait', `📥 เก็บคิว ${flHm(e.parkedAt)}${e.parkReason ? ' · ' + e.parkReason : ''}`, 'เก็บคิวไว้ — อยู่บนสุดของรายการรอ (แถวสีเหลือง) จนกว่าจะเรียกใหม่'));
   if (e.flowDone && e.flowDone.end) tags.push(tag('fl-t-end', `■ ชำระแล้ว ${flHowTag(e.flowDone.how)} · จบที่การเงิน`));
   else if (e.flowDone) tags.push(tag('fl-t-back', `✓ ชำระแล้ว ${flHowTag(e.flowDone.how)}`));
   if (e.fwdTo) tags.push(tag('fl-t-call', `➜ ส่ง${e.fwdTo} ${flHm(e.fwdAt)}`));
@@ -1916,14 +2118,15 @@ function histRow(e) {
       <div class="wq-pttype-cell">${e.pttypeName ? `<span class="wq-pttype">${flEsc(e.pttypeName)}</span>` : dash}</div>
       <div class="wq-hn-cell">${e.hn ? `<span class="wq-hn-val">${flEsc(e.hn)}</span>` : dash}</div>
       <div class="wq-qn-cell">${e.qn ? `<span class="wq-hn-val">${flEsc(e.qn)}</span>` : dash}</div>
-      <div class="wq-action-cell">${e.noShowAt === undefined && !e.uncalledAt && !e.notCalled
-        ? `<button class="btn-fl-more" title="เรียกซ้ำที่ช่องของเครื่องนี้" onclick="recallFromHist('${flEsc(e.display)}')">↺ เรียกซ้ำ</button>` : ''}</div>
+      <div class="wq-action-cell">${e.noShowAt === undefined && !e.uncalledAt && (!e.notCalled || (e.flowDone && e.flowDone.end))
+        // a queue closed here without being called (ปิดคิว · จบที่การเงิน) can be called too; one sent back to the pharmacy is theirs now
+        ? `<button class="btn-fl-more" title="${e.notCalled ? 'เรียกคิวนี้ที่ช่องของเครื่องนี้ (ปิดคิวไปแล้วโดยไม่ได้เรียก)' : 'เรียกซ้ำที่ช่องของเครื่องนี้'}" onclick="recallFromHist('${flEsc(e.display)}')">${e.notCalled ? '🔔 เรียก' : '↺ เรียกซ้ำ'}</button>` : ''}</div>
     </div>`;
 }
 function recallFromHist(display) {
   fetch(`/api/sys/${sysId}/recall-served`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ display, counterId: myCounterId }) })
-    .then(r => r.json()).then(d => toast(d.success ? `เรียกซ้ำ ${display}` : d.message, d.success ? 'ok' : 'err'))
+    .then(r => r.json()).then(d => { if (d.success && d.calledQueue) setMyCall(d.calledQueue); toast(d.success ? `เรียกซ้ำ ${display}` : d.message, d.success ? 'ok' : 'err'); })
     .catch(() => toast('เรียกซ้ำไม่สำเร็จ', 'err'));
 }
 
@@ -1935,6 +2138,14 @@ function renderFlowLane() {
     document.getElementById('rpCnt').textContent = list.length;
     document.getElementById('waitingList').innerHTML = list.length ? list.map(histRow).join('')
       : `<div class="wq-empty"><div class="wq-empty-icon">📋</div>ยังไม่มีคิวที่เรียกวันนี้<span class="fl-empty-sub">ทุกครั้งที่เรียกคิวในห้องนี้จะถูกเก็บไว้ที่นี่ทั้งวัน พร้อมเวลาที่เรียก</span></div>`;
+    loadDrugCounts(list); loadPayAmounts(list);
+    return true;
+  }
+  if (role && flowLane === 'ns') {
+    const list = nsList().slice().reverse();          // newest first
+    document.getElementById('rpCnt').textContent = list.length;
+    document.getElementById('waitingList').innerHTML = list.length ? list.map(nsRow).join('')
+      : `<div class="wq-empty"><div class="wq-empty-icon">✕</div>ไม่มีคิวที่เรียกแล้วไม่มา<span class="fl-empty-sub">กด ✕ ไม่มา ที่คิวที่เรียก แล้วคิวจะมาอยู่ที่นี่ — เรียกซ้ำได้เมื่อผู้ป่วยกลับมา</span></div>`;
     loadDrugCounts(list); loadPayAmounts(list);
     return true;
   }
@@ -1985,6 +2196,8 @@ function flowRow(t, kind) {
     tags.push(tag(d.how === 'manual' ? 'fl-t-hand' : 'fl-t-back', flHowTag(d.how)));
     if (t.notCalled) tags.push(tag('fl-t-hand', '⏭ ไม่ได้เรียก', 'ปิด / ส่งกลับห้องยาจากรายการรอ โดยไม่ได้เรียกคิว'));
     time = `<span class="wq-time">${flHm(d.at)}</span>`;
+    // ended here (ปิดคิว) → can still be called / called again at this counter; sent back to the pharmacy → theirs now
+    if (d.end) act = `<button class="btn-fl-more" title="เรียกคิวนี้ที่ช่องของเครื่องนี้" onclick="recallFromHist('${flEsc(t.display)}')">${t.notCalled ? '🔔 เรียก' : '↺ เรียกซ้ำ'}</button>`;
   }
   const dash = '<span style="color:#94a3b8">—</span>';
   return `
@@ -2044,7 +2257,7 @@ function openFlowAct(kind, display) {
         <span><b>ถือว่าตรวจยาแล้ว</b><small>${free ? 'ย้ายไป “พร้อมจ่ายยา” เรียกได้ทันที' : `คิวนี้ต้องชำระเงิน — ส่งไป${flEsc(cashName)}ทันที`}</small></span></label>` +
       (free ? `
       <label class="flm-opt"><input type="radio" name="flmAct" value="toCashier">
-        <span><b>ส่งไป${flEsc(cashName)}</b><small>คนไข้ต้องชำระเงินแม้ระบบบอกว่าไม่ผ่านการเงิน — จะกลับมาห้องยาเมื่อชำระแล้ว</small></span></label>` : '');
+        <span><b>ถือว่าตรวจยาแล้ว · ส่งไป${flEsc(cashName)}</b><small>คนไข้ต้องชำระเงินแม้ระบบบอกว่าไม่ผ่านการเงิน — จะกลับมาห้องยาเมื่อชำระแล้ว</small></span></label>` : '');
     chips = ['HOSxP เชื่อมต่อไม่ได้', 'ตรวจยาแล้ว ระบบยังไม่ขึ้น', 'เภสัชกรอนุญาต'];
     document.getElementById('flmGo').textContent = '✓ ยืนยัน';
   } else {
@@ -2125,11 +2338,18 @@ function renderFlowSetting() {
   const pick = fwdTargets.find(x => x.id === Number(cStyle.flowCashierId)) || fwdTargets[0];
   sel.innerHTML = fwdTargets.map(x => `<option value="${x.id}"${pick && pick.id === x.id ? ' selected' : ''}>${flEsc((x.icon || '') + ' ' + x.name)}</option>`).join('');
   document.getElementById('spFlowCashRow').style.display = cStyle.flowOn === true ? '' : 'none';
+  document.getElementById('cs_flowShowFwd').checked = cStyle.flowShowFwd === true;
+  document.getElementById('spFlowFwdRow').style.display = role ? '' : 'none';
+}
+function toggleFlowShowFwd(on) {
+  cStyle.flowShowFwd = !!on;
+  saveStyle(); renderFwd(); renderPendingFwd();
+  toast(on ? 'แสดงปุ่มส่งต่อแล้ว' : 'ซ่อนปุ่มส่งต่อ — ระบบเดินคิวให้เอง', 'ok');
 }
 function toggleFlow(on) {
   cStyle.flowOn = !!on;
   if (on && !cStyle.flowCashierId && fwdTargets[0]) cStyle.flowCashierId = fwdTargets[0].id;
-  saveStyle(); renderFlowSetting();
+  saveStyle(); renderFlowSetting(); renderFwd(); renderPendingFwd();
   toast(on ? 'เปิดเดินคิวตามสถานะ HOSxP แล้ว' : 'ปิดเดินคิวตามสถานะ HOSxP แล้ว — คิวที่รอตรวจยาเรียกได้ตามปกติ', 'ok');
 }
 function setFlowCashier(id) { cStyle.flowCashierId = Number(id) || null; saveStyle(); }
@@ -2177,6 +2397,7 @@ function statusCell(t, i) {
   const size = t.drugSize || type.drugSize;
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const tags = [];
+  if (t.parked) tags.push(`<span class="st-tag st-parked" title="เก็บคิวไว้ — เรียกคิวถัดไปจะข้ามคิวนี้ กด ▶ เรียก เมื่อพร้อม">📥 เก็บคิว${t.parked.reason ? ' · ' + esc(t.parked.reason) : ''} ${esc(String(t.parked.at || '').slice(0, 5))}</span>`);
   if (i === 0) tags.push(`<span class="st-tag st-next">▶ ถัดไป</span>`);
   // money route (+ ยาน้อย/ยามาก) as one tag, worded as set in ⚙ ออกคิว; older tickets get the standard words
   const isDept = t.deptQueue || type.payRule === 'dept' || type.payRule === 'pttype';   // ห้องตรวจ / สิทธิ queue
@@ -2337,6 +2558,7 @@ function updateStats() {
 
 // ── Called display ────────────────────────────────────────────────────────
 function showCalled(ticket) {
+  setTimeout(renderPin, 0);
   const showDetail = cStyle.showCallDetail !== false;
   document.getElementById('calledMain').innerHTML = `
     <div class="call-badge" style="background:${ticket.color};box-shadow:0 4px 24px ${ticket.color}88,0 0 0 3px ${ticket.color}33">${ticket.prefix}</div>
@@ -2359,6 +2581,7 @@ function showCalled(ticket) {
   renderCallAmt(ticket);
 }
 function resetCalled() {
+  setTimeout(renderPin, 0);
   document.getElementById('calledMain').innerHTML = '<div class="idle-txt">ยังไม่มีการเรียกคิว</div>';
   document.getElementById('btnRecall').disabled = true;
   document.getElementById('btnNoShow').disabled = true;
@@ -2389,11 +2612,13 @@ function renderNavLinked() {
     `<a href="/cashier.html?sys=${s.id}" target="_blank" class="nav-linked" title="เปิดหน้าเรียกคิว ${s.name} (แท็บใหม่)">${s.icon || '📋'} ${s.name} ↗</a>`).join('');
 }
 fetch('/api/systems').then(r => r.json()).then(loadFwdTargets).catch(() => {});
+// automatic flow on → no manual forward buttons (unless ⚙ "แสดงปุ่มส่งต่อเอง" is ticked)
+function flowHidesFwd() { try { return !!(flOn() && flowRole() && cStyle.flowShowFwd !== true); } catch { return false; } }
 function renderFwd() {
   const row = document.getElementById('fwdRow');
   if (!row) return;
   const t = lastCalled;
-  row.innerHTML = !forwardOn ? '' : fwdTargets.map(sys => {
+  row.innerHTML = !forwardOn || flowHidesFwd() ? '' : fwdTargets.map(sys => {
     if (t && t.forwardedTo && t.forwardedTo.sysId === sys.id)
       return `<button class="btn btn-fwd done" disabled>✓ ส่งต่อ ${sys.name} แล้ว</button>`;
     // a pharmacy-flow queue at the cashier goes back by itself once the receipt / debt slip is issued
@@ -2462,6 +2687,7 @@ function renderPendingFwd() {
   if (!fwdTargets.length || !forwardOn) return;
   // ห้องยาที่เดินคิวตามสถานะ HOSxP: queues go to / come back from the cashier by themselves — no auto-forward switch here
   if (flowRole() === 'pharmacy') {
+    if (flowHidesFwd()) { box.style.display = 'none'; return; }
     document.getElementById('autoFwdRows').innerHTML = `<div class="fwd-flow-note"><span>🔄</span><span><b>เดินคิวตามสถานะ HOSxP</b>
       ตรวจสอบยาแล้ว คิวไปการเงินถูกส่งไป${flEsc(flow.pharmacy.cashierName)}เอง และกลับมาเมื่อออกใบเสร็จ / ใบแจ้งหนี้ — ไม่ต้องกดส่ง</span></div>`;
     document.getElementById('fwdPendingBtn').style.display = 'none';
@@ -2585,6 +2811,7 @@ function clearNoShowDisplay(display) {
 }
 
 function renderNoShowHist() {
+  if (flOn()) { if (flowLane === 'ns') renderWaiting(); else renderFlowBar(); }
   const filterFn = t => tabMatch(t) && (t.mode || 'opd') === cashierMode;
   const activeList  = noShows.filter(filterFn);
   const clearedList = clearedNoShows.filter(filterFn);
@@ -2638,12 +2865,23 @@ function renderNoShowHist() {
 }
 
 // ── Call with confirm ─────────────────────────────────────────────────────
+// this counter's last call must be marked first (มาแล้ว / ไม่มา / เก็บคิว)
+function pinBlocks() {
+  const t = pinTicket();
+  if (!t) return false;
+  toast(`กด มาแล้ว / ไม่มา / เก็บคิว ของคิว ${t.display} ก่อน แล้วจึงเรียกคิวถัดไป`, 'err');
+  const el = document.getElementById('callPin');
+  el.classList.remove('cp-shake'); void el.offsetWidth; el.classList.add('cp-shake');
+  el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  return true;
+}
 function callNext() {
+  if (pinBlocks()) return;
   const all = getFilteredWaiting();
-  const filtered = all.filter(t => t.flow !== 'check');   // still waiting for the drug check → never "next"
+  const filtered = all.filter(t => t.flow !== 'check' && !t.parked);   // still waiting for the drug check → never "next"
   if (!filtered.length) {
-    const held = all.length - filtered.length;
-    toast(held ? `ยังไม่มีคิวที่พร้อมเรียก — รอตรวจสอบยา ${held} คิว` : 'ไม่มีคิวรอ', 'err');
+    const held = all.filter(t => t.flow === 'check').length, parked = all.filter(t => t.parked).length;
+    toast(held || parked ? `ยังไม่มีคิวที่พร้อมเรียก —${held ? ` รอตรวจสอบยา ${held} คิว` : ''}${parked ? ` เก็บคิวไว้ ${parked} คิว (กด ▶ เรียก ที่แถว)` : ''}` : 'ไม่มีคิวรอ', 'err');
     return;
   }
   pendingCall = { type: 'display', display: filtered[0].display };
@@ -2651,6 +2889,7 @@ function callNext() {
 }
 
 function callByDisplay(display, ticketJson) {
+  if (pinBlocks()) return;
   let ticket;
   try { ticket = typeof ticketJson === 'object' ? ticketJson : JSON.parse(ticketJson); } catch { ticket = { display, color:'#4a9fe0', prefix:'?', typeName:'', issuedAt:'' }; }
   pendingCall = { type: 'display', display };
@@ -2682,12 +2921,13 @@ function confirmCall() {
     const body = { counterId: myCounterId };
     if (call.typeId) body.typeId = call.typeId;
     fetch(`/api/sys/${sysId}/call-next`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) })
-      .then(r=>r.json()).then(d => { if (!d.success) toast(d.message, 'err'); else noteAutoForward(d); });
+      .then(r=>r.json()).then(d => { if (!d.success) toast(d.message, 'err'); else { if (d.calledQueue) setMyCall(d.calledQueue); noteAutoForward(d); } });
   } else {
     const by = [sessionStorage.getItem('officerName') || '', (counters.find(c => c.id === Number(myCounterId)) || {}).name || ''].filter(Boolean).join(' · ');
     fetch(`/api/sys/${sysId}/call-number`, { method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ display: call.display, counterId: myCounterId, by }) })
       .then(r=>r.json()).then(d => {
+        if (d.success && d.calledQueue) setMyCall(d.calledQueue);
         if (!d.success) toast(d.message, 'err');
         else if (d.calledQueue && d.calledQueue.flowForced && d.calledQueue.payRoute === 'cash' && flowRole() === 'pharmacy')
           toast(`✋ ${d.calledQueue.display} เรียกก่อนตรวจยา — คิวนี้ต้องชำระเงิน`, 'err');
@@ -2700,22 +2940,95 @@ function confirmCall() {
 }
 
 // ── Other actions ─────────────────────────────────────────────────────────
+// ══ the queue just called, pinned on top of the list until มาแล้ว / ไม่มา (or the next call) ══
+// myCall = the last queue THIS screen called (kept per room on this device) — open until มาแล้ว / ไม่มา / เก็บคิว
+const myCallStore = () => 'qf_mycall_' + sysId;
+let myCall = null;
+try { const m = JSON.parse(localStorage.getItem(myCallStore()) || 'null'); if (m && m.day === new Date().toDateString()) myCall = m; } catch (e) {}
+function setMyCall(t) {
+  myCall = t ? { display: t.display, prefix: t.prefix, color: t.color, typeName: t.typeName, patientName: t.patientName, hn: t.hn,
+                 counterId: t.counterId, counterName: t.counterName, _ts: t._ts || Date.now(), day: new Date().toDateString() } : null;
+  try { myCall ? localStorage.setItem(myCallStore(), JSON.stringify(myCall)) : localStorage.removeItem(myCallStore()); } catch (e) {}
+  renderPin();
+}
+function pinTicket() {
+  const t = myCall;
+  if (!t) return null;
+  // handled elsewhere meanwhile (returned / parked / no-show) → nothing open any more
+  if ((typeof allWaiting !== 'undefined' && allWaiting.some(w => w.display === t.display)) ||
+      (typeof noShows !== 'undefined' && (noShows || []).some(n => n.display === t.display))) { myCall = null; try { localStorage.removeItem(myCallStore()); } catch (e) {} return null; }
+  return t;
+}
+function ackPin() { setMyCall(null); }
+function renderPin() {
+  const el = document.getElementById('callPin'); if (!el) return;
+  const t = pinTicket();
+  el.hidden = !t;
+  if (!t) { el.innerHTML = ''; return; }
+  const e = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';');
+  const ago = t._ts ? Math.max(0, Math.floor((Date.now() - t._ts) / 1000)) : null;
+  el.innerHTML = `<div class="cp-head"><span class="cp-dot"></span>กำลังเรียก${ago != null ? ` · ${ago < 60 ? ago + ' วินาที' : Math.floor(ago / 60) + ' นาที'}ที่แล้ว` : ''}<small>คนไข้มาหรือยัง?</small></div>` +
+    `<div class="cp-body"><div class="cp-badge" style="background:${e(t.color)}">${e(t.prefix)}</div>` +
+    `<div class="cp-info"><b style="color:${e(t.color)}">${e(t.display)}</b><span>${t.patientName ? '👤 ' + e(t.patientName) : e(t.typeName)}${t.hn ? ' · HN ' + e(t.hn) : ''}${t.counterName ? ' · 🪟 ' + e(t.counterName) : ''}</span></div>` +
+    `<div class="cp-btns"><button class="cp-ok" onclick="ackPin()">✓ มาแล้ว</button>` +
+    `<button class="cp-re" onclick="recallCurrent()">↺ เรียกซ้ำ</button>` +
+    `<button class="cp-park" onclick="openPark()" title="เก็บคิวไว้เรียกใหม่ภายหลัง เช่น ยามีปัญหา">📥 เก็บคิว</button>` +
+    `<button class="cp-ns" onclick="markNoShow()">✕ ไม่มา</button></div></div>`;
+}
+// 📥 เก็บคิว: the called queue goes back to the list, parked — "เรียกคิวถัดไป" skips it until someone calls it again
+var roomName = '';
+// reasons follow the room: การเงิน gets money reasons, ห้องยา (and the rest) drug reasons
+const PARK_REASONS_DRUG = ['ยาต้องตรวจสอบ', 'ยามีปัญหา', 'รอเภสัชกรตรวจสอบ', 'รอแพทย์แก้ไขยา', 'รอเอกสาร / สิทธิ', 'คนไข้ขอรอ'];
+const PARK_REASONS_CASH = ['รอตรวจสอบค่าใช้จ่าย', 'ยอดเงินไม่ถูกต้อง', 'รอแก้ไข / ยืนยันสิทธิ', 'รอเอกสารเบิกจ่าย', 'คนไข้ไปเตรียมเงิน', 'คนไข้ขอรอ'];
+function parkReasons() { return flowRole() === 'cashier' || /การเงิน|เงิน|cashier/i.test(roomName) ? PARK_REASONS_CASH : PARK_REASONS_DRUG; }
+function openPark() {
+  const t = pinTicket() || lastCalled; if (!t) return;
+  const PARK_REASONS = parkReasons();
+  let ov = document.getElementById('parkOv');
+  if (!ov) {
+    ov = document.createElement('div'); ov.id = 'parkOv'; ov.className = 'park-ov'; document.body.appendChild(ov);
+    ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('show'); });
+  }
+  ov.innerHTML = `<div class="park-box"><h3>📥 เก็บคิว ${flEsc(t.display)} ไว้เรียกใหม่</h3>` +
+    `<p>คิวจะไปอยู่ช่อง <b>📥 กำลังตรวจสอบ</b> · เรียกคิวถัดไปจะข้ามคิวนี้ · กด ▶ เรียก ที่แถวเมื่อพร้อม</p>` +
+    `<div class="park-chips">${PARK_REASONS.map(r => `<button type="button">${r}</button>`).join('')}</div>` +
+    `<input id="parkReason" maxlength="80" placeholder="เหตุผล (ไม่บังคับ)" value="${PARK_REASONS[0]}"/>` +
+    `<div class="park-btns"><button class="park-cancel" type="button">ยกเลิก</button><button class="park-ok" type="button">📥 เก็บคิว</button></div></div>`;
+  ov.querySelectorAll('.park-chips button').forEach(b => b.onclick = () => { ov.querySelector('#parkReason').value = b.textContent; });
+  ov.querySelector('.park-cancel').onclick = () => ov.classList.remove('show');
+  ov.querySelector('.park-ok').onclick = () => {
+    const reason = ov.querySelector('#parkReason').value.trim();
+    fetch(`/api/sys/${sysId}/uncall`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ display: t.display, park: true, reason }) })
+      .then(r => r.json()).then(d => {
+        if (!d.success) return toast(d.message || 'เก็บคิวไม่สำเร็จ', 'err');
+        ov.classList.remove('show'); ackPin(); toast(`เก็บคิว ${t.display} แล้ว — อยู่ที่ช่อง “กำลังตรวจสอบ”`, 'ok');
+      }).catch(() => toast('เก็บคิวไม่สำเร็จ', 'err'));
+  };
+  ov.classList.add('show');
+  setTimeout(() => ov.querySelector('#parkReason').select(), 50);
+}
+setInterval(() => { if (!document.getElementById('callPin').hidden) renderPin(); }, 15000);
+// ↺ เรียกซ้ำ at the counter selected NOW (switch the counter first to call the patient to another counter)
 function recallCurrent() {
-  if (!lastCalled) return;
+  const t = pinTicket() || lastCalled;
+  if (!t) return;
+  const ctr = (counters.find(c => c.id === Number(myCounterId)) || {}).name || '';
   fetch(`/api/sys/${sysId}/recall-served`, {
     method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ display: lastCalled.display, counterId: myCounterId })
+    body: JSON.stringify({ display: t.display, counterId: myCounterId })
   }).then(r=>r.json()).then(d => {
-    if (d.success) toast(`เรียกซ้ำ ${lastCalled.display}`, 'ok');
+    if (d.success) { if (d.calledQueue) setMyCall(d.calledQueue); toast(`เรียกซ้ำ ${t.display}${ctr ? ' ที่ ' + ctr : ''}`, 'ok'); }
     else toast(d.message, 'err');
   });
 }
 function markNoShow() {
-  if (!lastCalled) return;
+  const t = pinTicket() || lastCalled;
+  if (!t) return;
   fetch(`/api/sys/${sysId}/no-show`, { method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ display: lastCalled.display }) })
+    body: JSON.stringify({ display: t.display }) })
   .then(r=>r.json()).then(d => {
-    if (d.success) { toast(`"${d.entry.display}" ไม่มา ${d.entry.noShowAt}`, 'ok'); document.getElementById('btnNoShow').disabled = true; }
+    if (d.success) { toast(`"${d.entry.display}" ไม่มา ${d.entry.noShowAt}`, 'ok'); document.getElementById('btnNoShow').disabled = true; ackPin(); }
     else toast(d.message, 'err');
   });
 }
@@ -2740,7 +3053,7 @@ function recallServed(display) {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ display, counterId: myCounterId })
   }).then(r=>r.json()).then(d => {
-    if (d.success) toast(`เรียกซ้ำ ${display}`, 'ok');
+    if (d.success) { if (d.calledQueue) setMyCall(d.calledQueue); toast(`เรียกซ้ำ ${display}`, 'ok'); }
     else toast(d.message, 'err');
   });
 }
@@ -2787,6 +3100,7 @@ function callSpecific() {
   const inp = document.getElementById('spNum');
   const raw = inp.value.trim();
   if (!raw) return;
+  if (pinBlocks()) return;
   const val = raw.toUpperCase();
   inp.value = '';
   inp.focus();
@@ -2795,7 +3109,8 @@ function callSpecific() {
   const modList  = allWaiting.filter(x => (x.mode || 'opd') === cashierMode);
 
   // 1. ตรงกับ display number เช่น A001
-  let t = modList.find(x => x.display && x.display.toUpperCase() === val);
+  const dk = v => String(v || '').toUpperCase().replace(/[\s-]/g, '');
+  let t = modList.find(x => x.display && (x.display.toUpperCase() === val || dk(x.display) === dk(val)));
   // 2. ตรงกับ QN (เลขคิว HIS)
   t = t || modList.find(x => x.qn && String(x.qn).trim() === raw.trim());
   if (isIpd) {
@@ -2866,7 +3181,7 @@ document.addEventListener('keydown', function(e) {
 // ── Style settings ────────────────────────────────────────────────────────
 const SKEY = 'qf_cashier_style_' + sysId;
 const DEF_STYLE = {
-  repeatAnnounce:false, forwardEnabled:true, autoForward:true, autoForwardTo:null, flowOn:false, flowCashierId:null, flowManualCall:false,
+  repeatAnnounce:false, forwardEnabled:true, autoForward:true, autoForwardTo:null, flowOn:false, flowCashierId:null, flowManualCall:false, flowShowFwd:false,
   bodyBg:'#e2ecfa', navBg:'#ffffff', cbarBg:'#e7f0fb',
   tabsBg:'#e2ecfa', calledTop:'#ffffff', calledBot:'#f7fafd',
   wqHdrBg:'#1f83d1', histBg:'#ffffff',
@@ -3077,13 +3392,42 @@ function swSpTab(tab, el) {
 }
 function resetStyle() {
   // "คืนค่าเริ่มต้น" is about how the page looks — it must not switch forwarding back on
-  cStyle = Object.assign({}, DEF_STYLE, { forwardEnabled: cStyle.forwardEnabled !== false, flowOn: cStyle.flowOn === true, flowCashierId: cStyle.flowCashierId || null, flowManualCall: cStyle.flowManualCall === true });
+  cStyle = Object.assign({}, DEF_STYLE, { forwardEnabled: cStyle.forwardEnabled !== false, flowOn: cStyle.flowOn === true, flowCashierId: cStyle.flowCashierId || null, flowManualCall: cStyle.flowManualCall === true, flowShowFwd: cStyle.flowShowFwd === true });
   saveStyle();
   restoreStyleInputs();
 }
 
 applyStyle();
 document.getElementById('spNum').focus();
+
+// ── 📱 mobile mode — remembered per device; a phone gets it on its first visit ──
+// mobile: the type filter sits right above the waiting list; desktop: back in the bar under the menu
+let _tabsHome = null;
+function placeTabs(mobile) {
+  const tabs = document.getElementById('typeTabs'), rp = document.querySelector('.right-panel');
+  if (!tabs || !rp) return;
+  if (!_tabsHome) _tabsHome = { parent: tabs.parentNode, next: tabs.nextSibling };
+  if (mobile) rp.insertBefore(tabs, rp.querySelector('.rp-header'));
+  else _tabsHome.parent.insertBefore(tabs, _tabsHome.next);
+}
+function applyViewMode(on) {
+  document.body.classList.toggle('mobile', on);
+  placeTabs(on);
+  const b = document.getElementById('btnViewMode');
+  if (b) { b.textContent = on ? '🖥 เดสก์ท็อป' : '📱 มือถือ'; b.title = on ? 'กลับเป็นหน้าจอเดสก์ท็อป' : 'สลับเป็นหน้าจอแบบมือถือ'; }
+}
+function toggleViewMode() {
+  const on = !document.body.classList.contains('mobile');
+  try { localStorage.setItem('qf_cashier_view', on ? 'mobile' : 'desktop'); } catch (e) {}
+  applyViewMode(on);
+  window.scrollTo(0, 0);
+}
+(() => {
+  let v = null; try { v = localStorage.getItem('qf_cashier_view'); } catch (e) {}
+  // a phone: judge by the screen — innerWidth grows when the desktop layout is zoomed out to fit
+  applyViewMode(v ? v === 'mobile' : Math.min(screen.width, window.innerWidth) < 820);
+})();
 </script>
+<script src="/vendor/pwa.js"></script>
 </body>
 </html>
