@@ -8,3 +8,6 @@ dist/QueuePrintAgent.exe
 dist/QueueServer.exe
 .claude/
 .pkg-icon-base/
+
+# local kiosk script for another system — keep off GitHub
+Scrip เต็มจอ/open-display-kiosk ห้องยา.bat
