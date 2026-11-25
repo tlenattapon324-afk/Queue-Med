@@ -1,0 +1,7 @@
+{
+  "barcodeField": "hn",
+  "barcodePrefixLen": 0,
+  "barcodeUseLen": 0,
+  "allowAllPtypes": true,
+  "pttypeRules": []
+}

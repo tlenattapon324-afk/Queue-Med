@@ -96,5 +96,50 @@
     "description": "",
     "icon": "💊",
     "color": "#ff7043"
+  },
+  {
+    "id": 23,
+    "name": "ห้องยา OPD",
+    "description": "",
+    "icon": "💊",
+    "color": "#42a5f5"
+  },
+  {
+    "id": 24,
+    "name": "ห้องยา OPD",
+    "description": "",
+    "icon": "💊",
+    "color": "#42a5f5"
+  },
+  {
+    "id": 25,
+    "name": "จ่ายยา OPD",
+    "description": "",
+    "icon": "💊",
+    "color": "#42a5f5",
+    "db": "348db17a801c",
+    "forwardTo": [
+      30
+    ]
+  },
+  {
+    "id": 30,
+    "name": "ห้องการเงิน",
+    "description": "",
+    "icon": "💰",
+    "color": "#42a5f5",
+    "forwardTo": [
+      25
+    ],
+    "db": "348db17a801c"
+  },
+  {
+    "id": 31,
+    "name": "การเงินเบอร์ 19",
+    "description": "",
+    "icon": "⭐",
+    "color": "#42a5f5",
+    "db": "348db17a801c",
+    "forwardTo": []
   }
 ]

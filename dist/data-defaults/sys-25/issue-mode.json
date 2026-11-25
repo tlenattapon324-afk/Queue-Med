@@ -1,0 +1,103 @@
+{
+  "mode": "pay",
+  "rules": [
+    {
+      "name": "ยาน้อย",
+      "min": 0,
+      "max": 1,
+      "prefix": "S",
+      "typeId": 4
+    },
+    {
+      "name": "ยามาก",
+      "min": 2,
+      "max": 99,
+      "prefix": "L",
+      "typeId": 5
+    }
+  ],
+  "pay": {
+    "cashName": "ไปการเงิน",
+    "cashPrefix": "2 -",
+    "freeName": "ไม่ผ่านการเงิน",
+    "freePrefix": "N",
+    "cashCodes": [
+      "01",
+      "03"
+    ],
+    "debtCodes": [
+      "02"
+    ],
+    "edcPttypes": [
+      "10",
+      "11",
+      "28",
+      "AA",
+      "BC",
+      "K7",
+      "16",
+      "OA",
+      "AP",
+      "31",
+      "29",
+      "AD",
+      "AC",
+      "AB",
+      "AE"
+    ],
+    "cashPttypes": [
+      "26"
+    ],
+    "cashTypeId": 6,
+    "freeTypeId": 7,
+    "deptRouteCheck": true,
+    "deptOn": true,
+    "deptName": "คิวบริการทางเภสัช",
+    "deptPrefix": "5 -",
+    "deptCodes": [
+      "426"
+    ],
+    "deptTypeId": 8,
+    "edcOn": true,
+    "incomeOn": true,
+    "incomeCodes": [
+      "17"
+    ],
+    "ptOn": true,
+    "ptName": "สิทธิเฉพาะ",
+    "ptPrefix": "1 -",
+    "ptTypeId": 13,
+    "drugOn": true,
+    "drugMax": 3,
+    "drugMin": 1,
+    "drugCash": false,
+    "drugFree": true,
+    "noDrugOn": false,
+    "noDrugSysId": 30,
+    "noDrugName": "ไม่มียา ไปการเงิน",
+    "noDrugPrefix": "C",
+    "noDrugTypeId": null,
+    "cashSName": "ไปการเงิน ยาน้อย  : ต้องจ่ายเงิน",
+    "cashSPrefix": "FS",
+    "cashSTypeId": null,
+    "cashLName": "ไปการเงิน ยามาก   :  ต้องจ่ายเงิน",
+    "cashLPrefix": "FL",
+    "cashLTypeId": null,
+    "freeSName": "ห้องยา ยาน้อย",
+    "freeSPrefix": "3 -",
+    "freeSTypeId": 14,
+    "freeLName": "ห้องยา ยามาก",
+    "freeLPrefix": "4 -",
+    "freeLTypeId": 15,
+    "cashLabel": "💰 การเงิน",
+    "freeLabel": "✓ ห้องยา",
+    "deptLabel": "🏥 ห้องตรวจที่เลือก",
+    "pttypeLabel": "💳 สิทธิที่เลือก",
+    "cashSLabel": "💰 การเงิน · ยาน้อย",
+    "cashLLabel": "💰 การเงิน · ยามาก",
+    "freeSLabel": "💊 ห้องยา - ยาน้อย",
+    "freeLLabel": "💊💊 ห้องยา · ยามาก",
+    "noDrugLabel": "🧾 ไม่มียา · ตรงไปการเงิน"
+  },
+  "allowReissue": false
+}

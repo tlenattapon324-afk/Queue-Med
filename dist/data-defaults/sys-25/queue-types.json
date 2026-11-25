@@ -1,0 +1,82 @@
+[
+  {
+    "id": 1,
+    "name": "ทั่วไป",
+    "prefix": "A",
+    "color": "#0d47a1",
+    "forMode": "opd"
+  },
+  {
+    "id": 3,
+    "name": "ด่วน",
+    "prefix": "E",
+    "color": "#42a5f5",
+    "forMode": "opd"
+  },
+  {
+    "id": 4,
+    "name": "ยาน้อย",
+    "prefix": "S",
+    "color": "#26a69a",
+    "forMode": "opd",
+    "drugRule": true
+  },
+  {
+    "id": 5,
+    "name": "ยามาก",
+    "prefix": "L",
+    "color": "#ef6c00",
+    "forMode": "opd",
+    "drugRule": true
+  },
+  {
+    "id": 6,
+    "name": "ไปการเงิน",
+    "prefix": "2 -",
+    "color": "#ef6c00",
+    "forMode": "opd",
+    "payRule": "cash"
+  },
+  {
+    "id": 7,
+    "name": "ไม่ผ่านการเงิน",
+    "prefix": "N",
+    "color": "#26a69a",
+    "forMode": "opd",
+    "payRule": "free"
+  },
+  {
+    "id": 8,
+    "name": "คิวบริการทางเภสัช",
+    "prefix": "5 -",
+    "color": "#5c6bc0",
+    "forMode": "opd",
+    "payRule": "dept"
+  },
+  {
+    "id": 13,
+    "name": "สิทธิเฉพาะ",
+    "prefix": "1 -",
+    "color": "#0891b2",
+    "forMode": "opd",
+    "payRule": "pttype"
+  },
+  {
+    "id": 14,
+    "name": "ห้องยา ยาน้อย",
+    "prefix": "3 -",
+    "color": "#26a69a",
+    "forMode": "opd",
+    "payRule": "free",
+    "drugSize": "S"
+  },
+  {
+    "id": 15,
+    "name": "ห้องยา ยามาก",
+    "prefix": "4 -",
+    "color": "#00796b",
+    "forMode": "opd",
+    "payRule": "free",
+    "drugSize": "L"
+  }
+]

@@ -1,0 +1,70 @@
+{
+  "paperSize": "80mm",
+  "customWidth": "80",
+  "customHeight": "190",
+  "printerName": "Xprinter XP-80",
+  "showHeader": true,
+  "headerName": "",
+  "headerSubtitle": "ระบบแสดงคิว",
+  "headerFontSize": 18,
+  "showDividerLine": true,
+  "showPatientName": true,
+  "showHnQn": true,
+  "patientFontSize": 11,
+  "showQueueType": true,
+  "queueTypeFontSize": 11,
+  "queueNumFontSize": 60,
+  "showDateTime": true,
+  "dateFontSize": 9,
+  "showFooter": true,
+  "footerText": "กรุณานั่งรอเรียกหมายเลขของท่าน\n",
+  "footerFontSize": 8,
+  "autoPrint": true,
+  "copies": 1,
+  "showBarcode": true,
+  "barcodeSource": "hn",
+  "queueTypePosition": "above",
+  "barcodeType": "code128",
+  "barcodeHeight": 10,
+  "qrSize": 25,
+  "barcodeShowText": true,
+  "showLogo": false,
+  "logoData": "",
+  "logoAspect": 1,
+  "logoWidth": 30,
+  "showPttype": false,
+  "pttypeLabel": "สิทธิ: ",
+  "pttypeFontSize": 10,
+  "numBoxStyle": "thick",
+  "dividerStyle": "solid",
+  "sectionStyles": {
+    "header": {
+      "align": "center",
+      "bold": true,
+      "color": "black"
+    },
+    "barcode": {
+      "align": "center"
+    }
+  },
+  "customTexts": [],
+  "layoutOrder": [
+    "logo",
+    "header",
+    "patientName",
+    "hnQn",
+    "pttype",
+    "queueType",
+    "queueNum",
+    "barcode",
+    "dateTime",
+    "footer",
+    "divider"
+  ],
+  "fontFamily": "",
+  "barcodeSources": [
+    "hn"
+  ],
+  "offsetX": 0,
+  "offsetY": 0
+}

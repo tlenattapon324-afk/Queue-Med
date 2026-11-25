@@ -1,14 +1,14 @@
 [
   {
     "id": 1,
-    "name": "ทั่วไป",
+    "name": "คิว OPD",
     "prefix": "A",
-    "color": "#42a5f5",
-    "forMode": "both"
+    "color": "#0d35a1",
+    "forMode": "opd"
   },
   {
     "id": 2,
-    "name": "นิติบุคคล",
+    "name": "คิว ER",
     "prefix": "B",
     "color": "#66bb6a",
     "forMode": "both"

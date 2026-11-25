@@ -1295,6 +1295,44 @@ app.post('/api/sys/:sysId/delete-waiting', requireSys, (req, res) => {
   res.json({ success: false, message: 'ไม่พบคิวนี้ในรายการรอ' });
 });
 
+// ── Close a waiting queue without calling it (คลิกที่คิว → เมนู) ───────────────────
+//   as: 'noshow' → เรียกแล้วไม่มา (goes to the no-show list, can be called back from there)
+//   as: 'done'   → ให้บริการแล้ว ไม่ต้องเรียก (e.g. the drugs were already handed over)
+// Never announced and never put on a counter's screen; kept in "เรียกแล้ว" marked ไม่ได้เรียก.
+app.post('/api/sys/:sysId/close-waiting', requireSys, (req, res) => {
+  const { sys, sysId } = req;
+  const display = (req.body.display || '').toUpperCase().trim();
+  const as = req.body.as === 'done' ? 'done' : 'noshow';
+  const w = findWaiting(sys, display);
+  if (!w) return res.json({ success: false, message: 'ไม่พบคิวนี้ในรายการรอ' });
+  const [t0] = w.s.waiting.splice(w.i, 1);
+  const counter = sys.counters.find(c => c.id === Number(req.body.counterId));
+  const at = new Date().toLocaleTimeString('th-TH');
+  const closed = { ...t0, calledAt: at, _ts: Date.now(), notCalled: true,
+    counterId: counter ? counter.id : undefined, counterName: counter ? counter.name : '',
+    noShow: as === 'noshow' || undefined, parked: undefined };
+  w.s.served.unshift(closed);
+  if (w.s.served.length > 40) w.s.served.pop();
+  logCalled(sys, closed);
+  const by = String(req.body.by || '').slice(0, 60) || undefined;
+  if (as === 'noshow') {
+    const entry = { ...closed, noShowAt: at, noShowTs: Date.now() };
+    logMark(sys, display, { notCalled: true, noShowAt: at, closedBy: by });
+    sys.noShows.unshift(entry);
+    if (sys.noShows.length > 50) sys.noShows.pop();
+    saveQueueState(sysId, sys);
+    dbNoShow(sysId, display);
+    io.to('sys-' + sysId).emit('queue_noshow', { display, entry, noShows: sys.noShows.slice(0, 40), allServed: allServed(sys) });
+  } else {
+    logMark(sys, display, { notCalled: true, closedAt: at, closedBy: by });
+    saveQueueState(sysId, sys);
+    dbCallTicket(sysId, closed);
+    io.to('sys-' + sysId).emit('queue_noshow', { display, noShows: sys.noShows.slice(0, 40), allServed: allServed(sys) });
+  }
+  emitWaitingChanged(sysId, sys, display);
+  res.json({ success: true, as, at });
+});
+
 // waiting list changed by a delete / restore — every page refreshes its waiting list and "คิวที่ลบ"
 function emitWaitingChanged(sysId, sys, display) {
   io.to('sys-' + sysId).emit('queue_deleted_waiting', {

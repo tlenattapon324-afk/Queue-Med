@@ -955,6 +955,28 @@
     body.mobile .wq-patient{font-size:1rem}
     body.mobile .toast{max-width:92vw;white-space:normal;text-align:center}
     @media (min-width:700px){ body.mobile{background:#dfe3ee} }
+    /* คลิกที่แถวคิว → เมนู */
+    .wq-clickable{cursor:pointer}
+    .row-menu{position:fixed;inset:0;z-index:950;display:none}
+    .row-menu.open{display:block}
+    .rm-box{position:fixed;width:330px;background:#fff;border:1px solid #dbe3f0;border-radius:14px;padding:8px;
+      box-shadow:0 18px 40px rgba(15,23,42,.22);font-family:inherit}
+    .rm-head{display:flex;align-items:center;gap:8px;padding:6px 8px 10px;border-bottom:1px solid #eef2f7;margin-bottom:6px;font-size:1.05rem}
+    .rm-badge{color:#fff;border-radius:6px;padding:1px 7px;font-size:.8rem;font-weight:800}
+    .rm-name{color:#64748b;font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+    .rm-opt{display:flex;align-items:flex-start;gap:10px;width:100%;text-align:left;background:none;border:none;border-radius:10px;
+      padding:9px 10px;cursor:pointer;font-family:inherit;color:#1e293b}
+    .rm-opt:hover:not(:disabled){background:#eff6ff}
+    .rm-opt:disabled{opacity:.45;cursor:not-allowed}
+    .rm-opt b{display:block;font-size:.95rem}
+    .rm-opt small{display:block;color:#64748b;font-size:.76rem;margin-top:2px;line-height:1.35}
+    .rm-ic{flex:0 0 26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;
+      background:#2563eb;color:#fff;font-size:.8rem}
+    .rm-warn .rm-ic{background:#e11d48}
+    .rm-warn:hover{background:#fff1f2!important}
+    .rm-ok .rm-ic{background:#16a34a}
+    .rm-ok:hover{background:#f0fdf4!important}
+    .rm-cancel{width:100%;margin-top:4px;background:#f1f5f9;border:none;border-radius:10px;padding:8px;cursor:pointer;font-family:inherit;color:#475569;font-weight:700}
   </style>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
@@ -1139,6 +1161,19 @@
 </div>
 
 <!-- Delete waiting queue confirm modal -->
+<!-- คลิกที่แถวคิว: เรียกคิวนี้ / เรียกแล้วไม่มา / ให้บริการแล้ว ไม่ต้องเรียก -->
+<div class="row-menu" id="rowMenu" onclick="if(event.target===this)closeRowMenu()">
+  <div class="rm-box">
+    <div class="rm-head"></div>
+    <button class="rm-opt" data-act="call" onclick="rowMenuAct('call')"><span class="rm-ic">▶</span>
+      <span><b>เรียกคิวนี้ (ข้ามคิว)</b><small></small></span></button>
+    <button class="rm-opt rm-warn" onclick="rowMenuAct('noshow')"><span class="rm-ic">✕</span>
+      <span><b>เรียกแล้วไม่มา</b><small>ย้ายไปรายการ "ไม่มา" ไม่ประกาศเสียง — เรียกกลับได้ภายหลัง</small></span></button>
+    <button class="rm-opt rm-ok" onclick="rowMenuAct('done')"><span class="rm-ic">✓</span>
+      <span><b>ให้บริการแล้ว ไม่ต้องเรียก</b><small>เช่น จ่ายยาไปแล้ว — ปิดคิว ไม่ประกาศเสียง ไม่ขึ้นจอ</small></span></button>
+    <button class="rm-cancel" onclick="closeRowMenu()">ยกเลิก</button>
+  </div>
+</div>
 <div class="confirm-overlay" id="deleteConfirmOverlay">
   <div class="confirm-box">
     <h3 style="color:#ef4444">🗑 ลบคิวออกจากรายการรอ</h3>
@@ -1881,7 +1916,8 @@ function renderWaiting() {
   }
   const parked = list.filter(t => t.parked), rest = list.filter(t => !t.parked);
   el.innerHTML = [...parked, ...rest].map((t, i) => { const tn = typeTone(t.color) || { bg: t.color + '22', bd: t.color + '66', fg: t.color, num: t.color }; i = held || t.parked ? -1 : i - parked.length; return `
-    <div class="wq-item ${i===0?'wq-next':''} ${t.parked?'wq-parked':''} ${t.returned?'wq-ret':''} ${held?'fl-held':''} ${t.flowBack && !held?'fl-paid':''}"
+    <div class="wq-item wq-clickable ${i===0?'wq-next':''} ${t.parked?'wq-parked':''} ${t.returned?'wq-ret':''} ${held?'fl-held':''} ${t.flowBack && !held?'fl-paid':''}"
+      onclick="openRowMenu(event,'${t.display}',${held ? 1 : 0})"
       ${t.flowBack && !held ? `title="ผ่านการเงินแล้ว — ${flEsc((t.flowBack.cashier || 'การเงิน') + ' ส่งกลับมาเวลา ' + String(t.flowBack.at).slice(0, 5))}"` : ''}>
       <div class="wq-del-cell">
         <button class="btn-del-item" onclick="deleteWaiting('${t.display}',${JSON.stringify(t).replace(/"/g,'&quot;')})">🗑</button>
@@ -2887,6 +2923,44 @@ function callNext() {
   pendingCall = { type: 'display', display: filtered[0].display };
   if (skipConfirm) { confirmCall(); } else { showConfirm(filtered[0]); }
 }
+
+// ── คลิกที่แถวคิว → เรียกคิวนี้ (ข้ามคิว) / เรียกแล้วไม่มา / ให้บริการแล้ว ไม่ต้องเรียก ──
+let _rowMenu = null;
+function openRowMenu(ev, display, held) {
+  if (ev.target.closest('button, a, input, select, label')) return;   // the row's own buttons keep their job
+  const t = allWaiting.find(x => x.display === display);
+  if (!t) return;
+  _rowMenu = { display };
+  const m = document.getElementById('rowMenu');
+  const canCall = !held || flManual();
+  m.querySelector('.rm-head').innerHTML =
+    `<span class="rm-badge" style="background:${t.color}">${flEsc(t.prefix || '')}</span><b style="color:${t.color}">${flEsc(t.display)}</b>` +
+    `<span class="rm-name">${flEsc(t.patientName || t.typeName || '')}</span>`;
+  const call = m.querySelector('[data-act="call"]');
+  call.disabled = !canCall;
+  call.querySelector('small').textContent = canCall ? 'เรียกและประกาศเสียงทันที แม้ไม่ใช่คิวถัดไป' : 'ยังไม่ผ่านการตรวจสอบยา — เรียกไม่ได้';
+  m.classList.add('open');
+  // next to the click, kept inside the window
+  const box = m.querySelector('.rm-box'), r = box.getBoundingClientRect();
+  box.style.left = Math.max(8, Math.min(ev.clientX, innerWidth - r.width - 8)) + 'px';
+  box.style.top  = Math.max(8, Math.min(ev.clientY, innerHeight - r.height - 8)) + 'px';
+}
+function closeRowMenu() { document.getElementById('rowMenu').classList.remove('open'); _rowMenu = null; }
+function rowMenuAct(act) {
+  if (!_rowMenu) return;
+  const { display } = _rowMenu;
+  closeRowMenu();
+  const t = allWaiting.find(x => x.display === display);
+  if (!t) { toast('ไม่พบคิวนี้แล้ว — อาจถูกเรียกไปแล้ว', 'err'); return; }
+  if (act === 'call') return callByDisplay(display, t);
+  fetch(`/api/sys/${sysId}/close-waiting`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ display, as: act, counterId: myCounterId, by: sessionStorage.getItem('officerName') || '' }) })
+    .then(r => r.json()).then(d => {
+      if (d.success) toast(act === 'noshow' ? `${display} → เรียกแล้วไม่มา (ไม่ได้ประกาศเสียง)` : `ปิดคิว ${display} — ให้บริการแล้ว ไม่ได้เรียก`, 'ok');
+      else toast(d.message || 'ทำไม่สำเร็จ', 'err');
+    }).catch(() => toast('เกิดข้อผิดพลาด', 'err'));
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && _rowMenu) closeRowMenu(); });
 
 function callByDisplay(display, ticketJson) {
   if (pinBlocks()) return;

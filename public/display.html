@@ -363,6 +363,9 @@
       display:flex;align-items:center;justify-content:center;overflow:hidden;min-width:0;position:relative}
     .board-row-ctr{font-weight:800;color:var(--accent);text-align:center;padding:4px;line-height:1.15;background:var(--board-ctr-bg,var(--cell))}
     .board-row-q{background:var(--board-q-bg,var(--cell))}
+    /* each column header has its own colours (empty = theme / the shared header text colour) */
+    .board-col-hdr .bh-ctr{background:var(--board-ctr-hdr-bg,var(--hb));color:var(--board-ctr-hdr-clr,var(--board-hdr-clr,var(--htxt)))}
+    .board-col-hdr .bh-q{background:var(--board-q-hdr-bg,var(--hb));color:var(--board-q-hdr-clr,var(--board-hdr-clr,var(--htxt)))}
     .clr-pair{display:flex;gap:6px;align-items:center}
     .clr-pair input[type=color]{flex:1;height:32px;border:1px solid #1e3a5f;border-radius:7px;background:#0f1923;cursor:pointer;padding:2px}
     .clr-pair button{background:none;border:1px solid #1e3a5f;color:#90caf9;border-radius:7px;padding:6px 8px;font-size:.7rem;cursor:pointer;white-space:nowrap;font-family:inherit}
@@ -401,14 +404,15 @@
     @keyframes nsScroll{from{transform:translateY(0)}to{transform:translateY(-50%)}}
 
     /* Tap-to-enable-sound overlay (browsers block audio until the screen is touched once) */
-    .audio-unlock{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.55);display:none;
-      align-items:center;justify-content:center;cursor:pointer}
-    .audio-unlock.show{display:flex}
-    .audio-unlock-box{background:#0d1f33;border:2px solid #42a5f5;border-radius:18px;padding:30px 44px;text-align:center;
-      color:#fff;box-shadow:0 10px 40px rgba(0,0,0,.6);animation:aScale .4s cubic-bezier(.22,1,.36,1) both}
-    .audio-unlock-box .au-icon{font-size:3.2rem;line-height:1;margin-bottom:12px}
-    .audio-unlock-box .au-th{font-size:1.6rem;font-weight:800}
-    .audio-unlock-box .au-en{font-size:.95rem;color:#90caf9;margin-top:6px}
+    /* sound still blocked by the browser: a small chip in the corner (the screen is never covered) */
+    .audio-unlock{position:fixed;left:14px;bottom:96px;z-index:9000;display:none;cursor:pointer}
+    .audio-unlock.show{display:block}
+    .audio-unlock-box{display:flex;align-items:center;gap:8px;background:rgba(13,31,51,.92);border:1px solid #42a5f5;border-radius:999px;
+      padding:6px 14px 6px 10px;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.4);animation:auPulse 2.4s ease-in-out infinite}
+    .audio-unlock-box .au-icon{font-size:1.1rem;line-height:1}
+    .audio-unlock-box .au-th{font-size:.85rem;font-weight:700}
+    .audio-unlock-box .au-en{display:none}
+    @keyframes auPulse{0%,100%{opacity:.75}50%{opacity:1}}
 
     /* Drawer additions */
     .opt-seg{display:flex;gap:6px;flex-wrap:wrap}
@@ -454,6 +458,7 @@
       <span class="fs-val" id="fsVal">8</span>
       <button class="btn-fs" onclick="stepFontSize(1)" title="เพิ่มขนาด">+</button>
     </div>
+    <button class="btn-settings" id="btnFull" onclick="toggleFull()" title="เต็มจอ (ซ่อนแถบ URL)">⛶ เต็มจอ</button>
     <button class="btn-settings" onclick="openDrawer()">⚙ ตั้งค่าหน้าจอ</button>
   </div>
 </div>
@@ -473,8 +478,8 @@
 <!-- Browsers keep audio muted until the screen has been touched once -->
 <div class="audio-unlock" id="audioUnlock" onclick="unlockAudio()">
   <div class="audio-unlock-box">
-    <div class="au-icon">🔊</div>
-    <div class="au-th">แตะหน้าจอเพื่อเปิดเสียง</div>
+    <div class="au-icon">🔇</div>
+    <div class="au-th">เสียงยังไม่เปิด — แตะจอ 1 ครั้ง</div>
     <div class="au-en">Tap to enable sound</div>
   </div>
 </div>
@@ -561,9 +566,29 @@
               <input type="range" id="cfgBoardHdrFsR" min="0.8" max="4" step="0.1" value="1.3" oninput="syncNum('cfgBoardHdrFs',this.value,1);onBoardOptChange()"/>
               <input class="sf-numval" type="number" id="cfgBoardHdrFs" min="0.5" max="8" step="0.1" value="1.3" oninput="syncRange('cfgBoardHdrFsR',this.value,0.8,4);onBoardOptChange()"/>
             </div></div>
-          <div class="sf-row" style="margin-bottom:0"><label class="sf-label">สีตัวอักษรหัวคอลัมน์</label>
-            <div class="clr-pair" id="pairBoardHdrClr"><input type="color" id="cfgBoardHdrClr" oninput="setBoardClr('boardHdrClr',this.value)"/>
-              <button onclick="setBoardClr('boardHdrClr','')">ใช้สีธีม</button></div></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <div class="sf-row"><label class="sf-label">ชื่อหัว — ช่องบริการ</label>
+                <input class="sf-input" type="text" id="cfgBoardLblCtr" placeholder="ช่องบริการ" oninput="onBoardOptChange()"/></div>
+              <div class="sf-row"><label class="sf-label">สีแถบหัว</label>
+                <div class="clr-pair" id="pairBoardCtrHdrBg"><input type="color" id="cfgBoardCtrHdrBg" oninput="setBoardClr('boardCtrHdrBg',this.value)"/>
+                  <button onclick="setBoardClr('boardCtrHdrBg','')">ใช้สีธีม</button></div></div>
+              <div class="sf-row" style="margin-bottom:0"><label class="sf-label">สีตัวอักษรหัว</label>
+                <div class="clr-pair" id="pairBoardCtrHdrClr"><input type="color" id="cfgBoardCtrHdrClr" oninput="setBoardClr('boardCtrHdrClr',this.value)"/>
+                  <button onclick="setBoardClr('boardCtrHdrClr','')">ใช้สีธีม</button></div></div>
+            </div>
+            <div>
+              <div class="sf-row"><label class="sf-label">ชื่อหัว — หมายเลขคิว</label>
+                <input class="sf-input" type="text" id="cfgBoardLblQ" placeholder="หมายเลขคิว" oninput="onBoardOptChange()"/></div>
+              <div class="sf-row"><label class="sf-label">สีแถบหัว</label>
+                <div class="clr-pair" id="pairBoardQHdrBg"><input type="color" id="cfgBoardQHdrBg" oninput="setBoardClr('boardQHdrBg',this.value)"/>
+                  <button onclick="setBoardClr('boardQHdrBg','')">ใช้สีธีม</button></div></div>
+              <div class="sf-row" style="margin-bottom:0"><label class="sf-label">สีตัวอักษรหัว</label>
+                <div class="clr-pair" id="pairBoardQHdrClr"><input type="color" id="cfgBoardQHdrClr" oninput="setBoardClr('boardQHdrClr',this.value)"/>
+                  <button onclick="setBoardClr('boardQHdrClr','')">ใช้สีธีม</button></div></div>
+            </div>
+          </div>
+          <div class="sf-hint">แบ่งช่องบริการหลายคอลัมน์ → ตั้งชื่อหัวช่องบริการแยกแต่ละคอลัมน์ได้ที่ "แบ่งคอลัมน์ช่องบริการ"</div>
         </div>
         <div class="sec-box" style="background:#100c22;border-color:#2a2350">
           <div class="sec-box-title" style="color:#b39ddb">✨ เน้นส่วนคิวที่กำลังเรียก</div>
@@ -586,6 +611,15 @@
           <div class="sf-row" style="margin-bottom:0"><label class="sf-label">④ หมายเลขคิว</label>
             <div class="clr-pair" id="pairBoardQBg"><input type="color" id="cfgBoardQBg" oninput="setBoardClr('boardQBg',this.value)"/>
               <button onclick="setBoardClr('boardQBg','')">ใช้สีธีม</button></div></div>
+        </div>
+        <div class="sec-box" style="background:#100c22;border-color:#2a2350">
+          <div class="sec-box-title" style="color:#b39ddb">สีตัวอักษรในตาราง</div>
+          <div class="sf-row"><label class="sf-label">③ ชื่อช่องบริการ</label>
+            <div class="clr-pair" id="pairBoardCtrClr"><input type="color" id="cfgBoardCtrClr" oninput="setBoardClr('boardCtrClr',this.value)"/>
+              <button onclick="setBoardClr('boardCtrClr','')">ใช้สีธีม</button></div></div>
+          <div class="sf-row" style="margin-bottom:0"><label class="sf-label">④ หมายเลขคิว</label>
+            <div class="clr-pair" id="pairBoardQClr"><input type="color" id="cfgBoardQClr" oninput="setBoardClr('boardQClr',this.value)"/>
+              <button onclick="setBoardClr('boardQClr','')">ใช้สีประเภทคิว</button></div></div>
         </div>
         <div class="sf-row"><label class="sf-label">ความกว้างส่วนคิวล่าสุด (%) — ลากเส้นแบ่งบนจอได้</label>
           <div class="sf-slider-row">
@@ -1308,6 +1342,7 @@ const DEF = { ...VT_DEF, columns:2, maxPerCounter:1, selectedCounters:[], hidden
   // board layout
   boardHdr:'คิวที่กำลังเรียก', boardLeft:50, boardNumFs:11, boardRowFs:4.5, boardCtrFs:1.8, showUpcoming:true, upcomingCount:5, showBoardParked:false, boardParkedLabel:'คิวยากำลังตรวจสอบ', boardParkedCount:8, boardParkedFs:1.6, boardParkedHdrFs:1.05, boardParkedH:0, boardRowFit:true, boardRowH:24,
   boardHdrH:48, boardHdrFs:1.3, boardHdrClr:'', boardHero:true, boardHeroClr:'', boardBigBg:'', boardCtrBg:'', boardQBg:'',
+  boardLblCtr:'', boardLblQ:'หมายเลขคิว', boardCtrHdrBg:'', boardCtrHdrClr:'', boardQHdrBg:'', boardQHdrClr:'', boardCtrClr:'', boardQClr:'',
   anim:'scale', showName:false, maskName:true, nameFs:1.6, nsAutoScroll:false, nsSpeed:20 };
 let cfg = { ...DEF, ...(JSON.parse(localStorage.getItem(LS_KEY) || '{}')) };
 function getModeSettings(ds) {
@@ -1711,7 +1746,7 @@ function buildBoard(d, visible, area) {
     <div class="board-right${hero ? ' grouped' : ''}">${groups.map(({ g, k }) => `
       <div class="board-col">
         <div class="board-col-hdr" style="grid-template-columns:${BOARD_ROW_COLS}">
-          <div>${escHtml(colHeader(d, k, d.splitLblCtr || 'ช่องบริการ'))}</div><div>หมายเลขคิว</div>
+          <div class="bh-ctr">${escHtml(colHeader(d, k, d.boardLblCtr || d.splitLblCtr || 'ช่องบริการ'))}</div><div class="bh-q">${escHtml(d.boardLblQ || 'หมายเลขคิว')}</div>
         </div>
         <div class="board-rows" style="${fit ? '' : 'overflow-y:auto'}">${g.map(c => `<div class="board-row" id="brow-${c.id}" style="${rowStyle}grid-template-columns:${BOARD_ROW_COLS}"></div>`).join('')}</div>
       </div>`).join('')}
@@ -1719,7 +1754,9 @@ function buildBoard(d, visible, area) {
   renderBoard(false, null);
 }
 // The most recent call among this screen's counters (what the big block shows)
-const BOARD_CLR_VARS = { boardHeroClr: '--board-hero-clr', boardHdrClr: '--board-hdr-clr', boardBigBg: '--board-big-bg', boardCtrBg: '--board-ctr-bg', boardQBg: '--board-q-bg' };
+const BOARD_CLR_VARS = { boardHeroClr: '--board-hero-clr', boardHdrClr: '--board-hdr-clr', boardBigBg: '--board-big-bg', boardCtrBg: '--board-ctr-bg', boardQBg: '--board-q-bg',
+  boardCtrHdrBg: '--board-ctr-hdr-bg', boardCtrHdrClr: '--board-ctr-hdr-clr', boardQHdrBg: '--board-q-hdr-bg', boardQHdrClr: '--board-q-hdr-clr',
+  boardCtrClr: '--board-ctr-clr', boardQClr: '--board-q-clr' };
 function applyBoardVars(d, area) {
   area.style.setProperty('--board-hdr-h', (Number(d.boardHdrH) || 48) + 'px');
   area.style.setProperty('--board-hdr-fs', (Number(d.boardHdrFs) || 1.3) + 'rem');
@@ -1734,12 +1771,17 @@ function cssColorToHex(c) {
   return '#' + m.slice(0, 3).map(x => Math.round(+x).toString(16).padStart(2, '0')).join('');
 }
 function syncBoardClrUI(d) {
-  const theme = { boardHeroClr: '--accent', boardHdrClr: '--htxt', boardBigBg: '--cell', boardCtrBg: '--cell', boardQBg: '--cell' };
-  const ids = { boardHeroClr: 'BoardHeroClr', boardHdrClr: 'BoardHdrClr', boardBigBg: 'BoardBigBg', boardCtrBg: 'BoardCtrBg', boardQBg: 'BoardQBg' };
+  const theme = { boardHeroClr: '--accent', boardHdrClr: '--htxt', boardBigBg: '--cell', boardCtrBg: '--cell', boardQBg: '--cell',
+    boardCtrHdrBg: '--hb', boardCtrHdrClr: '--htxt', boardQHdrBg: '--hb', boardQHdrClr: '--htxt', boardCtrClr: '--accent', boardQClr: '--text' };
+  const ids = { boardHeroClr: 'BoardHeroClr', boardHdrClr: 'BoardHdrClr', boardBigBg: 'BoardBigBg', boardCtrBg: 'BoardCtrBg', boardQBg: 'BoardQBg',
+    boardCtrHdrBg: 'BoardCtrHdrBg', boardCtrHdrClr: 'BoardCtrHdrClr', boardQHdrBg: 'BoardQHdrBg', boardQHdrClr: 'BoardQHdrClr',
+    boardCtrClr: 'BoardCtrClr', boardQClr: 'BoardQClr' };
+  // what a part shows while it follows the theme (the header text follows the older shared colour first)
+  const follows = { boardCtrHdrClr: d.boardHdrClr, boardQHdrClr: d.boardHdrClr, boardCtrClr: d.custom && d.custom.ccNameClr };
   for (const [k, id] of Object.entries(ids)) {
     const inp = document.getElementById('cfg' + id), pair = document.getElementById('pair' + id);
     if (!inp) continue;
-    const themeVal = getComputedStyle(document.documentElement).getPropertyValue(theme[k]).trim();
+    const themeVal = follows[k] || getComputedStyle(document.documentElement).getPropertyValue(theme[k]).trim();
     inp.value = d[k] || cssColorToHex(themeVal.startsWith('#') ? hexToRgbStr(themeVal) : themeVal);
     pair.classList.toggle('theme', !d[k]);
   }
@@ -1801,9 +1843,9 @@ function renderBoard(animate, flashFor) {
     const t = (recentByCtr[String(c.id)] || []).filter(modeMatches)[0];
     const rowNew = animate && t && flashFor && t.display === flashFor.display;
     row.innerHTML = `
-      <div class="board-row-ctr" style="font-size:${d.boardCtrFs || 1.8}vw;color:${(d.custom && d.custom.ccNameClr) || 'var(--accent)'}">${escHtml(c.name)}</div>
+      <div class="board-row-ctr" style="font-size:${d.boardCtrFs || 1.8}vw;color:var(--board-ctr-clr,${(d.custom && d.custom.ccNameClr) || 'var(--accent)'})">${escHtml(c.name)}</div>
       <div class="board-row-q">${t
-        ? `<div class="${rowNew ? animClass(d) : ''}"><div class="board-num" data-flash="${rowNew ? 1 : ''}" style="font-size:${fitFs(t.display, d.boardRowFs || 4.5)};color:${numClr(t)}">${qno(t.display)}</div></div>`
+        ? `<div class="${rowNew ? animClass(d) : ''}"><div class="board-num" data-flash="${rowNew ? 1 : ''}" style="font-size:${fitFs(t.display, d.boardRowFs || 4.5)};color:var(--board-q-clr,${numClr(t)})">${qno(t.display)}</div></div>`
         : `<span style="color:var(--dim);opacity:.4;font-size:${(d.boardRowFs || 4.5) * 0.5}vw">—</span>`}</div>`;
     if (rowNew) flashCall(row.querySelector('[data-flash="1"]'), row.querySelector('.board-row-q'));
   });
@@ -2665,6 +2707,8 @@ function setColHdr(k, val) {
 function onBoardOptChange() {
   const c = getCurrentCfg();
   c.boardHdr      = document.getElementById('cfgBoardHdr').value;
+  c.boardLblCtr   = document.getElementById('cfgBoardLblCtr').value.trim();
+  c.boardLblQ     = document.getElementById('cfgBoardLblQ').value.trim();
   c.boardLeft     = Math.min(80, Math.max(20, parseInt(document.getElementById('cfgBoardLeft').value) || 50));
   c.boardNumFs    = Math.max(2, parseFloat(document.getElementById('cfgBoardNumFs').value) || 11);
   c.boardRowFs    = Math.max(1, parseFloat(document.getElementById('cfgBoardRowFs').value) || 4.5);
@@ -2744,6 +2788,8 @@ function loadNewCfgUI(d) {
   d = getDisplayCfg();
   const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
   set('cfgBoardHdr', d.boardHdr || 'คิวที่กำลังเรียก');
+  set('cfgBoardLblCtr', d.boardLblCtr || '');
+  set('cfgBoardLblQ', d.boardLblQ ?? 'หมายเลขคิว');
   set('cfgBoardLeft', d.boardLeft || 50);       set('cfgBoardLeftR', d.boardLeft || 50);
   set('cfgBoardNumFs', d.boardNumFs || 11);     set('cfgBoardNumFsR', Math.min(22, d.boardNumFs || 11));
   set('cfgBoardRowFs', d.boardRowFs || 4.5);    set('cfgBoardRowFsR', Math.min(12, d.boardRowFs || 4.5));
@@ -3272,6 +3318,33 @@ function unlockAudio() {
 }
 // any first touch of the screen (e.g. opening settings) counts too
 document.addEventListener('pointerdown', () => { if (!_audioUnlocked) unlockAudio(); }, { once: true, capture: true });
+
+// ── เต็มจอ: browsers only allow it from a tap, and a refresh leaves it — so a screen that was put in
+// fullscreen (remembered on this device) goes back into it on the first tap after a reload, the same tap as the sound
+const FS_KEY = 'qf_fullscreen_' + sysId;
+const isFull = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+function fsRemember(on) { try { localStorage.setItem(FS_KEY, on ? '1' : '0'); } catch (e) {} }
+// default = เต็มจอ: only a screen that was taken out of fullscreen on purpose (button / Esc) stays windowed
+function fsWanted() { try { return localStorage.getItem(FS_KEY) !== '0'; } catch (e) { return true; } }
+function enterFull() {
+  const el = document.documentElement, req = el.requestFullscreen || el.webkitRequestFullscreen;
+  if (req) try { const p = req.call(el); if (p && p.catch) p.catch(() => {}); } catch (e) {}
+}
+function toggleFull() {
+  if (isFull()) { fsRemember(false); (document.exitFullscreen || document.webkitExitFullscreen).call(document); }
+  else { fsRemember(true); enterFull(); }
+}
+function syncFullBtn() {
+  const b = document.getElementById('btnFull');
+  if (b) b.textContent = isFull() ? '⛶ ออกจากเต็มจอ' : '⛶ เต็มจอ';
+}
+// left with Esc / F11 → forgotten; a refresh fires no event, so the wish survives the reload
+const onFullChange = () => { if (!isFull()) fsRemember(false); syncFullBtn(); };
+document.addEventListener('fullscreenchange', onFullChange);
+document.addEventListener('webkitfullscreenchange', onFullChange);
+document.addEventListener('pointerdown', e => {
+  if (fsWanted() && !isFull() && !(e.target.closest && e.target.closest('#btnFull'))) enterFull();
+}, { capture: true });
 
 function toggleSound() {
   soundEnabled = !soundEnabled;

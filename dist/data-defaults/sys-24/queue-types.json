@@ -1,0 +1,37 @@
+[
+  {
+    "id": 1,
+    "name": "ทั่วไป",
+    "prefix": "A",
+    "color": "#0d47a1",
+    "forMode": "opd"
+  },
+  {
+    "id": 2,
+    "name": "ด่วน",
+    "prefix": "B",
+    "color": "#66bb6a",
+    "forMode": "opd"
+  },
+  {
+    "id": 3,
+    "name": "IPD พิเศษ",
+    "prefix": "I",
+    "color": "#42a5f5",
+    "forMode": "ipd"
+  },
+  {
+    "id": 4,
+    "name": "IPD สามัญ",
+    "prefix": "O",
+    "color": "#42a5f5",
+    "forMode": "ipd"
+  },
+  {
+    "id": 5,
+    "name": "คิวคู่ IP/OP",
+    "prefix": "N",
+    "color": "#ffca28",
+    "forMode": "both"
+  }
+]

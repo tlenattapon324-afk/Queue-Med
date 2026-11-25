@@ -7,8 +7,7 @@
   "headerName": "รพร.สว่างแดนดิน",
   "headerSubtitle": "คิวรับบริการการเงิน",
   "headerFontSize": 19,
-  "showDivider": true,
-  "dividerStyle": "dashed",
+  "showDividerLine": true,
   "showPatientName": true,
   "showHnQn": true,
   "patientFontSize": 15,
@@ -21,5 +20,10 @@
   "footerText": "กรุณานั่งรอเรียกหมายเลขของท่าน\nPlease wait for your number",
   "footerFontSize": 8,
   "autoPrint": true,
-  "showDividerLine": true
+  "copies": 1,
+  "showBarcode": false,
+  "barcodeSource": "qn",
+  "showDivider": true,
+  "dividerStyle": "dashed",
+  "logoData": ""
 }
