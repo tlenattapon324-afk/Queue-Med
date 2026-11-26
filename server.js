@@ -6,7 +6,7 @@ const fs      = require('fs');
 const os      = require('os');
 const crypto  = require('crypto');
 const { exec } = require('child_process');
-const { printSlip } = require('./slip-print');
+const { printSlip, listPrinters } = require('./slip-print');
 const { createTts } = require('./tts-voice');
 
 const app    = express();
@@ -144,7 +144,7 @@ const SCREEN_CFG_DEFAULTS = {
 const PRINT_CFG_DEFAULTS = {
   paperSize:'80mm', customWidth:'80', customHeight:'',
   printerName:'',
-  showHeader:true, headerName:'', headerSubtitle:'Queue System', headerFontSize:14,
+  showHeader:true, headerName:'', headerSubtitle:'', headerFontSize:14,
   showDividerLine:true,
   showPatientName:true, showHnQn:true, patientFontSize:11,
   showQueueType:true, queueTypeFontSize:11, queueNumFontSize:60,
@@ -606,6 +606,8 @@ function queueDisplay(prefix, n) {
 }
 // the same queue whatever the staff typed: "1 - 001" = "1-001" = "1001"
 const dispKey = d => String(d || '').toUpperCase().replace(/[\s-]/g, '');
+// a queue type's line on the printed ticket: up to 3 lines, 200 characters
+const slipNoteOf = v => String(v == null ? '' : v).replace(/\r/g, '').split('\n').map(s => s.trim()).filter(Boolean).slice(0, 3).join('\n').slice(0, 200);
 app.post('/api/sys/:sysId/queue-types', requireSys, (req, res) => {
   const { sys, sysId } = req;
   const { name, prefix, color, forMode } = req.body;
@@ -615,6 +617,8 @@ app.post('/api/sys/:sysId/queue-types', requireSys, (req, res) => {
   if (p !== '' && sys.queueTypes.find(t => t.prefix === p))
     return res.status(400).json({ success: false, message: `Prefix "${p}" ถูกใช้แล้ว` });
   const type = { id: sys.nextTypeId++, name: name.trim(), prefix: p, color: color || '#42a5f5', forMode: forMode || 'both' };
+  const note = slipNoteOf(req.body.slipNote);
+  if (note) type.slipNote = note;
   sys.queueTypes.push(type); initTypeState(sys, type.id);
   saveJson(sys.typesFile, sys.queueTypes);
   io.to('sys-' + sysId).emit('types_updated', sys.queueTypes);
@@ -637,6 +641,11 @@ app.put('/api/sys/:sysId/queue-types/:id', requireSys, (req, res) => {
   if (name)    sys.queueTypes[idx].name    = name.trim();
   if (color)   sys.queueTypes[idx].color   = color;
   if (forMode) sys.queueTypes[idx].forMode = forMode;
+  // ข้อความบนบัตรคิว (e.g. where to go next) — empty removes it
+  if (req.body.slipNote !== undefined) {
+    const note = slipNoteOf(req.body.slipNote);
+    if (note) sys.queueTypes[idx].slipNote = note; else delete sys.queueTypes[idx].slipNote;
+  }
   saveJson(sys.typesFile, sys.queueTypes);
   io.to('sys-' + sysId).emit('types_updated', sys.queueTypes);
   res.json({ success: true, type: sys.queueTypes[idx] });
@@ -811,6 +820,16 @@ app.post('/api/sys/:sysId/get-serial', requireSys, (req, res) => {
     ticket.issuedFrom = { sysId: srcSysId, name: me ? me.name : '' };
     ticket.forwardSkipped = true;   // already at the cashier — never auto-sent on (e.g. back to the pharmacy)
   }
+  // ข้อความบนบัตรคิว: the queue type's own note; a ห้องตรวจ / สิทธิ queue without one uses the note of the
+  // way the visit goes (ไปการเงิน / ไม่ผ่านการเงิน queue type)
+  const routeNote = r => {
+    const t = sys.queueTypes.find(x => x.id === pay[r + 'TypeId'] && x.slipNote)
+      || sys.queueTypes.find(x => x.payRule === r && !x.drugSize && x.slipNote)
+      || sys.queueTypes.find(x => x.payRule === r && x.slipNote);
+    return t ? t.slipNote : '';
+  };
+  const slipNote = type.slipNote || (groupRule && ticket.payRoute ? routeNote(ticket.payRoute) : '');
+  if (slipNote) ticket.slipNote = slipNote;
   // เดินคิวตามสถานะ HOSxP: an OPD visit waits for the drug check before it can be called (or sent to การเงิน)
   if (!toCashier && !deptNoRoute && ticket.mode === 'opd' && ticket.vn && flowCashierOf(srcSysId, srcSys)) {
     ticket.flow = 'check';
@@ -1976,6 +1995,20 @@ app.put('/api/sys/:sysId/issue-mode', requireSys, (req, res) => {
         old.prefix = '';
       }
     }
+    // ข้อความบนบัตรคิว typed under each row — kept on the queue type (the same note ตั้งค่า → ประเภทคิว edits);
+    // a row not sent leaves its note as it is, an empty one removes it
+    const notes = payIn.slipNotes && typeof payIn.slipNotes === 'object' ? payIn.slipNotes : {};
+    const setNote = (t, v) => {
+      if (!t || v === undefined) return;
+      const n = slipNoteOf(v);
+      if (n) t.slipNote = n; else delete t.slipNote;
+    };
+    const byId = id => sys.queueTypes.find(x => x.id === id);
+    for (const [k] of PAY_DRUG_SPLIT) setNote(byId(pay[k + 'TypeId']), notes[k]);
+    setNote(byId(pay.cashTypeId), notes.cash);
+    setNote(byId(pay.freeTypeId), notes.free);
+    if (pay.deptOn) setNote(byId(pay.deptTypeId), notes.dept);
+    if (pay.ptOn)   setNote(byId(pay.ptTypeId), notes.pttype);
     // the "ไม่มียา" type lives in the cashier room; drop it from any room no longer chosen, unless used today
     for (const o of systems) {
       const os = getSys(o.id);
@@ -1988,6 +2021,8 @@ app.put('/api/sys/:sysId/issue-mode', requireSys, (req, res) => {
           os.queueTypes.push(t); initTypeState(os, t.id);
         }
         t.name = pay.noDrugName; t.prefix = pay.noDrugPrefix;
+        setNote(t, notes.noDrug);
+        pay.noDrugNote = t.slipNote || '';   // that type is in the cashier room — the settings window reads it here
         pay.noDrugTypeId = t.id;
       } else if (t && !(os.state[t.id]?.waiting || []).length && !(os.state[t.id]?.served || []).length) {
         os.queueTypes = os.queueTypes.filter(x => x !== t);
@@ -2561,12 +2596,7 @@ function corsLocal(req, res, next) {
 // ── Printer list (Windows) ────────────────────────────────────────────────
 app.options('/api/printers', corsLocal);
 app.get('/api/printers', corsLocal, (req, res) => {
-  exec('powershell -NoProfile -Command "Get-Printer | Select-Object -ExpandProperty Name"',
-    { timeout: 6000, windowsHide: true }, (err, stdout) => {
-    if (err) return res.json({ printers: [] });
-    const printers = stdout.split('\n').map(p => p.trim()).filter(p => p.length > 0);
-    res.json({ printers });
-  });
+  listPrinters((printers, error) => res.json({ printers, error }), { maxAgeMs: /[?&]fresh=1/.test(req.url) ? 0 : 60000 });
 });
 
 // ── Direct print (server-side, no browser dialog) — shared with print-agent.js ──

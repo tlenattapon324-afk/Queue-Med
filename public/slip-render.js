@@ -5,12 +5,20 @@
  * Needs /vendor/jsbarcode.min.js (CODE128) and /vendor/qrcode.js (QR) loaded first.
  */
 (function () {
-  const DEFAULT_ORDER = ['header','patientName','hnQn','pttype','queueType','queueNum','barcode','dateTime','footer'];
+  const DEFAULT_ORDER = ['header','patientName','hnQn','pttype','queueType','queueNum','slipNote','barcode','dateTime','footer'];
+  // layouts saved before the ticket note existed: it goes right under the queue number (as slip-print.js)
+  function withSlipNote(order) {
+    if (order.includes('slipNote')) return order;
+    const o = order.slice(), at = o.indexOf('queueNum');
+    o.splice(at >= 0 ? at + 1 : o.length, 0, 'slipNote');
+    return o;
+  }
 
   // Default per-section style — matches the original fixed look
   const STYLE_DEFAULTS = {
     header:      { align:'center', bold:true,  color:'black' },
     patientName: { align:'center', bold:true,  color:'black' },
+    slipNote:    { align:'center', bold:true,  color:'black' },
     hnQn:        { align:'center', bold:false, color:'gray'  },
     pttype:      { align:'center', bold:false, color:'black' },
     queueType:   { align:'center', bold:false, color:'black' },
@@ -40,6 +48,27 @@
     }[k] || ''));
   }
 
+  // HN / QN on the patient name's line (hnQnPosition 'left' | 'right') — same rule as slip-print.js
+  const hnQnInline = cfg => (cfg.hnQnPosition === 'left' || cfg.hnQnPosition === 'right') && cfg.showHnQn !== false;
+  const hnQnText = d => [d.hn ? 'HN: ' + d.hn : '', d.qn ? 'QN: ' + d.qn : ''].filter(Boolean).join('   ');
+  function fitOneLine(text, fs, widthMm) {
+    const n = String(text).replace(/[ัิ-ฺ็-๎]/g, '').length || 1;
+    const fit = widthMm / (n * 0.62 * 25.4 / 72);
+    return Math.max(6, Math.min(fs, Math.floor(fit * 2) / 2));
+  }
+
+  // "3 - 001" → "3-001" (as slip-print.js)
+  const compactNum = d => String(d == null ? '' : d).replace(/\s*-\s*/g, '-');
+  // a note line too long for the paper: split at the space nearest the middle (as slip-print.js)
+  function noteRows(text, fs, widthMm) {
+    const f = fitOneLine(text, fs, widthMm);
+    if (f >= fs * 0.85 || !/\s/.test(text)) return [[text, f]];
+    const mid = text.length / 2;
+    let cut = -1;
+    for (let i = 0; i < text.length; i++) if (/\s/.test(text[i]) && (cut < 0 || Math.abs(i - mid) < Math.abs(cut - mid))) cut = i;
+    return [text.slice(0, cut).trim(), text.slice(cut + 1).trim()].filter(Boolean).map(t => [t, fitOneLine(t, fs, widthMm)]);
+  }
+
   const colorCss = c => c === 'gray' ? '#555' : '#000';
   const textCss  = (st, fs, extra = '') =>
     `text-align:${st.align};font-size:${fs}pt;font-weight:${st.bold ? 800 : 400};color:${colorCss(st.color)};${extra}`;
@@ -62,6 +91,8 @@
   function makeCode(cfg, value) {
     if (!value) return null;
     const showText = cfg.barcodeShowText !== false;
+    // ขนาดตัวเลขใต้บาร์โค้ด (canvas px — 22 was the fixed size before it could be set)
+    const textPx = Math.min(60, Math.max(12, Number(cfg.barcodeTextSize) || 22));
     const canvas = document.createElement('canvas');
     const g = canvas.getContext('2d');
     try {
@@ -70,7 +101,7 @@
         const qr = qrcode(0, 'M');
         qr.addData(String(value)); qr.make();
         const n = qr.getModuleCount(), cell = 8, pad = cell * 2;
-        const side = n * cell + pad * 2, textH = showText ? 44 : 0;
+        const side = n * cell + pad * 2, textH = showText ? Math.round(textPx * 2) : 0;
         canvas.width = side; canvas.height = side + textH;
         g.fillStyle = '#fff'; g.fillRect(0, 0, canvas.width, canvas.height);
         g.fillStyle = '#000';
@@ -78,7 +109,7 @@
           for (let c = 0; c < n; c++)
             if (qr.isDark(r, c)) g.fillRect(pad + c * cell, pad + r * cell, cell, cell);
         if (showText) {
-          g.font = 'bold 30px monospace'; g.textAlign = 'center'; g.textBaseline = 'middle';
+          g.font = `bold ${Math.round(textPx * 1.36)}px monospace`; g.textAlign = 'center'; g.textBaseline = 'middle';
           g.fillText(String(value), side / 2, side + textH / 2 - 4);
         }
         const wmm = Number(cfg.qrSize) || 25;
@@ -87,7 +118,7 @@
       if (typeof JsBarcode === 'undefined') return null;
       JsBarcode(canvas, String(value), {
         format:'CODE128', width:2, height: Math.round((Number(cfg.barcodeHeight) || 10) / MM_PER_PX),
-        displayValue: showText, fontSize: 22, margin: 8, background:'#ffffff', lineColor:'#000000',
+        displayValue: showText, fontSize: textPx, margin: 8, background:'#ffffff', lineColor:'#000000',
       });
       return { dataUrl: canvas.toDataURL('image/png'), wmm: canvas.width * MM_PER_PX, hmm: canvas.height * MM_PER_PX };
     } catch (e) {
@@ -124,17 +155,23 @@
         const st = style(cfg, 'header'), fs = cfg.headerFontSize || 14;
         let h = `<div style="${textCss(st, fs, 'margin-bottom:2px')}">${esc(fill(cfg.headerName || d.sysName, d))}</div>`;
         if (cfg.headerSubtitle)
-          h += `<div style="${textCss({ align: st.align, bold:false, color:'gray' }, fs - 3, 'margin-bottom:3px')}">${esc(fill(cfg.headerSubtitle, d))}</div>`;
+          h += `<div style="${textCss({ align: st.align, bold:false, color:'gray' }, cfg.subtitleFontSize || Math.max(7, fs - 3), 'margin-bottom:3px')}">${esc(fill(cfg.headerSubtitle, d))}</div>`;
         return h;
       },
       patientName: () => {
         if (!cfg.showPatientName || !d.patientName) return '';
-        return `<div style="${textCss(style(cfg, 'patientName'), cfg.patientFontSize || 11, 'margin:2px 0')}">${esc(d.patientName)}</div>`;
+        const fs = cfg.patientFontSize || 11, hq = hnQnText(d);
+        if (hnQnInline(cfg) && hq) {
+          const text = cfg.hnQnPosition === 'left' ? `${hq}  ${d.patientName}` : `${d.patientName}  ${hq}`;
+          return `<div style="${textCss(style(cfg, 'patientName'), fitOneLine(text, fs, paperSize(cfg).w - 6), 'margin:2px 0;white-space:pre;overflow:hidden')}">${esc(text)}</div>`;
+        }
+        return `<div style="${textCss(style(cfg, 'patientName'), fs, 'margin:2px 0')}">${esc(d.patientName)}</div>`;
       },
       hnQn: () => {
         if (!cfg.showHnQn || (!d.hn && !d.qn)) return '';
+        if (hnQnInline(cfg) && cfg.showPatientName && d.patientName) return '';   // already on the name's line
         const parts = [d.hn ? 'HN: ' + d.hn : '', d.qn ? 'QN: ' + d.qn : ''].filter(Boolean).join('&nbsp;&nbsp;&nbsp;');
-        return `<div style="${textCss(style(cfg, 'hnQn'), (cfg.patientFontSize || 11) - 2, 'margin:2px 0')}">${parts}</div>`;
+        return `<div style="${textCss(style(cfg, 'hnQn'), cfg.hnQnFontSize || Math.max(7, (cfg.patientFontSize || 11) - 2), 'margin:2px 0')}">${parts}</div>`;
       },
       pttype: () => {
         if (!cfg.showPttype || !d.pttypeName) return '';
@@ -152,14 +189,21 @@
           const st = style(cfg, 'queueType');
           return `<div style="display:flex;align-items:center;gap:3px;margin:4px 0">` +
             `<div style="flex:0 0 35%;${textCss({ ...st, align:'center' }, cfg.queueTypeFontSize || 11, 'word-break:break-word;line-height:1.3')}">${esc(d.typeName)}</div>` +
-            `<div style="flex:1;font-size:${numFs}pt;font-weight:900;text-align:center;letter-spacing:4px;color:#000;${numBoxCss(box)}padding:1px 4px;box-sizing:border-box">${esc(d.display)}</div>` +
+            `<div style="flex:1;font-size:${numFs}pt;font-weight:900;text-align:center;letter-spacing:4px;color:#000;${numBoxCss(box)}padding:1px 4px;box-sizing:border-box">${esc(compactNum(d.display))}</div>` +
             `</div>`;
         }
-        return `<div style="font-size:${numFs}pt;font-weight:900;text-align:${style(cfg, 'queueNum').align};letter-spacing:4px;color:#000;${numBoxCss(box)}padding:1px 10px;display:inline-block;width:100%;box-sizing:border-box;margin:4px 0">${esc(d.display)}</div>`;
+        return `<div style="font-size:${numFs}pt;font-weight:900;text-align:${style(cfg, 'queueNum').align};letter-spacing:4px;color:#000;${numBoxCss(box)}padding:1px 10px;display:inline-block;width:100%;box-sizing:border-box;margin:4px 0">${esc(compactNum(d.display))}</div>`;
       },
       dateTime: () => {
         if (!cfg.showDateTime) return '';
         return `<div style="${textCss(style(cfg, 'dateTime'), cfg.dateFontSize || 9, 'margin:2px 0')}">${esc(d.date)} · ${esc(d.issuedAt)}</div>`;
+      },
+      // ข้อความบนบัตรคิว — set per queue type; one row per line, shrunk to fit like the printed slip
+      slipNote: () => {
+        if (cfg.showSlipNote === false || !d.slipNote) return '';
+        const st = style(cfg, 'slipNote'), fs = cfg.slipNoteFontSize || 11, w = paperSize(cfg).w - 6;
+        return String(d.slipNote).split(/\r?\n/).map(l => l.trim()).filter(Boolean).flatMap(l => noteRows(l, fs, w)).map(([t, f]) =>
+          `<div style="${textCss(st, f, 'margin:2px 0;white-space:pre;overflow:hidden')}">${esc(t)}</div>`).join('');
       },
       barcode: () => {
         const align = style(cfg, 'barcode').align;
@@ -171,7 +215,7 @@
       },
     };
 
-    const order = (cfg.layoutOrder && cfg.layoutOrder.length) ? cfg.layoutOrder : DEFAULT_ORDER;
+    const order = withSlipNote((cfg.layoutOrder && cfg.layoutOrder.length) ? cfg.layoutOrder : DEFAULT_ORDER);
     let h = '', lastWasDivider = true; // no divider at the very top
     for (const id of order) {
       let part = '';

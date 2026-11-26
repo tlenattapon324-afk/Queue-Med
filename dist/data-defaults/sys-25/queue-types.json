@@ -35,7 +35,8 @@
     "prefix": "2 -",
     "color": "#ef6c00",
     "forMode": "opd",
-    "payRule": "cash"
+    "payRule": "cash",
+    "slipNote": "กรุณารอเจ้าหน้าที่การเงินเรียกคิว เพื่อชำระค่ารักษาพยาบาล"
   },
   {
     "id": 7,
@@ -51,7 +52,8 @@
     "prefix": "5 -",
     "color": "#5c6bc0",
     "forMode": "opd",
-    "payRule": "dept"
+    "payRule": "dept",
+    "slipNote": "กรุณารอเจ้าหน้าที่ห้องยาเรียกคิว เพื่อรับยา"
   },
   {
     "id": 13,
@@ -59,7 +61,8 @@
     "prefix": "1 -",
     "color": "#0891b2",
     "forMode": "opd",
-    "payRule": "pttype"
+    "payRule": "pttype",
+    "slipNote": "กรุณารอเจ้าหน้าที่การเงินเรียกคิว เพื่อชำระค่ารักษาพยาบาล"
   },
   {
     "id": 14,
@@ -68,7 +71,8 @@
     "color": "#26a69a",
     "forMode": "opd",
     "payRule": "free",
-    "drugSize": "S"
+    "drugSize": "S",
+    "slipNote": "กรุณารอเจ้าหน้าที่ห้องยาเรียกคิว เพื่อรับยา"
   },
   {
     "id": 15,
@@ -77,6 +81,7 @@
     "color": "#00796b",
     "forMode": "opd",
     "payRule": "free",
-    "drugSize": "L"
+    "drugSize": "L",
+    "slipNote": "กรุณารอเจ้าหน้าที่ห้องยาเรียกคิว เพื่อรับยา"
   }
 ]

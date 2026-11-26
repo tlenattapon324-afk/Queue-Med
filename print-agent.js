@@ -8,13 +8,18 @@ const { exec } = require('child_process');
 const os   = require('os');
 const fs   = require('fs');
 const path = require('path');
-const { printSlip } = require('./slip-print');
+const { printSlip, listPrinters } = require('./slip-print');
 
 const PORT    = 3001;
 // When packaged as .exe (pkg), __dirname points inside the snapshot FS.
 // Use process.execPath dir so config file sits next to the .exe on disk.
 const APP_DIR     = typeof process.pkg !== 'undefined' ? path.dirname(process.execPath) : __dirname;
-const CONFIG_FILE = path.join(APP_DIR, 'local-print-config.json');
+// The install folder (C:\Program Files (x86)\...) is read-only for a normal user — saving there threw and
+// stopped the agent. The config now lives in the user's own folder; an older one next to the .exe is
+// still read the first time.
+const OLD_CONFIG  = path.join(APP_DIR, 'local-print-config.json');
+const CONFIG_DIR  = process.env.LOCALAPPDATA ? path.join(process.env.LOCALAPPDATA, 'QueuePrintAgent') : APP_DIR;
+const CONFIG_FILE = path.join(CONFIG_DIR, 'local-print-config.json');
 
 // ── Local print config ────────────────────────────────────────────────────
 const DEFAULT_CONFIG = {
@@ -32,16 +37,26 @@ const DEFAULT_CONFIG = {
 };
 
 function loadConfig() {
-  try {
-    return Object.assign({}, DEFAULT_CONFIG, JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8')));
-  } catch {
-    return Object.assign({}, DEFAULT_CONFIG);
+  for (const f of [CONFIG_FILE, OLD_CONFIG]) {
+    try { return Object.assign({}, DEFAULT_CONFIG, JSON.parse(fs.readFileSync(f, 'utf8'))); } catch {}
   }
+  return Object.assign({}, DEFAULT_CONFIG);
 }
 
+// returns an error message instead of throwing — a failed save must never stop the agent
 function saveConfig(cfg) {
-  fs.writeFileSync(CONFIG_FILE, JSON.stringify(cfg, null, 2), 'utf8');
+  try {
+    fs.mkdirSync(CONFIG_DIR, { recursive: true });
+    fs.writeFileSync(CONFIG_FILE, JSON.stringify(cfg, null, 2), 'utf8');
+    return null;
+  } catch (err) {
+    console.log(`Could not save config: ${err.message}`);
+    return err.message;
+  }
 }
+// last line of defence: log it and keep running
+process.on('uncaughtException',  err => console.log(`Error: ${err && err.message}`));
+process.on('unhandledRejection', err => console.log(`Error: ${err && err.message}`));
 
 let localCfg = loadConfig();
 
@@ -50,6 +65,8 @@ function cors(res) {
   res.setHeader('Access-Control-Allow-Origin',  '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  // Chrome: a page on the LAN (http://10.x.x.x:3000) calling this machine's localhost asks first
+  res.setHeader('Access-Control-Allow-Private-Network', 'true');
 }
 
 function readBody(req) {
@@ -66,13 +83,8 @@ function sendJson(res, obj, status = 200) {
   res.end(body);
 }
 
-function getPrinters(cb) {
-  exec('powershell -NoProfile -Command "Get-Printer | Select-Object -ExpandProperty Name"',
-    { timeout: 6000, windowsHide: true }, (err, stdout) => {
-      if (err) { cb([]); return; }
-      cb(stdout.split('\n').map(p => p.trim()).filter(Boolean));
-    });
-}
+// ?fresh=1 (the 🔄 button) reads the list again instead of the cached one
+const getPrinters = (cb, fresh) => listPrinters(cb, { maxAgeMs: fresh ? 0 : 60000 });
 
 // ── HTTP Server ───────────────────────────────────────────────────────────
 const server = http.createServer((req, res) => {
@@ -80,8 +92,8 @@ const server = http.createServer((req, res) => {
   if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
 
   // GET /api/printers
-  if (req.method === 'GET' && req.url === '/api/printers') {
-    getPrinters(printers => sendJson(res, { printers }));
+  if (req.method === 'GET' && req.url.split('?')[0] === '/api/printers') {
+    getPrinters((printers, error) => sendJson(res, { printers, error }), /[?&]fresh=1/.test(req.url));
     return;
   }
 
@@ -95,8 +107,9 @@ const server = http.createServer((req, res) => {
   if (req.method === 'POST' && req.url === '/api/print-config') {
     readBody(req).then(body => {
       Object.assign(localCfg, body);
-      saveConfig(localCfg);
-      sendJson(res, { success: true, printConfig: localCfg });
+      const err = saveConfig(localCfg);
+      sendJson(res, err ? { success: false, message: 'บันทึกค่าบนเครื่องนี้ไม่ได้: ' + err, printConfig: localCfg }
+                        : { success: true, printConfig: localCfg });
     });
     return;
   }
@@ -124,8 +137,17 @@ const server = http.createServer((req, res) => {
   res.writeHead(404); res.end('Not found');
 });
 
+// the console window has no Thai font — its messages stay in English
+server.on('error', err => {
+  console.log(err.code === 'EADDRINUSE'
+    ? `Port ${PORT} is already in use - Queue Print Agent may already be running on this PC.`
+    : `Error: ${err.message}`);
+  setTimeout(() => process.exit(1), 15000);
+});
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Queue Print Agent  http://localhost:${PORT}`);
   console.log(`Config: ${CONFIG_FILE}`);
-  console.log('พร้อมรับคำสั่งปริ้นจากเครื่องอื่น — กด Ctrl+C เพื่อหยุด');
+  console.log('Ready - keep this window open (minimize is OK). Closing it stops printing.');
+  // read the printer list now, so the first settings page doesn't wait for PowerShell
+  getPrinters((p, error) => console.log(p.length ? `Printers (${p.length}): ${p.join(' | ')}` : `No printers found${error ? ' - ' + error : ''}`));
 });

@@ -338,6 +338,12 @@
     .ni-cancel{margin-top:14px;width:100%;border:1.5px solid #fca5a5;background:#fff;color:#b91c1c;border-radius:12px;padding:12px;
       font-size:1.05rem;font-weight:800;cursor:pointer;font-family:inherit}
     .im-row.im-pay-row{grid-template-columns:1.1fr 1.6fr .7fr}
+    /* ข้อความบนบัตรคิว under each queue row */
+    .im-note-row{display:flex;align-items:center;gap:6px;margin:-2px 0 10px}
+    .im-note-ic{flex:0 0 auto;font-size:.9rem;opacity:.75}
+    .im-note{flex:1;min-width:0;border:1px dashed #cbd5e1;border-radius:9px;padding:6px 10px;font:inherit;font-size:.82rem;color:#0f766e;background:#f8fafc}
+    .im-note:focus{outline:none;border-style:solid;border-color:#14b8a6;background:#fff}
+    .im-note::placeholder{color:#94a3b8}
     .im-tag{font-weight:800;font-size:.92rem;border-radius:8px;padding:8px 10px;text-align:center}
     .im-tag.cash{background:#fff3e0;color:#c2410c}
     .im-tag.free{background:#e0f2f1;color:#0f766e}
@@ -1764,11 +1770,51 @@ function updateIssueModeLbl() {
 let _imRules = [];
 let _pttypes = null, _edc = new Set();
 let _depts = null, _dept = new Set(), _deptView = [];
+// ข้อความบนบัตรคิว — one box under each queue row of "ออกคิวตามสิทธิ / ค่าใช้จ่าย" (saved on the queue type;
+// the same note as ตั้งค่า → ประเภทคิว → แก้ไข)
+const NOTE_ROWS = [['cash', 'payCashName'], ['free', 'payFreeName'], ['cashS', 'payCashSName'], ['cashL', 'payCashLName'],
+  ['freeS', 'payFreeSName'], ['freeL', 'payFreeLName'], ['noDrug', 'payNoDrugName'], ['pttype', 'payPtName'], ['dept', 'payDeptName']];
+const noteId = k => 'note_' + k;
+function ensureNoteInputs() {
+  for (const [k, nameId] of NOTE_ROWS) {
+    if (document.getElementById(noteId(k))) continue;
+    const row = document.getElementById(nameId)?.closest('.im-pay-row');
+    if (!row) continue;
+    row.insertAdjacentHTML('afterend', `<div class="im-note-row"><span class="im-note-ic" title="ข้อความบนบัตรคิว">🧾</span>` +
+      `<input id="${noteId(k)}" class="im-note" maxlength="200" placeholder="ข้อความบนบัตรคิว เช่น กรุณารอเจ้าหน้าที่…เรียกคิว (ไม่ใส่ = ไม่พิมพ์)"/></div>`);
+  }
+}
+function loadNotes(pay) {
+  ensureNoteInputs();
+  const typeOf = k => {
+    const id = { pttype: pay.ptTypeId, dept: pay.deptTypeId }[k] ?? pay[k + 'TypeId'];
+    return (queueTypes || []).find(t => t.id === id) || null;
+  };
+  for (const [k] of NOTE_ROWS) {
+    const el = document.getElementById(noteId(k));
+    if (!el) continue;
+    // ไม่มียา → its queue type lives in the cashier room (not in this list): the server keeps it when left alone
+    el.value = (typeOf(k) || {}).slipNote || (k === 'noDrug' ? (pay.noDrugNote || '') : '');
+    el.dataset.orig = el.value;
+  }
+}
+// sent only for boxes on screen; ไม่มียา only when changed (its note can't be read here)
+function collectNotes() {
+  const out = {};
+  for (const [k] of NOTE_ROWS) {
+    const el = document.getElementById(noteId(k));
+    if (!el || (k === 'noDrug' && el.value === el.dataset.orig)) continue;
+    out[k] = el.value;
+  }
+  return out;
+}
+
 function openIssueMode() {
   _imRules = (issueMode.rules || []).length
     ? issueMode.rules.map(r => ({ ...r }))
     : [{ name: 'ยาน้อย', min: 1, max: 3, prefix: 'S' }, { name: 'ยามาก', min: 4, max: 10, prefix: 'L' }];
   const pay = issueMode.pay || {};
+  loadNotes(pay);
   document.getElementById('payCashName').value   = pay.cashName   || 'ไปการเงิน';
   document.getElementById('payCashPrefix').value = pay.cashPrefix || 'F';
   document.getElementById('payFreeName').value   = pay.freeName   || 'ไม่ผ่านการเงิน';
@@ -1862,8 +1908,15 @@ function syncDrugSplitUI() {
   const cash = document.getElementById('payDrugCash').checked, free = document.getElementById('payDrugFree').checked;
   document.getElementById('drugSplitBody').style.display = on ? '' : 'none';
   // the size rows of an unticked route are hidden; its F / N row above stays in use
-  for (const id of ['payCashSRow', 'payCashLRow']) document.getElementById(id).style.display = cash ? '' : 'none';
-  for (const id of ['payFreeSRow', 'payFreeLRow']) document.getElementById(id).style.display = free ? '' : 'none';
+  // (each row's ข้อความบนบัตรคิว box below it goes with it)
+  const showRow = (id, on) => {
+    const row = document.getElementById(id);
+    row.style.display = on ? '' : 'none';
+    const note = row.nextElementSibling;
+    if (note && note.classList.contains('im-note-row')) note.style.display = on ? '' : 'none';
+  };
+  for (const id of ['payCashSRow', 'payCashLRow']) showRow(id, cash);
+  for (const id of ['payFreeSRow', 'payFreeLRow']) showRow(id, free);
   // ยา 0 รายการ never gets a pharmacy queue; the top row (F / N) is only used for 1..min-1 drugs when min > 1
   const min = Math.max(1, Number(document.getElementById('payDrugMin').value) || 1);
   const max = Number(document.getElementById('payDrugMax').value) || 0;
@@ -2124,6 +2177,7 @@ async function saveIssueMode() {
     ...Object.fromEntries(Object.keys(PAY_LABEL_DEF).map(k => [k + 'Label', v(labelId(k)).trim() || PAY_LABEL_DEF[k]])),
     noDrugOn: document.getElementById('payNoDrugOn').checked, noDrugSysId: Number(v('payNoDrugSys')) || null,
     noDrugName: v('payNoDrugName'), noDrugPrefix: v('payNoDrugPrefix'),
+    slipNotes: collectNotes(),
   } : issueMode.pay;
   const r = await fetch(`/api/sys/${sysId}/issue-mode`, { method: 'PUT', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ mode, rules: rules.map(x => ({ ...x, min: Number(x.min), max: Number(x.max) })), pay,
@@ -2471,6 +2525,8 @@ function doPrint(ticket, opts) {
     display:     ticket.display,
     date:        ticket.date,
     issuedAt:    ticket.issuedAt,
+    // ข้อความบนบัตรคิว (set per queue type) — older tickets: the type's current note
+    slipNote:    ticket.slipNote || ((queueTypes || []).find(q => q.id === ticket.typeId) || {}).slipNote || null,
   };
   // Barcode/QR is rendered here and sent as an image — server / Print Agent cannot draw it
   data.codeImgs = SlipRender.codeImages(printConfig, data);

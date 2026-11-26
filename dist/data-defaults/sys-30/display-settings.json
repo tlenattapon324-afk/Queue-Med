@@ -289,7 +289,8 @@
           "vtParkedHeaderBg": "#a6e8c6",
           "vtParkedHeaderFontSize": 52,
           "vtParkedHeaderHeight": 100,
-          "vtParkedHeaderColor": "#000000"
+          "vtParkedHeaderColor": "#000000",
+          "vtNoShowAutoScroll": false
         }
       },
       "theme": "blue",

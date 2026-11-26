@@ -1,12 +1,12 @@
 ﻿[Setup]
 AppName=ระบบคิว (Queue System)
-AppVersion=3.2.0
-AppVerName=ระบบคิว (Queue System) v3.2.0
+AppVersion=3.3.0
+AppVerName=ระบบคิว (Queue System) v3.3.0
 AppPublisher=Hospital Queue System
 AppId={{A3F2C1D0-4E5B-6F7A-8B9C-0D1E2F3A4B5C}
 DefaultDirName={autopf}\QueueSystem
 OutputDir=.
-OutputBaseFilename=Queue-Setup-Full-v3.2.0
+OutputBaseFilename=Queue-Setup-Full-v3.3.0
 SetupIconFile=..\assets\icons\setup.ico
 WizardSmallImageFile=..\assets\icons\wizard-small-55.bmp,..\assets\icons\wizard-small-110.bmp
 Compression=lzma2/ultra64

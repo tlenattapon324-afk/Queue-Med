@@ -2,21 +2,21 @@
   "paperSize": "80mm",
   "customWidth": "80",
   "customHeight": "190",
-  "printerName": "Xprinter XP-80",
-  "showHeader": true,
+  "printerName": "Snagit 12",
+  "showHeader": false,
   "headerName": "",
-  "headerSubtitle": "ระบบแสดงคิว",
+  "headerSubtitle": "",
   "headerFontSize": 18,
   "showDividerLine": true,
   "showPatientName": true,
   "showHnQn": true,
   "patientFontSize": 11,
-  "showQueueType": true,
+  "showQueueType": false,
   "queueTypeFontSize": 11,
   "queueNumFontSize": 60,
-  "showDateTime": true,
+  "showDateTime": false,
   "dateFontSize": 9,
-  "showFooter": true,
+  "showFooter": false,
   "footerText": "กรุณานั่งรอเรียกหมายเลขของท่าน\n",
   "footerFontSize": 8,
   "autoPrint": true,
@@ -25,9 +25,9 @@
   "barcodeSource": "hn",
   "queueTypePosition": "above",
   "barcodeType": "code128",
-  "barcodeHeight": 10,
+  "barcodeHeight": 6,
   "qrSize": 25,
-  "barcodeShowText": true,
+  "barcodeShowText": false,
   "showLogo": false,
   "logoData": "",
   "logoAspect": 1,
@@ -35,7 +35,7 @@
   "showPttype": false,
   "pttypeLabel": "สิทธิ: ",
   "pttypeFontSize": 10,
-  "numBoxStyle": "thick",
+  "numBoxStyle": "thin",
   "dividerStyle": "solid",
   "sectionStyles": {
     "header": {
@@ -45,6 +45,16 @@
     },
     "barcode": {
       "align": "center"
+    },
+    "hnQn": {
+      "align": "center",
+      "bold": false,
+      "color": "black"
+    },
+    "slipNote": {
+      "align": "center",
+      "bold": false,
+      "color": "black"
     }
   },
   "customTexts": [],
@@ -57,6 +67,7 @@
     "queueType",
     "queueNum",
     "barcode",
+    "slipNote",
     "dateTime",
     "footer",
     "divider"
@@ -66,5 +77,11 @@
     "hn"
   ],
   "offsetX": 0,
-  "offsetY": 0
+  "offsetY": 0,
+  "subtitleFontSize": 15,
+  "hnQnFontSize": 9,
+  "hnQnPosition": "below",
+  "showSlipNote": true,
+  "slipNoteFontSize": 10,
+  "barcodeTextSize": 22
 }

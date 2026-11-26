@@ -180,6 +180,9 @@
       border:none;border-radius:10px;padding:11px;font-size:.88rem;font-weight:700;
       cursor:pointer;font-family:inherit;width:100%;transition:opacity .2s}
     .pd-test-btn:hover{opacity:.85}
+    .pd-save-state{font-size:.78rem;text-align:center;margin-top:6px;min-height:1em;color:#64748b}
+    .pd-save-state.saved{color:#15803d}
+    .pd-save-state.error{color:#c62828;font-weight:700}
     .pd-save-btn{background:linear-gradient(135deg,#42a5f5,#1565c0);color:#fff;
       border:none;border-radius:12px;padding:14px;font-size:.95rem;font-weight:700;
       cursor:pointer;font-family:inherit;width:100%;transition:opacity .2s}
@@ -689,7 +692,7 @@
             <select id="pdLocalPrinter" onchange="saveLocalPrinter()">
               <option value="">— กำลังโหลด... —</option>
             </select>
-            <button class="pd-ref-btn" onclick="loadLocalPrinters()">↺ รีเฟรช</button>
+            <button class="pd-ref-btn" onclick="loadLocalPrinters(true)">↺ รีเฟรช</button>
           </div>
           <div class="pd-hint" id="pdLocalPrinterHint">💡 รายชื่อเครื่องพิมพ์บนเครื่องนี้ — ระบบจะปริ้นโดยตรงโดยไม่ผ่าน dialog</div>
         </div>
@@ -730,9 +733,15 @@
               <input type="text" id="pdHeaderSub" oninput="updatePreview()"/></div>
             <div class="pd-field"><label>ขนาดตัวอักษร</label>
               <div class="pd-range-row">
-                <input type="range" id="pdHeaderFs" min="8" max="22" value="14"
+                <input type="range" id="pdHeaderFs" min="8" max="36" value="14"
                   oninput="document.getElementById('pdHeaderFsV').textContent=this.value+'pt';updatePreview()"/>
                 <span class="pd-range-val" id="pdHeaderFsV">14pt</span>
+              </div></div>
+            <div class="pd-field"><label>ขนาดตัวอักษรข้อความรอง</label>
+              <div class="pd-range-row">
+                <input type="range" id="pdSubFs" min="6" max="30" value="11"
+                  oninput="document.getElementById('pdSubFsV').textContent=this.value+'pt';updatePreview()"/>
+                <span class="pd-range-val" id="pdSubFsV">11pt</span>
               </div></div>
           </div>
         </div>
@@ -757,12 +766,25 @@
               </div></div>
             <div class="pd-hint">💡 ดึงจากสิทธิของ visit (ovst.pttype → pttype.name) ตอนค้นหาผู้ป่วย — ถ้าออกคิวแบบไม่ผูกผู้ป่วยจะไม่แสดง</div>
           </div>
-          <div class="pd-field"><label>ขนาดตัวอักษร</label>
+          <div class="pd-field"><label>ขนาดตัวอักษรชื่อผู้ป่วย</label>
             <div class="pd-range-row">
-              <input type="range" id="pdPtFs" min="7" max="18" value="11"
+              <input type="range" id="pdPtFs" min="7" max="30" value="11"
                 oninput="document.getElementById('pdPtFsV').textContent=this.value+'pt';updatePreview()"/>
               <span class="pd-range-val" id="pdPtFsV">11pt</span>
             </div></div>
+          <div class="pd-field"><label>ขนาดตัวอักษร HN / QN</label>
+            <div class="pd-range-row">
+              <input type="range" id="pdHnFs" min="6" max="30" value="9"
+                oninput="document.getElementById('pdHnFsV').textContent=this.value+'pt';updatePreview()"/>
+              <span class="pd-range-val" id="pdHnFsV">9pt</span>
+            </div></div>
+          <div class="pd-field"><label>ตำแหน่ง HN / QN</label>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:4px">
+              <label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="radio" name="pdHnPos" id="pdHnPosBelow" value="below" onchange="updatePreview()" checked> บรรทัดของตัวเอง</label>
+              <label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="radio" name="pdHnPos" id="pdHnPosLeft" value="left" onchange="updatePreview()"> ต่อชื่อ ทางซ้าย</label>
+              <label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="radio" name="pdHnPos" id="pdHnPosRight" value="right" onchange="updatePreview()"> ต่อชื่อ ทางขวา</label>
+            </div>
+            <div class="pd-hint">💡 ต่อชื่อ: HN / QN อยู่บรรทัดเดียวกับชื่อผู้ป่วย ใช้ขนาดและรูปแบบของชื่อผู้ป่วย — ถ้ายาวเกินกระดาษ ตัวอักษรจะเล็กลงให้พอดี 1 บรรทัด</div></div>
         </div>
 
         <!-- Queue number -->
@@ -802,6 +824,15 @@
               <option value="inverse">พื้นดำ ตัวเลขขาว</option>
             </select></div>
           <div class="pd-style" data-sec="queueNum" data-opts="align" data-label="หมายเลขคิว"></div>
+          <label class="pd-ck"><input type="checkbox" id="pdShowSlipNote" onchange="updatePreview()" checked><span>🧭 แสดงข้อความตามประเภทคิว</span></label>
+          <div class="pd-style" data-sec="slipNote" data-label="ข้อความ"></div>
+          <div class="pd-field"><label>ขนาดตัวอักษรข้อความตามประเภทคิว</label>
+            <div class="pd-range-row">
+              <input type="range" id="pdSlipNoteFs" min="7" max="24" value="11"
+                oninput="document.getElementById('pdSlipNoteFsV').textContent=this.value+'pt';updatePreview()"/>
+              <span class="pd-range-val" id="pdSlipNoteFsV">11pt</span>
+            </div></div>
+          <div class="pd-hint">💡 ตั้งข้อความของแต่ละประเภทคิวที่แท็บ ประเภทคิว → แก้ไข → "ข้อความบนบัตรคิว" — ประเภทที่ไม่ใส่ข้อความจะไม่พิมพ์ (ตัวอย่างด้านขวาเป็นข้อความสมมติ)</div>
           <label class="pd-ck"><input type="checkbox" id="pdShowDt" onchange="updatePreview()"><span>แสดงวันที่ / เวลา</span></label>
           <div class="pd-style" data-sec="dateTime" data-label="วันที่/เวลา"></div>
           <div class="pd-field"><label>ขนาดตัวอักษรวันที่</label>
@@ -835,6 +866,12 @@
                 <span class="pd-range-val" id="pdQrSizeV">25mm</span>
               </div></div>
             <label class="pd-ck"><input type="checkbox" id="pdBarcodeText" onchange="updatePreview()" checked><span>แสดงตัวเลขใต้บาร์โค้ด</span></label>
+            <div class="pd-field"><label>ขนาดตัวเลขใต้บาร์โค้ด</label>
+              <div class="pd-range-row">
+                <input type="range" id="pdBarcodeTextFs" min="12" max="60" value="22"
+                  oninput="document.getElementById('pdBarcodeTextFsV').textContent=this.value;updatePreview()"/>
+                <span class="pd-range-val" id="pdBarcodeTextFsV">22</span>
+              </div></div>
             <div class="pd-style" data-sec="barcode" data-opts="align" data-label="ตำแหน่ง"></div>
             <div class="pd-field"><label>ข้อมูลที่ใช้สร้างบาร์โค้ด (ติ๊กได้มากกว่า 1)</label>
               <div class="pd-radio-row" style="flex-direction:column;gap:8px;margin-top:6px">
@@ -918,6 +955,7 @@
         </div>
 
         <button class="pd-save-btn" onclick="savePrintCfg()">💾 บันทึกการตั้งค่า</button>
+        <div class="pd-save-state" id="pdSaveState"></div>
       </div>
 
       <!-- RIGHT: live preview -->
@@ -1281,6 +1319,12 @@
           </label>
         </div>
       </div>
+      <div class="field" style="width:100%">
+        <label>ข้อความบนบัตรคิว <span style="font-weight:400;color:#64748b">(ไม่ใส่ = ไม่พิมพ์)</span></label>
+        <textarea id="etSlipNote" rows="2" maxlength="200" style="width:100%;resize:vertical;font-family:inherit;font-size:.9rem;padding:8px 10px;border:1px solid #c7dbf3;border-radius:10px"
+          placeholder="เช่น กรุณารอเจ้าหน้าที่การเงินเรียกคิว เพื่อชำระค่ารักษาพยาบาล"></textarea>
+        <div style="font-size:.72rem;color:#64748b;margin-top:4px">พิมพ์ใต้หมายเลขคิว บอกคนไข้ว่าต้องไปไหนต่อ · ขึ้นบรรทัดใหม่ได้ (สูงสุด 3 บรรทัด) · ปรับขนาด/ตำแหน่งที่แท็บ แบบฟอร์มปริ้น</div>
+      </div>
     </div>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closeModal('modalType')">ยกเลิก</button>
@@ -1502,6 +1546,7 @@ function renderTypes() {
       <div class="item-info">
         <div class="i-name">${t.name} &nbsp;${modeBadge}</div>
         <div class="i-meta">${t.prefix ? `Prefix: <b>${t.prefix}</b>` : '<b style="color:#c2410c">ไม่ใช้ Prefix</b> (ตัวเลขล้วน)'} &nbsp;|&nbsp; ${t.color}</div>
+        ${t.slipNote ? `<div class="i-meta" style="color:#0f766e">🧾 บนบัตรคิว: ${String(t.slipNote).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])).replace(/\n/g, ' / ')}</div>` : ''}
       </div>
       <div class="item-actions">
         <button class="btn-edit" onclick="openEditType(${t.id})">แก้ไข</button>
@@ -1545,6 +1590,7 @@ function openEditType(id) {
   buildColorPicker('etColorRow', editTypeColor, c => { editTypeColor = c; });
   document.getElementById('etForOpd').checked = !t.forMode || t.forMode === 'opd' || t.forMode === 'both';
   document.getElementById('etForIpd').checked = !t.forMode || t.forMode === 'ipd' || t.forMode === 'both';
+  document.getElementById('etSlipNote').value = t.slipNote || '';
   document.getElementById('modalType').classList.add('open');
 }
 function saveType() {
@@ -1557,7 +1603,7 @@ function saveType() {
   const forIpd = document.getElementById('etForIpd').checked;
   const forMode = (forOpd && forIpd) ? 'both' : forOpd ? 'opd' : forIpd ? 'ipd' : 'both';
   fetch(`/api/sys/${sysId}/queue-types/${editTypeId}`, { method:'PUT', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ name, prefix, color: editTypeColor, forMode }) })
+    body: JSON.stringify({ name, prefix, color: editTypeColor, forMode, slipNote: document.getElementById('etSlipNote').value }) })
   .then(r=>r.json()).then(d => { if (d.success) { closeModal('modalType'); toast('บันทึกสำเร็จ'); } else toast(d.message); });
 }
 function deleteType(id, name) {
@@ -1671,6 +1717,11 @@ fetch(`/api/sys/${sysId}/status`).then(r=>r.json()).then(d => {
   if (d.sysInfo) {
     document.getElementById('sysBadgeIcon').textContent = d.sysInfo.icon || '📋';
     document.getElementById('sysBadgeName').textContent = d.sysInfo.name;
+    // the slip's heading when "ชื่อสถานพยาบาล / หัวข้อหลัก" is left empty is this room's name — show it as such
+    pdSysName = d.sysInfo.name || '';
+    const hn = document.getElementById('pdHeaderName');
+    if (hn) hn.placeholder = `ไม่ใส่ = ใช้ชื่อห้อง "${pdSysName}"`;
+    if (typeof printTabLoaded !== 'undefined' && printTabLoaded) updatePreview();
     document.title = `ตั้งค่า — ${d.sysInfo.name}`;
   }
   renderTypes(); renderCounters(); renderTicker();
@@ -1681,10 +1732,11 @@ const PD_SAMPLE = {
   sysName:'โรงพยาบาลตัวอย่าง', patientName:'นาย สมชาย ใจดี',
   hn:'12345', qn:'001', pttypeName:'บัตรทอง (UC)', typeName:'ทั่วไป', prefix:'A',
   display:'A001', issuedAt:'09:30:00', date:'7/5/2568',
+  slipNote:'กรุณารอเจ้าหน้าที่การเงินเรียกคิว เพื่อชำระค่ารักษาพยาบาล',
 };
 let pdCurrentSize = '80mm';
 let pdSysName = '';
-let pdLayoutOrder = ['logo', 'header', 'patientName', 'hnQn', 'pttype', 'queueType', 'queueNum', 'barcode', 'dateTime', 'footer'];
+let pdLayoutOrder = ['logo', 'header', 'patientName', 'hnQn', 'pttype', 'queueType', 'queueNum', 'slipNote', 'barcode', 'dateTime', 'footer'];
 let pdSectionStyles = {};   // { sectionId: { align, bold, color } }
 let pdCustomTexts   = [];   // [{ id, text, fs, align, bold, color }]
 let pdLogo          = { data: '', aspect: 1 };
@@ -1697,6 +1749,7 @@ const pdLayoutItems = {
   'pttype': { label: '💳 สิทธิการรักษา', icon: '💳' },
   'queueType': { label: '🏷 ประเภทคิว', icon: '🏷' },
   'queueNum': { label: '🔢 หมายเลขคิว', icon: '🔢' },
+  'slipNote': { label: '🧭 ข้อความตามประเภทคิว', icon: '🧭' },
   'barcode': { label: '📊 บาร์โค้ด', icon: '📊' },
   'dateTime': { label: '📅 วันที่/เวลา', icon: '📅' },
   'footer': { label: '📝 ข้อความท้าย', icon: '📝' },
@@ -1708,13 +1761,16 @@ function printCfgUrl() {
 }
 
 function loadPrintCfg() {
+  _pdSavedJson = null;   // auto-save waits until the saved form is on screen
   fetch(printCfgUrl(), { signal: AbortSignal.timeout(4000) })
     .then(r => r.json())
-    .then(cfg => { applyPrintCfgToForm(cfg); updatePreview(); })
+    .then(cfg => { applyPrintCfgToForm(cfg); updatePreview(); pdArmAutoSave(); })
     .catch(() => {
-      // fallback to server config if agent unreachable
+      // fallback to server config if agent unreachable — shown, but not auto-saved to the agent
       fetch(`/api/sys/${sysId}/print-config`).then(r=>r.json()).then(cfg => {
         applyPrintCfgToForm(cfg); updatePreview();
+        if ((localStorage.getItem('queuePrintMode') || 'host') === 'host') pdArmAutoSave();
+        else pdSaveState('error', 'เชื่อมต่อ Print Agent เครื่องนี้ไม่ได้ — แสดงค่าของ Server แทน และยังไม่บันทึกอัตโนมัติ');
       });
     });
 }
@@ -1737,10 +1793,12 @@ function applyPrintCfgToForm(cfg) {
   const sh = !!cfg.showHeader;
   document.getElementById('pdShowHeader').checked = sh;
   document.getElementById('pdHeaderName').value   = cfg.headerName    || '';
-  document.getElementById('pdHeaderSub').value    = cfg.headerSubtitle || 'ระบบแสดงคิว';
+  // empty stays empty (it used to come back as "ระบบแสดงคิว" every time the page opened)
+  document.getElementById('pdHeaderSub').value    = cfg.headerSubtitle != null ? cfg.headerSubtitle : '';
   const hfs = cfg.headerFontSize || 14;
   document.getElementById('pdHeaderFs').value = hfs;
   document.getElementById('pdHeaderFsV').textContent = hfs + 'pt';
+  setRange('pdSubFs', cfg.subtitleFontSize || Math.max(7, hfs - 3), 'pt');   // older settings: 3pt under the header
   togglePdSection('pdHeaderFields', { checked: sh });
   // Patient
   document.getElementById('pdShowPt').checked = cfg.showPatientName !== false;
@@ -1748,6 +1806,8 @@ function applyPrintCfgToForm(cfg) {
   const pfs = cfg.patientFontSize || 11;
   document.getElementById('pdPtFs').value = pfs;
   document.getElementById('pdPtFsV').textContent = pfs + 'pt';
+  setRange('pdHnFs', cfg.hnQnFontSize || Math.max(7, pfs - 2), 'pt');       // older settings: 2pt under the name
+  document.getElementById({ left: 'pdHnPosLeft', right: 'pdHnPosRight' }[cfg.hnQnPosition] || 'pdHnPosBelow').checked = true;
   // Queue number
   const showType = cfg.showQueueType !== false;
   document.getElementById('pdShowType').checked = showType;
@@ -1762,6 +1822,8 @@ function applyPrintCfgToForm(cfg) {
   document.getElementById('pdNumFs').value = nfs;
   document.getElementById('pdNumFsV').textContent = nfs + 'pt';
   document.getElementById('pdShowDt').checked = cfg.showDateTime !== false;
+  document.getElementById('pdShowSlipNote').checked = cfg.showSlipNote !== false;
+  setRange('pdSlipNoteFs', cfg.slipNoteFontSize || 11, 'pt');
   // Footer
   const sf = !!cfg.showFooter;
   document.getElementById('pdShowFooter').checked = sf;
@@ -1797,6 +1859,7 @@ function applyPrintCfgToForm(cfg) {
   setRange('pdBarcodeH', cfg.barcodeHeight || 10, 'mm');
   setRange('pdQrSize',   cfg.qrSize || 25, 'mm');
   document.getElementById('pdBarcodeText').checked = cfg.barcodeShowText !== false;
+  setRange('pdBarcodeTextFs', cfg.barcodeTextSize || 22, '');
   syncBarcodeTypeFields();
   // Logo
   const sl = !!cfg.showLogo;
@@ -1824,6 +1887,10 @@ function applyPrintCfgToForm(cfg) {
     pdLayoutOrder = cfg.layoutOrder.slice();
     if (!pdLayoutOrder.includes('barcode')) pdLayoutOrder.push('barcode');
     if (!pdLayoutOrder.includes('logo'))    pdLayoutOrder.unshift('logo');
+    if (!pdLayoutOrder.includes('slipNote')) {
+      const at = pdLayoutOrder.indexOf('queueNum');
+      pdLayoutOrder.splice(at >= 0 ? at + 1 : pdLayoutOrder.length, 0, 'slipNote');
+    }
     if (!pdLayoutOrder.includes('pttype')) {
       const at = pdLayoutOrder.indexOf('hnQn');
       pdLayoutOrder.splice(at >= 0 ? at + 1 : pdLayoutOrder.length, 0, 'pttype');
@@ -1857,6 +1924,12 @@ function collectPrintCfg() {
     headerName:       document.getElementById('pdHeaderName').value.trim(),
     headerSubtitle:   document.getElementById('pdHeaderSub').value.trim(),
     headerFontSize:   Number(document.getElementById('pdHeaderFs').value),
+    subtitleFontSize: Number(document.getElementById('pdSubFs').value),
+    hnQnFontSize:     Number(document.getElementById('pdHnFs').value),
+    hnQnPosition:     document.querySelector('input[name="pdHnPos"]:checked')?.value || 'below',
+    showSlipNote:     document.getElementById('pdShowSlipNote').checked,
+    slipNoteFontSize: Number(document.getElementById('pdSlipNoteFs').value) || 11,
+    barcodeTextSize:  Number(document.getElementById('pdBarcodeTextFs').value) || 22,
     showDividerLine:  document.getElementById('pdShowDivider').checked,
     showPatientName:  document.getElementById('pdShowPt').checked,
     showHnQn:         document.getElementById('pdShowHn').checked,
@@ -2121,7 +2194,10 @@ function updatePreview() {
     updateAuto();
     SlipRender.whenImagesReady(el).then(updateAuto); // logo / barcode change the height once loaded
   }
+  pdScheduleAutoSave();   // every change on this tab ends here — remember it
 }
+// controls that don't redraw the preview (printer list, copies…) are remembered too
+document.getElementById('pane-print').addEventListener('change', () => pdScheduleAutoSave());
 
 // Shared with queue.html and matches server / Print Agent output (public/slip-render.js)
 function renderSlipHtml(cfg, d) {
@@ -2164,26 +2240,37 @@ function loadPrintMode() {
   setPrintMode(mode);
 }
 
-function loadLocalPrinters() {
+// The Print Agent on this PC lists its printers (PowerShell — the first read can take several seconds
+// on a slow PC, so the wait is long). A saved printer that isn't in the list is still shown and kept.
+function loadLocalPrinters(fresh) {
   const sel  = document.getElementById('pdLocalPrinter');
   const hint = document.getElementById('pdLocalPrinterHint');
-  sel.innerHTML = '<option value="">— กำลังโหลด... —</option>';
-  fetch('http://localhost:3001/api/printers', { signal: AbortSignal.timeout(4000) })
+  const saved = localStorage.getItem('queueLocalPrinter') || '';
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const keepSaved = () => saved ? `<option value="${esc(saved)}" selected>${esc(saved)} (ที่เลือกไว้)</option>` : '';
+  sel.innerHTML = '<option value="">— กำลังโหลดรายชื่อเครื่องพิมพ์... —</option>';
+  hint.textContent = '⏳ กำลังถาม Queue Print Agent บนเครื่องนี้ (ครั้งแรกอาจใช้เวลา 5–15 วินาที)';
+  fetch('http://localhost:3001/api/printers' + (fresh ? '?fresh=1' : ''), { signal: AbortSignal.timeout(35000) })
     .then(r => r.json())
     .then(d => {
-      const saved = localStorage.getItem('queueLocalPrinter') || '';
-      if (!d.printers || !d.printers.length) {
-        sel.innerHTML = '<option value="">— ไม่พบเครื่องพิมพ์ —</option>';
-        hint.textContent = '⚠️ ไม่พบเครื่องพิมพ์ — ตรวจสอบว่าเครื่องนี้ติดตั้ง ระบบแสดงคิว แล้ว';
+      const list = d.printers || [];
+      if (!list.length) {
+        sel.innerHTML = '<option value="">— ไม่พบเครื่องพิมพ์ —</option>' + keepSaved();
+        hint.textContent = '⚠️ Print Agent ทำงานอยู่ แต่ไม่พบเครื่องพิมพ์ในเครื่องนี้' + (d.error ? ` (${d.error})` : '') +
+          ' — ตรวจว่าติดตั้งไดรเวอร์เครื่องพิมพ์ใน Windows แล้ว (Settings → Printers & scanners) แล้วกด ↺ รีเฟรช';
         return;
       }
       sel.innerHTML = '<option value="">— เลือกเครื่องพิมพ์ —</option>' +
-        d.printers.map(p => `<option value="${p}"${p === saved ? ' selected' : ''}>${p}</option>`).join('');
-      hint.textContent = '💡 ระบบจะปริ้นโดยตรงไปยังเครื่องพิมพ์ที่เลือก โดยไม่ผ่าน dialog';
+        (saved && !list.includes(saved) ? keepSaved() : '') +
+        list.map(p => `<option value="${esc(p)}"${p === saved ? ' selected' : ''}>${esc(p)}</option>`).join('');
+      hint.textContent = `💡 พบ ${list.length} เครื่องพิมพ์ — ระบบจะปริ้นโดยตรงไปยังเครื่องที่เลือก โดยไม่ผ่าน dialog`;
     })
-    .catch(() => {
-      sel.innerHTML = '<option value="">— เชื่อมต่อไม่ได้ —</option>';
-      hint.textContent = '⚠️ ไม่สามารถดึงรายชื่อเครื่องพิมพ์ได้ — กรุณารัน start-print-agent.bat บนเครื่องนี้ก่อน';
+    .catch(err => {
+      sel.innerHTML = '<option value="">— เชื่อมต่อ Print Agent ไม่ได้ —</option>' + keepSaved();
+      hint.textContent = err && err.name === 'TimeoutError'
+        ? '⚠️ Print Agent ตอบช้าเกินไป — กด ↺ รีเฟรช อีกครั้ง'
+        : '⚠️ เชื่อมต่อ Queue Print Agent บนเครื่องนี้ไม่ได้ — ตรวจว่าเปิด Queue Print Agent ไว้ (Start → Queue Print Agent) และถ้า Chrome ถามเรื่อง ' +
+          '"อุปกรณ์ในเครือข่าย / แอปในเครื่องนี้" ให้กด Allow (หรือ ไอคอนหน้า URL → Site settings → Local network access → Allow) แล้วกด ↺ รีเฟรช';
     });
 }
 
@@ -2193,18 +2280,43 @@ function saveLocalPrinter() {
   else     localStorage.removeItem('queueLocalPrinter');
 }
 
-function savePrintCfg() {
+// silent = the auto-save after each change (a short note instead of the big toast)
+function savePrintCfg(silent) {
+  clearTimeout(_pdAutoTimer);
   const cfg  = collectPrintCfg();
+  const json = JSON.stringify(cfg);
   const mode = localStorage.getItem('queuePrintMode') || 'host';
-  const targets = mode === 'local'
-    ? ['http://localhost:3001/api/print-config']
-    : [`/api/sys/${sysId}/print-config`];
-
-  Promise.all(targets.map(url =>
-    fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(cfg) })
-      .then(r => r.json())
-  )).then(() => toast('✓ บันทึกแบบฟอร์มปริ้นสำเร็จ'))
-    .catch(() => toast('เกิดข้อผิดพลาด'));
+  const url  = mode === 'local' ? 'http://localhost:3001/api/print-config' : `/api/sys/${sysId}/print-config`;
+  pdSaveState('saving');
+  return fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: json })
+    .then(r => r.json())
+    .then(d => {
+      if (d && d.success === false) throw new Error(d.message || 'บันทึกไม่สำเร็จ');
+      _pdSavedJson = json;
+      pdSaveState('saved');
+      if (!silent) toast('✓ บันทึกแบบฟอร์มปริ้นสำเร็จ');
+    })
+    .catch(err => {
+      pdSaveState('error', mode === 'local' ? 'บันทึกที่ Print Agent เครื่องนี้ไม่ได้' : (err.message || 'บันทึกไม่สำเร็จ'));
+      toast('✗ ' + (mode === 'local' ? 'บันทึกที่ Print Agent เครื่องนี้ไม่ได้ — ตรวจว่าเปิด Agent ไว้' : (err.message || 'บันทึกไม่สำเร็จ')));
+    });
+}
+// ── จำค่าล่าสุด: every change is saved by itself (no need to press 💾) ──
+// Armed only once the saved form has been loaded, so the defaults shown while loading are never saved over it.
+let _pdSavedJson = null, _pdAutoTimer = null;
+function pdArmAutoSave() { _pdSavedJson = JSON.stringify(collectPrintCfg()); pdSaveState('saved'); }
+function pdScheduleAutoSave() {
+  if (_pdSavedJson === null) return;
+  clearTimeout(_pdAutoTimer);
+  _pdAutoTimer = setTimeout(() => {
+    if (JSON.stringify(collectPrintCfg()) !== _pdSavedJson) savePrintCfg(true);
+  }, 700);
+}
+function pdSaveState(st, msg) {
+  const el = document.getElementById('pdSaveState');
+  if (!el) return;
+  el.className = 'pd-save-state ' + st;
+  el.textContent = st === 'saving' ? '⏳ กำลังบันทึก…' : st === 'saved' ? '✓ บันทึกอัตโนมัติแล้ว — เข้ามาใหม่ได้ค่าเดิม' : '⚠ ' + (msg || 'บันทึกไม่สำเร็จ');
 }
 
 // Print area for test print (hidden, used only by testPrint)

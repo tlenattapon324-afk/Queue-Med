@@ -9,12 +9,13 @@ const path = require('path');
 const { exec } = require('child_process');
 
 // same as public/slip-render.js — without 'barcode' here a slip with no saved layout printed no barcode
-const DEFAULT_ORDER = ['header','patientName','hnQn','pttype','queueType','queueNum','barcode','dateTime','footer'];
+const DEFAULT_ORDER = ['header','patientName','hnQn','pttype','queueType','queueNum','slipNote','barcode','dateTime','footer'];
 
 // Default per-section style — matches the original fixed look
 const STYLE_DEFAULTS = {
   header:      { align:'center', bold:true,  color:'black' },
   patientName: { align:'center', bold:true,  color:'black' },
+  slipNote:    { align:'center', bold:true,  color:'black' },
   hnQn:        { align:'center', bold:false, color:'gray'  },
   pttype:      { align:'center', bold:false, color:'black' },
   queueType:   { align:'center', bold:false, color:'black' },
@@ -43,9 +44,39 @@ function fillPlaceholders(text, t) {
 const psColor = col => col === 'gray' ? 'DimGray' : 'Black';
 const b64Of   = dataUrl => String(dataUrl || '').replace(/^data:image\/[a-z+]+;base64,/i, '');
 
+// HN / QN: their own line (default) or on the patient name's line — hnQnPosition 'left' | 'right'
+const hnQnInline = cfg => (cfg.hnQnPosition === 'left' || cfg.hnQnPosition === 'right') && cfg.showHnQn !== false;
+const hnQnText = (cfg, t) => [t.hn ? 'HN: ' + t.hn : '', t.qn ? 'QN: ' + t.qn : ''].filter(Boolean).join('   ');
+// a line is drawn in one row (no wrapping) — a long one gets a smaller font instead of being cut off.
+// Width estimate: ~0.62 em per character (bold Thai is wide); Thai vowel / tone marks take no width of their own.
+function fitOneLine(text, fs, widthMm) {
+  const n = String(text).replace(/[ัิ-ฺ็-๎]/g, '').length || 1;
+  const fit = widthMm / (n * 0.62 * 25.4 / 72);
+  return Math.max(6, Math.min(fs, Math.floor(fit * 2) / 2));
+}
+
+// "3 - 001" → "3-001": the spaces around the hyphen are very wide at queue-number size
+const compactNum = d => String(d == null ? '' : d).replace(/\s*-\s*/g, '-');
+// a note line too long for the paper: split at the space nearest the middle (rather than shrink it a lot)
+function noteRows(text, fs, widthMm) {
+  const f = fitOneLine(text, fs, widthMm);
+  if (f >= fs * 0.85 || !/\s/.test(text)) return [[text, f]];
+  const mid = text.length / 2;
+  let cut = -1;
+  for (let i = 0; i < text.length; i++) if (/\s/.test(text[i]) && (cut < 0 || Math.abs(i - mid) < Math.abs(cut - mid))) cut = i;
+  return [text.slice(0, cut).trim(), text.slice(cut + 1).trim()].filter(Boolean).map(t => [t, fitOneLine(t, fs, widthMm)]);
+}
+// layouts saved before the ticket note existed: it goes right under the queue number
+function withSlipNote(order) {
+  if (order.includes('slipNote')) return order;
+  const o = order.slice(), at = o.indexOf('queueNum');
+  o.splice(at >= 0 ? at + 1 : o.length, 0, 'slipNote');
+  return o;
+}
+
 function buildPrintLines(cfg, ticket) {
   const lines = [];
-  const order = (cfg.layoutOrder && cfg.layoutOrder.length) ? cfg.layoutOrder : DEFAULT_ORDER;
+  const order = withSlipNote((cfg.layoutOrder && cfg.layoutOrder.length) ? cfg.layoutOrder : DEFAULT_ORDER);
   const textLine = (text, fs, st) =>
     lines.push({ t:'text', text, fs, bold: !!st.bold, color: psColor(st.color), align: st.align });
 
@@ -62,16 +93,24 @@ function buildPrintLines(cfg, ticket) {
       const hfs = c(cfg.headerFontSize, 14);
       textLine(fillPlaceholders(c(cfg.headerName, ticket.sysName || 'ระบบคิว'), ticket), hfs, st);
       if (cfg.headerSubtitle)
-        textLine(fillPlaceholders(cfg.headerSubtitle, ticket), Math.max(7, hfs - 3), { align: st.align, bold:false, color:'gray' });
+        textLine(fillPlaceholders(cfg.headerSubtitle, ticket), Number(cfg.subtitleFontSize) || Math.max(7, hfs - 3), { align: st.align, bold:false, color:'gray' });
     },
     patientName: () => {
       if (!c(cfg.showPatientName, true) || !ticket.patientName) return;
-      textLine(ticket.patientName, c(cfg.patientFontSize, 11), sectionStyle(cfg, 'patientName'));
+      const fs = c(cfg.patientFontSize, 11), hq = hnQnText(cfg, ticket);
+      if (hnQnInline(cfg) && hq) {
+        // HN / QN on the name's line (left or right of it), in the name's style — shrunk to stay on one line
+        const text = cfg.hnQnPosition === 'left' ? `${hq}  ${ticket.patientName}` : `${ticket.patientName}  ${hq}`;
+        textLine(text, fitOneLine(text, fs, paperWidthMm(cfg) - 6), sectionStyle(cfg, 'patientName'));
+        return;
+      }
+      textLine(ticket.patientName, fs, sectionStyle(cfg, 'patientName'));
     },
     hnQn: () => {
       if (!c(cfg.showHnQn, true)) return;
-      const parts = [ticket.hn ? 'HN: '+ticket.hn : '', ticket.qn ? 'QN: '+ticket.qn : ''].filter(Boolean);
-      if (parts.length) textLine(parts.join('   '), Math.max(7, c(cfg.patientFontSize, 11) - 2), sectionStyle(cfg, 'hnQn'));
+      if (hnQnInline(cfg) && c(cfg.showPatientName, true) && ticket.patientName) return;   // already on the name's line
+      const hq = hnQnText(cfg, ticket);
+      if (hq) textLine(hq, Number(cfg.hnQnFontSize) || Math.max(7, c(cfg.patientFontSize, 11) - 2), sectionStyle(cfg, 'hnQn'));
     },
     pttype: () => {
       if (!cfg.showPttype || !ticket.pttypeName) return;
@@ -89,11 +128,19 @@ function buildPrintLines(cfg, ticket) {
         const st = sectionStyle(cfg, 'queueType');
         lines.push({ t:'numWithType', typeText: ticket.typeName, typeFs: c(cfg.queueTypeFontSize, 11),
                      typeBold: !!st.bold, typeColor: psColor(st.color),
-                     numText: ticket.display, numFs: c(cfg.queueNumFontSize, 60), box });
+                     numText: compactNum(ticket.display), numFs: c(cfg.queueNumFontSize, 60), box });
       } else {
-        lines.push({ t:'num', text: ticket.display, fs: c(cfg.queueNumFontSize, 60), bold:true, color:'Black',
+        lines.push({ t:'num', text: compactNum(ticket.display), fs: c(cfg.queueNumFontSize, 60), bold:true, color:'Black',
                      align: sectionStyle(cfg, 'queueNum').align, box });
       }
+    },
+    // ข้อความบนบัตรคิว — set per queue type (where to go next); nothing when the type has none
+    slipNote: () => {
+      if (cfg.showSlipNote === false || !ticket.slipNote) return;
+      const st = sectionStyle(cfg, 'slipNote'), fs = c(cfg.slipNoteFontSize, 11);
+      String(ticket.slipNote).split(/\r?\n/).forEach(l => {
+        if (l.trim()) noteRows(l.trim(), fs, paperWidthMm(cfg) - 6).forEach(([t, f]) => textLine(t, f, st));
+      });
     },
     barcode: () => {
       // Barcode / QR image is generated by the browser (public/slip-render.js) and sent with the ticket
@@ -239,6 +286,17 @@ function AlignOf($a){
 }
 
 # Queue-number box: thick | thin | none | inverse (white text on black)
+# the queue number must never be cut: measured with the real font, made smaller until it fits the width
+function FitSmm($g,$text,[float]$smm,$style,[float]$maxW){
+  while($smm -gt 3){
+    $f=New-Object System.Drawing.Font($script:fontName,$smm,$style,[System.Drawing.GraphicsUnit]::Millimeter)
+    $w=$g.MeasureString([string]$text,$f).Width
+    $f.Dispose()
+    if($w -le $maxW){ return $smm }
+    $smm=$smm*[float]0.94
+  }
+  return $smm
+}
 function DrawNumBox($g,$box,$x,$y,$w,$h){
   if($box -eq 'inverse'){ $g.FillRectangle([System.Drawing.Brushes]::Black,$x,$y,$w,$h); return [System.Drawing.Brushes]::White }
   if($box -eq 'thick'){ $g.DrawRectangle((New-Object System.Drawing.Pen([System.Drawing.Color]::Black,[float]0.7)),$x,$y,$w,$h) }
@@ -282,6 +340,7 @@ $script:drawContent = {
       [float]$lh=$numSmm*1.5
       [float]$leftW=$pw*[float]0.35; [float]$gap=[float]2.0
       [float]$rightW=$pw-$leftW-$gap; [float]$rightX=$m+$leftW+$gap
+      $numSmm=FitSmm $g $line.numText $numSmm ([System.Drawing.FontStyle]::Bold) ($rightW-[float]3)
       $tst=if($line.typeBold){[System.Drawing.FontStyle]::Bold}else{[System.Drawing.FontStyle]::Regular}
       $typeFont=New-Object System.Drawing.Font($script:fontName,$typeSmm,$tst,[System.Drawing.GraphicsUnit]::Millimeter)
       $numFont=New-Object System.Drawing.Font($script:fontName,$numSmm,[System.Drawing.FontStyle]::Bold,[System.Drawing.GraphicsUnit]::Millimeter)
@@ -297,12 +356,13 @@ $script:drawContent = {
     }else{
       [float]$smm=$line.fs/72.0*25.4
       $st=if($line.bold){[System.Drawing.FontStyle]::Bold}else{[System.Drawing.FontStyle]::Regular}
+      [float]$lh=$smm*1.5
+      if($line.t -eq 'num'){ $smm=FitSmm $g $line.text $smm $st ($pw-[float]4) }
       $font=New-Object System.Drawing.Font($script:fontName,$smm,$st,[System.Drawing.GraphicsUnit]::Millimeter)
       $brush=[System.Drawing.Brushes]::($line.color)
       if(-not $brush){$brush=[System.Drawing.Brushes]::Black}
       $fmt=New-Object System.Drawing.StringFormat
       $fmt.Alignment=AlignOf $line.align; $fmt.LineAlignment=[System.Drawing.StringAlignment]::Center
-      [float]$lh=$smm*1.5
       if($line.t -eq 'num'){ $brush = DrawNumBox $g $line.box $m $y $pw $lh }
       $rect=New-Object System.Drawing.RectangleF($m,$y,$pw,$lh)
       $g.DrawString($line.text,$font,$brush,$rect,$fmt)
@@ -413,4 +473,34 @@ function printSlip(cfg, ticket, printerName, callback, timeoutMs) {
                callback, timeoutMs);
 }
 
-module.exports = { buildPrintLines, calcPrintHeight, paperWidthMm, paperHeightMm, runSlipPrint, printSlip, fillPlaceholders };
+// ── Installed printers (server "เครื่องหลัก" and the client's Print Agent) ──────────────────
+// The list printing itself uses (System.Drawing) first; Get-Printer / WMI only as fallbacks, since
+// Get-Printer is missing on some machines (Windows 7, no PrintManagement module). Output is forced to
+// UTF-8 so Thai printer names come through. The first call can take several seconds on a slow PC
+// (PowerShell start-up), so the list is cached and requests made meanwhile share one run.
+const PS_PRINTERS = `
+[Console]::OutputEncoding = [Text.Encoding]::UTF8
+$n = @()
+try { Add-Type -AssemblyName System.Drawing; $n = @([System.Drawing.Printing.PrinterSettings]::InstalledPrinters) } catch {}
+if (-not $n.Count) { try { $n = @(Get-Printer | ForEach-Object { $_.Name }) } catch {} }
+if (-not $n.Count) { try { $n = @(Get-WmiObject Win32_Printer | ForEach-Object { $_.Name }) } catch {} }
+$n | ForEach-Object { $_ }
+`;
+let _printers = null, _printersAt = 0, _printersWait = null;
+function listPrinters(cb, { maxAgeMs = 60000 } = {}) {
+  if (_printers && Date.now() - _printersAt < maxAgeMs) return cb(_printers, null);
+  if (_printersWait) return _printersWait.push(cb);
+  _printersWait = [cb];
+  const enc = Buffer.from(PS_PRINTERS, 'utf16le').toString('base64');
+  exec(`powershell -NoProfile -ExecutionPolicy Bypass -EncodedCommand ${enc}`,
+    { timeout: 30000, windowsHide: true, encoding: 'utf8', maxBuffer: 1024 * 1024 }, (err, stdout) => {
+      const list = String(stdout || '').replace(/^﻿/, '').split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+      if (list.length) { _printers = [...new Set(list)]; _printersAt = Date.now(); }
+      const out = list.length ? _printers : (_printers || []);
+      const msg = list.length ? null : err ? String(err.killed ? 'หมดเวลารอรายชื่อเครื่องพิมพ์' : err.message).slice(0, 200) : 'เครื่องนี้ไม่มีเครื่องพิมพ์ติดตั้งไว้';
+      const waiting = _printersWait; _printersWait = null;
+      waiting.forEach(f => f(out, msg));
+    });
+}
+
+module.exports = { buildPrintLines, calcPrintHeight, paperWidthMm, paperHeightMm, runSlipPrint, printSlip, fillPlaceholders, listPrinters };
