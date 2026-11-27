@@ -1,12 +1,12 @@
 ﻿[Setup]
 AppName=ระบบคิว (Queue System)
-AppVersion=3.3.0
-AppVerName=ระบบคิว (Queue System) v3.3.0
+AppVersion=3.3.4
+AppVerName=ระบบคิว (Queue System) v3.3.4
 AppPublisher=Hospital Queue System
 AppId={{A3F2C1D0-4E5B-6F7A-8B9C-0D1E2F3A4B5C}
 DefaultDirName={autopf}\QueueSystem
 OutputDir=.
-OutputBaseFilename=Queue-Setup-Full-v3.3.0
+OutputBaseFilename=Queue-Setup-Full-v3.3.4
 SetupIconFile=..\assets\icons\setup.ico
 WizardSmallImageFile=..\assets\icons\wizard-small-55.bmp,..\assets\icons\wizard-small-110.bmp
 Compression=lzma2/ultra64
@@ -79,6 +79,22 @@ begin
   Result := RemoveBackslashUnlessRoot(Dir);
 end;
 
+// ตัวถอน Inno สร้างสำเนาตัวเองใน Temp แล้วคืนค่าทันที — Exec(..., ewWaitUntilTerminated) จึงไม่รอจนถอนเสร็จจริง
+// → รอจน registry ของรุ่นเก่าและไฟล์ unins*.exe หายไป (สูงสุด 3 นาที) ก่อนคืนข้อมูล/ติดตั้งไฟล์ใหม่
+//   ไม่งั้นตัวถอนที่ยังทำงานอยู่จะลบไฟล์ที่เพิ่งคืน/เพิ่งติดตั้ง (หน้าเว็บ จอ ระบบที่สร้างไว้หาย)
+procedure WaitOldUninstall(UninstExe: String);
+var
+  i: Integer;
+begin
+  for i := 1 to 360 do
+  begin
+    if (GetOldUninstallString() = '') and (not FileExists(UninstExe)) then
+      break;
+    Sleep(500);
+  end;
+  Sleep(1500);
+end;
+
 // copy ทั้งโฟลเดอร์ (ทับไฟล์เดิม) — robocopy คืนค่า 0-7 = สำเร็จ
 function RoboCopy(Src, Dst: String): Boolean;
 var
@@ -123,7 +139,7 @@ begin
     end;
     UninstStr := RemoveQuotes(UninstStr);
     Exec(UninstStr, '/SILENT /NORESTART /SUPPRESSMSGBOXES', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-    Sleep(2500);
+    WaitOldUninstall(UninstStr);
     if BackupDir <> '' then
       if not RoboCopy(BackupDir, OldData) then
         Result := 'คืนข้อมูลเดิมไม่สำเร็จ — ข้อมูลสำรองอยู่ที่ ' + BackupDir + ' ให้ copy กลับไปที่ ' + OldData;

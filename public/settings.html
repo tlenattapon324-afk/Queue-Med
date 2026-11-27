@@ -1180,6 +1180,18 @@
         <button class="btn-add" onclick="addCounter()">+ เพิ่ม</button>
       </div>
     </div>
+    <div class="form-card">
+      <h2>🔊 คำขึ้นต้นเสียงประกาศ (ใช้กับทุกช่องของระบบนี้)</h2>
+      <div class="form-row">
+        <div class="field name-f">
+          <label>คำที่พูดก่อนเลขคิว — เว้นว่าง = "ขอเชิญ หมายเลข"</label>
+          <input type="text" id="annPrefix" maxlength="60" placeholder="ขอเชิญ หมายเลข" oninput="updatePrefixPreview()"/>
+        </div>
+        <button type="button" class="btn-cancel" onclick="playSpeak(prefixSampleText())" style="white-space:nowrap">▶ ฟัง</button>
+        <button class="btn-add" onclick="savePrefix()">บันทึก</button>
+      </div>
+      <div id="annPrefixPreview" style="font-size:.8rem;color:#64748b;margin-top:8px"></div>
+    </div>
     <div class="item-list" id="counterList"><div class="empty-msg">กำลังโหลด...</div></div>
   </div>
 
@@ -1340,6 +1352,15 @@
     <div class="form-row">
       <div class="field" style="width:100%"><label>ชื่อช่องบริการ</label>
         <input type="text" id="ecName" maxlength="30"/></div>
+    </div>
+    <div class="form-row">
+      <div class="field" style="width:100%"><label>🔊 ข้อความเสียงประกาศ (ไม่บังคับ)</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="ecSpeak" maxlength="60" placeholder="เช่น ช่องรับยา 1 / ช่องชำระเงิน 1" style="flex:1"/>
+          <button type="button" class="btn-cancel" onclick="testCounterSpeak()" style="white-space:nowrap">▶ ฟัง</button>
+        </div>
+        <div id="ecSpeakPreview" style="font-size:.78rem;color:#64748b;margin-top:6px;line-height:1.5"></div>
+      </div>
     </div>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closeModal('modalCounter')">ยกเลิก</button>
@@ -1616,13 +1637,14 @@ function deleteType(id, name) {
 // ── Counters ──────────────────────────────────────────────────────────────
 function renderCounters() {
   const el = document.getElementById('counterList');
+  updatePrefixPreview();
   if (!counters.length) { el.innerHTML = '<div class="empty-msg">ยังไม่มีช่องบริการ</div>'; return; }
   el.innerHTML = counters.map(c => `
     <div class="item-row">
       <div class="item-icon">🪟</div>
       <div class="item-info">
         <div class="i-name">${c.name}</div>
-        <div class="i-meta">ID: ${c.id}</div>
+        <div class="i-meta">ID: ${c.id} · 🔊 ${escHtml(c.speak ? 'ที่ ' + c.speak : 'ที่ช่องบริการ ' + c.name)}</div>
       </div>
       <div class="item-actions">
         <button class="btn-edit" onclick="openEditCounter(${c.id})">แก้ไข</button>
@@ -1643,12 +1665,58 @@ function openEditCounter(id) {
   const c = counters.find(x => x.id === id); if (!c) return;
   editCounterId = id;
   document.getElementById('ecName').value = c.name;
+  document.getElementById('ecSpeak').value = c.speak || '';
+  updateSpeakPreview();
   document.getElementById('modalCounter').classList.add('open');
 }
+// same wording as display.html announceText()
+const speechClean = s => String(s || '').replace(/\//g, ' ทับ ').replace(/\s+/g, ' ').trim();
+const annHead = () => speechClean(document.getElementById('annPrefix').value) || 'ขอเชิญ หมายเลข';
+function counterSpeakText() {
+  const name  = document.getElementById('ecName').value.trim();
+  const speak = speechClean(document.getElementById('ecSpeak').value).replace(/^ที่\s*/, '');
+  return speak ? `${annHead()} A 1 ที่ ${speak}` : `${annHead()} A 1 ที่ช่องบริการ ${speechClean(name)}`;
+}
+// opening words, saved per system with the other announcement settings (cashier-settings: announcePrefix)
+function prefixSampleText() {
+  const c = counters[0];
+  return c && c.speak ? `${annHead()} A 1 ที่ ${speechClean(c.speak).replace(/^ที่\s*/, '')}`
+                      : `${annHead()} A 1 ที่ช่องบริการ ${speechClean(c ? c.name : 'ช่อง 1')}`;
+}
+function updatePrefixPreview() {
+  document.getElementById('annPrefixPreview').textContent = 'ตัวอย่าง: "' + prefixSampleText() + '"';
+}
+function loadPrefix() {
+  fetch(`/api/sys/${sysId}/cashier-settings`).then(r => r.json()).then(s => {
+    document.getElementById('annPrefix').value = (s && s.announcePrefix) || '';
+    updatePrefixPreview();
+  }).catch(() => {});
+}
+function savePrefix() {
+  const announcePrefix = document.getElementById('annPrefix').value.trim();
+  fetch(`/api/sys/${sysId}/cashier-settings`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ announcePrefix }) })
+  .then(r => r.json()).then(d => toast(d.success ? 'บันทึกคำขึ้นต้นแล้ว — จอแสดงคิวใช้ทันที' : (d.message || 'บันทึกไม่สำเร็จ')))
+  .catch(() => toast('บันทึกไม่สำเร็จ'));
+}
+loadPrefix();
+function updateSpeakPreview() {
+  document.getElementById('ecSpeakPreview').textContent = 'จอจะประกาศว่า: "' + counterSpeakText() + '"'
+    + (document.getElementById('ecSpeak').value.trim() ? '' : ' — เว้นว่าง = ใช้ชื่อช่อง');
+}
+document.getElementById('ecSpeak').addEventListener('input', updateSpeakPreview);
+document.getElementById('ecName').addEventListener('input', updateSpeakPreview);
+let _speakAudio = null;
+function playSpeak(text) {
+  if (_speakAudio) _speakAudio.pause();
+  _speakAudio = new Audio(`/api/tts?text=${encodeURIComponent(text)}&lang=th`);
+  _speakAudio.play().catch(() => toast('เล่นเสียงไม่สำเร็จ'));
+}
+function testCounterSpeak() { playSpeak(counterSpeakText()); }
 function saveCounter() {
   const name = document.getElementById('ecName').value.trim();
+  const speak = document.getElementById('ecSpeak').value.trim();
   if (!name) { toast('กรุณากรอกชื่อ'); return; }
-  fetch(`/api/sys/${sysId}/counters/${editCounterId}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name }) })
+  fetch(`/api/sys/${sysId}/counters/${editCounterId}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, speak }) })
   .then(r=>r.json()).then(d => { if (d.success) { closeModal('modalCounter'); toast('บันทึกสำเร็จ'); } else toast(d.message); });
 }
 function deleteCounter(id, name) {
@@ -1755,14 +1823,15 @@ const pdLayoutItems = {
   'footer': { label: '📝 ข้อความท้าย', icon: '📝' },
 };
 
-function printCfgUrl() {
+// local mode → this machine's Print Agent (through the queue server, see agentFetch in api-token.js)
+function printCfgFetch(init) {
   const mode = localStorage.getItem('queuePrintMode') || 'host';
-  return mode === 'local' ? 'http://localhost:3001/api/print-config' : `/api/sys/${sysId}/print-config`;
+  return mode === 'local' ? agentFetch('/api/print-config', init) : fetch(`/api/sys/${sysId}/print-config`, init);
 }
 
 function loadPrintCfg() {
   _pdSavedJson = null;   // auto-save waits until the saved form is on screen
-  fetch(printCfgUrl(), { signal: AbortSignal.timeout(4000) })
+  printCfgFetch({ signal: AbortSignal.timeout(8000) })
     .then(r => r.json())
     .then(cfg => { applyPrintCfgToForm(cfg); updatePreview(); pdArmAutoSave(); })
     .catch(() => {
@@ -2250,10 +2319,21 @@ function loadLocalPrinters(fresh) {
   const keepSaved = () => saved ? `<option value="${esc(saved)}" selected>${esc(saved)} (ที่เลือกไว้)</option>` : '';
   sel.innerHTML = '<option value="">— กำลังโหลดรายชื่อเครื่องพิมพ์... —</option>';
   hint.textContent = '⏳ กำลังถาม Queue Print Agent บนเครื่องนี้ (ครั้งแรกอาจใช้เวลา 5–15 วินาที)';
-  fetch('http://localhost:3001/api/printers' + (fresh ? '?fresh=1' : ''), { signal: AbortSignal.timeout(35000) })
-    .then(r => r.json())
+  agentFetch('/api/printers' + (fresh ? '?fresh=1' : ''), { signal: AbortSignal.timeout(35000) })
+    // a reply that isn't JSON (old server, a refusal page…) is shown as it is, so the cause is visible
+    .then(r => r.text().then(txt => {
+      try { return JSON.parse(txt); }
+      catch { return { agentUnreachable: true, message: `ตอบกลับ HTTP ${r.status}: ${txt.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120)}` }; }
+    }))
     .then(d => {
+      if (!d.agentUnreachable && d.success === false && !d.printers) d.agentUnreachable = true;   // e.g. the agent refused (403) or no token (401)
       const list = d.printers || [];
+      if (d.agentUnreachable) {
+        sel.innerHTML = '<option value="">— เชื่อมต่อ Print Agent ไม่ได้ —</option>' + keepSaved();
+        hint.textContent = `⚠️ ${d.message || 'เชื่อมต่อ Print Agent ไม่ได้'} — ตรวจว่าเปิด Queue Print Agent ไว้ (Start → Queue Print Agent) ` +
+          'และติดตั้ง Print Agent รุ่น 1.5.9 ขึ้นไป (เปิด Firewall port 3001 ให้เครื่องหลักส่งงานพิมพ์มาได้) แล้วกด ↺ รีเฟรช';
+        return;
+      }
       if (!list.length) {
         sel.innerHTML = '<option value="">— ไม่พบเครื่องพิมพ์ —</option>' + keepSaved();
         hint.textContent = '⚠️ Print Agent ทำงานอยู่ แต่ไม่พบเครื่องพิมพ์ในเครื่องนี้' + (d.error ? ` (${d.error})` : '') +
@@ -2269,8 +2349,8 @@ function loadLocalPrinters(fresh) {
       sel.innerHTML = '<option value="">— เชื่อมต่อ Print Agent ไม่ได้ —</option>' + keepSaved();
       hint.textContent = err && err.name === 'TimeoutError'
         ? '⚠️ Print Agent ตอบช้าเกินไป — กด ↺ รีเฟรช อีกครั้ง'
-        : '⚠️ เชื่อมต่อ Queue Print Agent บนเครื่องนี้ไม่ได้ — ตรวจว่าเปิด Queue Print Agent ไว้ (Start → Queue Print Agent) และถ้า Chrome ถามเรื่อง ' +
-          '"อุปกรณ์ในเครือข่าย / แอปในเครื่องนี้" ให้กด Allow (หรือ ไอคอนหน้า URL → Site settings → Local network access → Allow) แล้วกด ↺ รีเฟรช';
+        : `⚠️ เชื่อมต่อ Queue Print Agent บนเครื่องนี้ไม่ได้${err && err.message ? ` (${err.message})` : ''} — ตรวจว่าเปิด Queue Print Agent ไว้ (Start → Queue Print Agent) ` +
+          'และใช้ Print Agent รุ่น 1.5.9 ขึ้นไป แล้วกด ↺ รีเฟรช';
     });
 }
 
@@ -2286,9 +2366,8 @@ function savePrintCfg(silent) {
   const cfg  = collectPrintCfg();
   const json = JSON.stringify(cfg);
   const mode = localStorage.getItem('queuePrintMode') || 'host';
-  const url  = mode === 'local' ? 'http://localhost:3001/api/print-config' : `/api/sys/${sysId}/print-config`;
   pdSaveState('saving');
-  return fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: json })
+  return printCfgFetch({ method:'POST', headers:{'Content-Type':'application/json'}, body: json })
     .then(r => r.json())
     .then(d => {
       if (d && d.success === false) throw new Error(d.message || 'บันทึกไม่สำเร็จ');
@@ -2380,7 +2459,7 @@ async function confirmTestPrint() {
     const localPrinter = document.getElementById('pdLocalPrinter').value;
     if (localPrinter) {
       try {
-        const r = await fetch('http://localhost:3001/api/local-print', {
+        const r = await agentFetch('/api/local-print', {
           method:'POST', headers:{'Content-Type':'application/json'},
           body: JSON.stringify({ printerName: localPrinter, ticket, cfg })
         });

@@ -290,7 +290,9 @@
     .vt-ns-item{display:flex;flex-direction:column;align-items:center;border-radius:8px;padding:2px 10px;font-weight:900;line-height:1.1}
     .vt-ns-time{font-size:.68rem;color:#64748b;font-weight:600}
     .vt-ns-empty,.vt-wait-empty{margin:auto;color:rgba(255,255,255,.45);font-size:.9rem}
-    .vt-ns-track{display:flex;width:max-content;animation:vtMarq linear infinite}
+    /* own GPU layer: the scroll moves the layer instead of repainting the text every frame */
+    .vt-ns-track{display:flex;width:max-content;animation:vtMarq linear infinite;will-change:transform;backface-visibility:hidden}
+    .vt-wait-track{will-change:transform;backface-visibility:hidden}
     .vt-ns-grp{display:flex;gap:6px;padding-right:6px}
     @keyframes vtMarq{to{transform:translateX(-50%)}}
     .vt-count{background:rgba(255,255,255,.25);border-radius:999px;padding:0 8px;font-size:.85em}
@@ -344,9 +346,11 @@
     .board-park-item{font-size:var(--park-fs,1.6vw)!important}
     .board-park-rsz{flex:0 0 8px;margin-top:6px;border-radius:4px;cursor:row-resize;touch-action:none}
     .board-park-rsz:hover{background:rgba(245,158,11,.4)}
-    .board-park-hdr{background:#b45309!important;color:#fff!important}
-    .board-park-item{border-color:#f59e0b!important;background:rgba(245,158,11,.12)}
-    .board-park-item span{color:#d97706}
+    /* colours set in settings → board → คิวที่เก็บไว้ (boardPark* — applyBoardVars) */
+    .board-park{background:var(--board-park-bg,var(--cell))}
+    .board-park-hdr{background:var(--board-park-hdr-bg,#b45309)!important;color:var(--board-park-hdr-clr,#fff)!important}
+    .board-park-item{border-color:var(--board-park-item-bd,#f59e0b)!important;background:var(--board-park-item-bg,rgba(245,158,11,.12))}
+    .board-park-item span{color:var(--board-park-num-clr,#d97706)}
     .board-next-empty{color:var(--dim);opacity:.6;padding:4px 2px;font-size:.95rem}
     .board-resizer{flex:0 0 12px;cursor:col-resize;display:flex;align-items:center;justify-content:center}
     .board-resizer::after{content:'';width:4px;height:60px;border-radius:2px;background:var(--cborder);transition:background .2s}
@@ -691,7 +695,27 @@
           <div class="sf-slider-row">
             <input type="range" id="cfgBoardParkedHR" min="0" max="90" step="1" value="0" oninput="syncNum('cfgBoardParkedH',this.value,0);onBoardOptChange()"/>
             <input class="sf-numval" type="number" id="cfgBoardParkedH" min="0" max="100" step="0.5" value="0" oninput="syncRange('cfgBoardParkedHR',this.value,0,90);onBoardOptChange()"/>
-          </div></div>
+          </div>
+          <div class="sec-box-title" style="color:#fbbf24;margin-top:12px">🎨 สีกล่องนี้</div>
+          <div class="sf-row"><label class="sf-label">พื้นหลังหัวข้อ</label>
+            <div class="clr-pair" id="pairBoardParkHdrBg"><input type="color" id="cfgBoardParkHdrBg" oninput="setBoardClr('boardParkHdrBg',this.value)"/>
+              <button onclick="setBoardClr('boardParkHdrBg','')">ใช้สีเดิม</button></div></div>
+          <div class="sf-row"><label class="sf-label">ตัวอักษรหัวข้อ</label>
+            <div class="clr-pair" id="pairBoardParkHdrClr"><input type="color" id="cfgBoardParkHdrClr" oninput="setBoardClr('boardParkHdrClr',this.value)"/>
+              <button onclick="setBoardClr('boardParkHdrClr','')">ใช้สีเดิม</button></div></div>
+          <div class="sf-row"><label class="sf-label">พื้นหลังกล่อง</label>
+            <div class="clr-pair" id="pairBoardParkBg"><input type="color" id="cfgBoardParkBg" oninput="setBoardClr('boardParkBg',this.value)"/>
+              <button onclick="setBoardClr('boardParkBg','')">ใช้สีเดิม</button></div></div>
+          <div class="sf-row"><label class="sf-label">พื้นหลังเลขคิว</label>
+            <div class="clr-pair" id="pairBoardParkItemBg"><input type="color" id="cfgBoardParkItemBg" oninput="setBoardClr('boardParkItemBg',this.value)"/>
+              <button onclick="setBoardClr('boardParkItemBg','')">ใช้สีเดิม</button></div></div>
+          <div class="sf-row"><label class="sf-label">กรอบเลขคิว</label>
+            <div class="clr-pair" id="pairBoardParkItemBd"><input type="color" id="cfgBoardParkItemBd" oninput="setBoardClr('boardParkItemBd',this.value)"/>
+              <button onclick="setBoardClr('boardParkItemBd','')">ใช้สีเดิม</button></div></div>
+          <div class="sf-row" style="margin-bottom:0"><label class="sf-label">ตัวเลขคิว</label>
+            <div class="clr-pair" id="pairBoardParkNumClr"><input type="color" id="cfgBoardParkNumClr" oninput="setBoardClr('boardParkNumClr',this.value)"/>
+              <button onclick="setBoardClr('boardParkNumClr','')">ใช้สีเดิม</button></div></div>
+        </div>
       </div>
       <!-- ═══ แบ่งคอลัมน์ช่องบริการ (split-h / board) ═══ -->
       <div id="colsOpts" class="sec-box" style="display:none">
@@ -1343,6 +1367,7 @@ const DEF = { ...VT_DEF, columns:2, maxPerCounter:1, selectedCounters:[], hidden
   boardHdr:'คิวที่กำลังเรียก', boardLeft:50, boardNumFs:11, boardRowFs:4.5, boardCtrFs:1.8, showUpcoming:true, upcomingCount:5, showBoardParked:false, boardParkedLabel:'คิวยากำลังตรวจสอบ', boardParkedCount:8, boardParkedFs:1.6, boardParkedHdrFs:1.05, boardParkedH:0, boardRowFit:true, boardRowH:24,
   boardHdrH:48, boardHdrFs:1.3, boardHdrClr:'', boardHero:true, boardHeroClr:'', boardBigBg:'', boardCtrBg:'', boardQBg:'',
   boardLblCtr:'', boardLblQ:'หมายเลขคิว', boardCtrHdrBg:'', boardCtrHdrClr:'', boardQHdrBg:'', boardQHdrClr:'', boardCtrClr:'', boardQClr:'',
+  boardParkHdrBg:'', boardParkHdrClr:'', boardParkBg:'', boardParkItemBg:'', boardParkItemBd:'', boardParkNumClr:'',
   anim:'scale', showName:false, maskName:true, nameFs:1.6, nsAutoScroll:false, nsSpeed:20 };
 let cfg = { ...DEF, ...(JSON.parse(localStorage.getItem(LS_KEY) || '{}')) };
 function getModeSettings(ds) {
@@ -1519,6 +1544,7 @@ socket.on('counter_cleared', ({ recentByCounter: rbc, lastCalledByCounter: lbc }
 socket.on('sys_state', d => {
   if (!d) return;
   sysRepeatAnnounce = !!(d.cashierSettings && d.cashierSettings.repeatAnnounce);
+  sysAnnouncePrefix = (d.cashierSettings && d.cashierSettings.announcePrefix) || '';
   if (d.counters)            allCounters   = d.counters;
   if (d.queueTypes)          queueTypes    = d.queueTypes;
   if (d.noShows)             noShows       = d.noShows;
@@ -1756,7 +1782,9 @@ function buildBoard(d, visible, area) {
 // The most recent call among this screen's counters (what the big block shows)
 const BOARD_CLR_VARS = { boardHeroClr: '--board-hero-clr', boardHdrClr: '--board-hdr-clr', boardBigBg: '--board-big-bg', boardCtrBg: '--board-ctr-bg', boardQBg: '--board-q-bg',
   boardCtrHdrBg: '--board-ctr-hdr-bg', boardCtrHdrClr: '--board-ctr-hdr-clr', boardQHdrBg: '--board-q-hdr-bg', boardQHdrClr: '--board-q-hdr-clr',
-  boardCtrClr: '--board-ctr-clr', boardQClr: '--board-q-clr' };
+  boardCtrClr: '--board-ctr-clr', boardQClr: '--board-q-clr',
+  boardParkHdrBg: '--board-park-hdr-bg', boardParkHdrClr: '--board-park-hdr-clr', boardParkBg: '--board-park-bg',
+  boardParkItemBg: '--board-park-item-bg', boardParkItemBd: '--board-park-item-bd', boardParkNumClr: '--board-park-num-clr' };
 function applyBoardVars(d, area) {
   area.style.setProperty('--board-hdr-h', (Number(d.boardHdrH) || 48) + 'px');
   area.style.setProperty('--board-hdr-fs', (Number(d.boardHdrFs) || 1.3) + 'rem');
@@ -1772,16 +1800,20 @@ function cssColorToHex(c) {
 }
 function syncBoardClrUI(d) {
   const theme = { boardHeroClr: '--accent', boardHdrClr: '--htxt', boardBigBg: '--cell', boardCtrBg: '--cell', boardQBg: '--cell',
-    boardCtrHdrBg: '--hb', boardCtrHdrClr: '--htxt', boardQHdrBg: '--hb', boardQHdrClr: '--htxt', boardCtrClr: '--accent', boardQClr: '--text' };
+    boardCtrHdrBg: '--hb', boardCtrHdrClr: '--htxt', boardQHdrBg: '--hb', boardQHdrClr: '--htxt', boardCtrClr: '--accent', boardQClr: '--text',
+    // the kept-queue box has fixed orange defaults, not theme colours
+    boardParkHdrBg: '#b45309', boardParkHdrClr: '#ffffff', boardParkBg: '--cell', boardParkItemBg: '#3d2a12', boardParkItemBd: '#f59e0b', boardParkNumClr: '#d97706' };
   const ids = { boardHeroClr: 'BoardHeroClr', boardHdrClr: 'BoardHdrClr', boardBigBg: 'BoardBigBg', boardCtrBg: 'BoardCtrBg', boardQBg: 'BoardQBg',
     boardCtrHdrBg: 'BoardCtrHdrBg', boardCtrHdrClr: 'BoardCtrHdrClr', boardQHdrBg: 'BoardQHdrBg', boardQHdrClr: 'BoardQHdrClr',
-    boardCtrClr: 'BoardCtrClr', boardQClr: 'BoardQClr' };
+    boardCtrClr: 'BoardCtrClr', boardQClr: 'BoardQClr',
+    boardParkHdrBg: 'BoardParkHdrBg', boardParkHdrClr: 'BoardParkHdrClr', boardParkBg: 'BoardParkBg',
+    boardParkItemBg: 'BoardParkItemBg', boardParkItemBd: 'BoardParkItemBd', boardParkNumClr: 'BoardParkNumClr' };
   // what a part shows while it follows the theme (the header text follows the older shared colour first)
   const follows = { boardCtrHdrClr: d.boardHdrClr, boardQHdrClr: d.boardHdrClr, boardCtrClr: d.custom && d.custom.ccNameClr };
   for (const [k, id] of Object.entries(ids)) {
     const inp = document.getElementById('cfg' + id), pair = document.getElementById('pair' + id);
     if (!inp) continue;
-    const themeVal = follows[k] || getComputedStyle(document.documentElement).getPropertyValue(theme[k]).trim();
+    const themeVal = follows[k] || (theme[k].startsWith('--') ? getComputedStyle(document.documentElement).getPropertyValue(theme[k]).trim() : theme[k]);
     inp.value = d[k] || cssColorToHex(themeVal.startsWith('#') ? hexToRgbStr(themeVal) : themeVal);
     pair.classList.toggle('theme', !d[k]);
   }
@@ -1960,6 +1992,7 @@ function renderVertical(animate, flashFor) {
     fitVtGrid(grid);
     if (isNew) { const el = grid.querySelector('[data-flash="1"]'); flashCall(el, el); }
   });
+  evenVtGrids();
   renderVtNoShow();
   renderVtWaiting();
 }
@@ -1980,6 +2013,24 @@ function fitVtGrid(grid) {
     equalize();
   }
 }
+// Each box shrinks its own numbers to fit, so one counter's number came out bigger than the next one's
+// (A025 vs A014, or a longer number in one box). Give every counter the smallest of those sizes and the
+// same frame width, so the columns look the same.
+function evenVtGrids() {
+  const grids = [...document.querySelectorAll('.vt-grid')].filter(g => g.querySelector('.vt-chip'));
+  const chips = grids.flatMap(g => [...g.querySelectorAll('.vt-chip')]);
+  if (chips.length < 2) return;
+  const sizeOf = ch => parseFloat(getComputedStyle(ch).fontSize);
+  let fs = Math.min(...chips.map(sizeOf));
+  const apply = () => {
+    chips.forEach(ch => { ch.style.fontSize = fs + 'px'; ch.style.width = ''; });
+    const w = Math.max(...chips.map(ch => ch.offsetWidth));
+    chips.forEach(ch => { ch.style.width = w + 'px'; });
+  };
+  const allFit = () => grids.every(g => g.scrollHeight <= g.clientHeight + 1 && g.scrollWidth <= g.clientWidth + 1);
+  apply();
+  for (let i = 0; i < 30 && !allFit() && fs > 8; i++) { fs = Math.max(8, fs * 0.9); apply(); }
+}
 function renderVtNoShow() {
   const d = getDisplayCfg();
   const max = Math.max(1, Number(d.vtNoShowMaxItems) || 3);
@@ -1993,12 +2044,26 @@ function renderVtNoShow() {
     const item = t => `<div class="vt-ns-item" style="background:${d.vtNoShowItemBg};${d.vtNoShowItemBorderWidth > 0 ? `border:${d.vtNoShowItemBorderWidth}px solid ${d.vtNoShowItemBorderColor}` : ''}">
         <span style="color:${d.vtNoShowQueueColor};font-size:${d.vtNoShowFontSize}vw">${qno(t.display)}</span><span class="vt-ns-time">${escHtml(t.calledAt || '')}</span></div>`;
     const items = list.map(item).join('');
-    box.innerHTML = `<div class="vt-ns-hd" style="background:${d.vtNoShowHeaderBg};color:${d.vtNoShowHeaderColor};height:${d.vtNoShowHeaderHeight}px;font-size:${d.vtNoShowHeaderFontSize}px">
+    setHtmlIfChanged(box, `<div class="vt-ns-hd" style="background:${d.vtNoShowHeaderBg};color:${d.vtNoShowHeaderColor};height:${d.vtNoShowHeaderHeight}px;font-size:${d.vtNoShowHeaderFontSize}px">
         ${escHtml(d.vtNoShowLabel || '')}${all.length ? `<span class="vt-count">${all.length}</span>` : ''}</div>
       <div class="vt-ns-body">${!list.length ? '<span class="vt-ns-empty">ไม่มีรายการ</span>'
         : scroll ? `<div class="vt-ns-track" style="animation-duration:${Math.max(3, d.vtNoShowScrollSpeed)}s"><div class="vt-ns-grp">${items}</div><div class="vt-ns-grp" aria-hidden="true">${items}</div></div>`
-        : items}</div>`;
+        : items}</div>`);
   });
+  // the no-show cards of every counter as wide as the widest one (same as the called numbers above)
+  const cards = [...document.querySelectorAll('.vt-ns-item')];
+  if (cards.length > 1) {
+    cards.forEach(el => { el.style.minWidth = ''; });
+    const w = Math.max(...cards.map(el => el.offsetWidth));
+    cards.forEach(el => { el.style.minWidth = w + 'px'; });
+  }
+}
+// Rewriting a scrolling list restarts its animation from the start — the jump seen every time any queue
+// changed. Only touch the box when what it shows is different.
+function setHtmlIfChanged(el, html) {
+  if (el._html === html) return;
+  el._html = html;
+  el.innerHTML = html;
 }
 function renderVtWaiting() {
   const d = getDisplayCfg();
@@ -2020,12 +2085,12 @@ function renderVtList(boxId, p, list, emptyText) {
       <span class="vt-wait-no" style="color:${d.vtWaitingQueueColor};font-size:${fitFs(t.display, d.vtWaitingFontSize)}">${qno(t.display)}${modeTag(t)}</span>
       ${hidden.includes(Number(t.typeId)) ? '' : `<span class="vt-wait-type" style="color:${t.color}">${escHtml(t.typeName || '')}</span>`}
     </div>`).join('');
-  box.innerHTML = `<div class="vt-wait-hd" style="background:${d.vtWaitingHeaderBg};color:${d.vtWaitingHeaderColor};height:${d.vtWaitingHeaderHeight}px;font-size:${d.vtWaitingHeaderFontSize}px">
+  setHtmlIfChanged(box, `<div class="vt-wait-hd" style="background:${d.vtWaitingHeaderBg};color:${d.vtWaitingHeaderColor};height:${d.vtWaitingHeaderHeight}px;font-size:${d.vtWaitingHeaderFontSize}px">
       ${escHtml(d.vtWaitingLabel || '')}${list.length ? `<span class="vt-count">${list.length}</span>` : ''}</div>
     <div class="vt-wait-body">${!list.length ? `<span class="vt-wait-empty">${emptyText}</span>`
       // speed is per queue, so a long list scrolls no faster than a short one
       : scroll ? `<div class="vt-wait-track" style="animation-duration:${Math.max(1, d.vtWaitingScrollSpeed) * list.length}s"><div class="vt-wait-list">${items}</div><div class="vt-wait-list" aria-hidden="true">${items}</div></div>`
-      : `<div class="vt-wait-list">${items}</div>`}</div>`;
+      : `<div class="vt-wait-list">${items}</div>`}</div>`);
 }
 // drag the dividers: col = column width, row = counter box height, ns = no-show box height, wait = waiting column width
 function bindVtDrag(area) {
@@ -3436,7 +3501,9 @@ function sanitizeForSpeech(str) {
 
 // "อ่านคิว 2 รอบ" is switched on the call-queue page (cashier-settings of this system)
 let sysRepeatAnnounce = false;
-socket.on('cashier_settings_updated', cs => { sysRepeatAnnounce = !!(cs && cs.repeatAnnounce); });
+// opening words of the announcement (settings → ช่องบริการ → คำขึ้นต้น), standard "ขอเชิญ หมายเลข" when empty
+let sysAnnouncePrefix = '';
+socket.on('cashier_settings_updated', cs => { sysRepeatAnnounce = !!(cs && cs.repeatAnnounce); sysAnnouncePrefix = (cs && cs.announcePrefix) || ''; });
 
 // Calls that arrive together are announced one after another: the next bell waits until the
 // previous announcement (and its repeat) has finished, so no call is cut off
@@ -3459,13 +3526,22 @@ function nextAnnounce() {
   announceQueue(ticket, 0, finish);
 }
 
+// The counter's own wording (settings → ช่องบริการ → ข้อความเสียง), e.g. "ช่องรับยา 1" / "ช่องชำระเงิน 1",
+// otherwise the standard "ที่ช่องบริการ <counter name>"
+function announceText(num, ticket, prefix) {
+  const head = sanitizeForSpeech(prefix === undefined ? sysAnnouncePrefix : prefix) || 'ขอเชิญ หมายเลข';
+  const speak = sanitizeForSpeech(ticket.counterSpeak || '').replace(/^ที่\s*/, '');
+  if (speak) return `${head} ${num} ที่ ${speak}`;
+  const ctr = sanitizeForSpeech(ticket.counterName || '');
+  return ctr ? `${head} ${num} ที่ช่องบริการ ${ctr}` : `${head} ${num}`;
+}
+
 // afterMs: wait for the bell to finish, so the chime never covers "ขอเชิญ หมายเลข"
 // onDone: called after the last round (or on error)
 function announceQueue(ticket, afterMs = 0, onDone) {
   if (!soundEnabled || !ticket) { if (onDone) onDone(); return; }
   const num = fmtQueueNum(ticket.display);
-  const ctr = sanitizeForSpeech(ticket.counterName || '');
-  const text = ctr ? `ขอเชิญ หมายเลข ${num} ที่ช่องบริการ ${ctr}` : `ขอเชิญ หมายเลข ${num}`;
+  const text = announceText(num, ticket);
   const times = sysRepeatAnnounce ? 2 : 1;
   const first = prepareSpeech(text);   // downloads while the bell rings
   const say = round => speakGoogle(text,
@@ -3484,8 +3560,7 @@ function testVoice() {
   applyCounterSettings();
   setDiag('🌐 กำลังขอเสียงจาก Google Translate...', '#80cbc4');
   const num = fmtQueueNum('A001');
-  const ctr = sanitizeForSpeech('ชำระเงิน ช่อง 1');
-  const text = `ขอเชิญ หมายเลข ${num} ที่ช่องบริการ ${ctr}`;
+  const text = announceText(num, { counterName: 'ชำระเงิน ช่อง 1' });
   speakGoogle(
     text,
     () => setDiag('✓ ได้ยินเสียงแล้ว — Google Translate TTS พร้อมใช้งาน', '#69f0ae'),
@@ -3571,7 +3646,7 @@ function playBell() {
 <script>
 (function(){
   var BK='qf_brightness',SK='qf_saturation';
-  function _applyV(b,s){b=parseFloat(b)||1;s=parseFloat(s)||1;localStorage.setItem(BK,b);localStorage.setItem(SK,s);document.body.style.filter='brightness('+b+') saturate('+s+')';var bl=document.getElementById('_brLbl'),sl=document.getElementById('_stLbl'),bs=document.getElementById('_brSlider'),ss=document.getElementById('_stSlider');if(bl)bl.textContent=b.toFixed(2);if(bs)bs.value=b;if(sl)sl.textContent=s.toFixed(2);if(ss)ss.value=s;}
+  function _applyV(b,s){b=parseFloat(b)||1;s=parseFloat(s)||1;localStorage.setItem(BK,b);localStorage.setItem(SK,s);document.body.style.filter=(b===1&&s===1)?'':'brightness('+b+') saturate('+s+')';/* a filter on the whole page also slows every scrolling list — none at 1.00 / 1.00 */var bl=document.getElementById('_brLbl'),sl=document.getElementById('_stLbl'),bs=document.getElementById('_brSlider'),ss=document.getElementById('_stSlider');if(bl)bl.textContent=b.toFixed(2);if(bs)bs.value=b;if(sl)sl.textContent=s.toFixed(2);if(ss)ss.value=s;}
   window._applyGlobalColor=_applyV;
   function _applyF(){_applyV(parseFloat(localStorage.getItem(BK)||'1'),parseFloat(localStorage.getItem(SK)||'1'));}
   _applyF();

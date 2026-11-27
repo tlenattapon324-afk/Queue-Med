@@ -421,8 +421,8 @@
     .then(d => {
       if (!d.success) { listEl.innerHTML = '<div class="dept-err">' + escHtml(d.message || 'โหลดข้อมูลไม่สำเร็จ') + '</div>'; return; }
       const depts = d.departments || [];
-      if (!depts.length) { listEl.innerHTML = '<div class="dept-err">ไม่พบห้องตรวจที่กำหนด</div>'; return; }
-      if (depts.length === 1) { selectDept(token, depts[0].depcode, depts[0].name); return; }
+      if (!depts.length) { listEl.innerHTML = '<div class="dept-err">ไม่พบห้องตรวจที่ผูกกับผู้ใช้นี้ใน HOSxP (officer_department) — ให้ผู้ดูแล HOSxP เพิ่มห้องตรวจให้ผู้ใช้ก่อน</div>'; return; }
+      // always show the list — even a single room is shown for the user to confirm (it was picked silently before)
       listEl.innerHTML = '';
       depts.forEach(dept => {
         const b = document.createElement('button');

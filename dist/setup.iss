@@ -1,12 +1,12 @@
 ﻿[Setup]
 AppName=Queue Print Agent
-AppVersion=1.5.7
-AppVerName=Queue Print Agent v1.5.7
+AppVersion=1.5.9
+AppVerName=Queue Print Agent v1.5.9
 AppPublisher=Hospital Queue System
 DefaultDirName={autopf}\QueuePrintAgent
 DefaultGroupName=Queue Print Agent
 OutputDir=.
-OutputBaseFilename=QueuePrintAgent_Setup-v1.5.7
+OutputBaseFilename=QueuePrintAgent_Setup-v1.5.9
 SetupIconFile=..\assets\icons\setup.ico
 WizardSmallImageFile=..\assets\icons\wizard-small-55.bmp,..\assets\icons\wizard-small-110.bmp
 Compression=lzma2
@@ -39,10 +39,17 @@ Name: "{commondesktop}\Queue Print Agent"; Filename: "{sys}\wscript.exe"; Parame
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "QueuePrintAgent"; ValueData: """{sys}\wscript.exe"" ""{app}\agent-hidden.vbs"""; Flags: uninsdeletevalue; Tasks: startup
 
 [Run]
+; เครื่องหลักส่งงานพิมพ์มาที่ port 3001 ของเครื่องนี้ (Chrome บล็อกหน้าเว็บไม่ให้เรียก localhost ตรง ๆ)
+; ลบกฎ "บล็อก" ที่ Windows สร้างไว้ตอนกด Cancel ที่หน้าต่าง Firewall ก่อน แล้วเปิด port 3001
+; (ไม่จำกัด IP ที่ Firewall: บาง รพ. ใช้ IP นอกช่วงมาตรฐาน เช่น 162.16.x.x — ตัว Agent กรองเองว่ารับเฉพาะเครือข่ายเดียวกัน)
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=all program=""{app}\QueuePrintAgent.exe"""; Flags: runhidden
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""Queue Print Agent 3001"""; Flags: runhidden
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""Queue Print Agent 3001"" dir=in action=allow protocol=TCP localport=3001 profile=any"; Flags: runhidden
 Filename: "{sys}\wscript.exe"; Parameters: """{app}\agent-hidden.vbs"""; Description: "เปิดใช้งาน Queue Print Agent ทันที (ทำงานเบื้องหลัง)"; Flags: nowait postinstall skipifsilent
 
 [UninstallRun]
 Filename: "taskkill"; Parameters: "/F /IM QueuePrintAgent.exe"; Flags: runhidden; RunOnceId: "KillAgent"
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""Queue Print Agent 3001"""; Flags: runhidden; RunOnceId: "DelFw3001"
 
 [Code]
 // ติดตั้งทับรุ่นเก่า: ปิด Print Agent ที่เปิดค้างอยู่ก่อน ไม่งั้นไฟล์ .exe ถูกล็อกเขียนทับไม่ได้

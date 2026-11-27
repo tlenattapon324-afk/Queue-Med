@@ -1158,7 +1158,7 @@ fetch(`/api/sys/${sysId}/status`).then(r=>r.json()).then(d => {
   screenConfig = d.screenConfig || {};
   // If local mode, overlay with agent's own config (per-machine settings)
   if ((localStorage.getItem('queuePrintMode') || 'host') === 'local') {
-    fetch('http://localhost:3001/api/print-config', { signal: AbortSignal.timeout(3000) })
+    agentFetch('/api/print-config', { signal: AbortSignal.timeout(6000) })
       .then(r => r.json())
       .then(cfg => { Object.assign(printConfig, cfg); })
       .catch(() => {});
@@ -2409,7 +2409,7 @@ async function updatePrinterStatus() {
   if (!chkPrintEnabled.checked) return setDev('devPrinter', 'warn', 'ปิดพิมพ์อัตโนมัติ');
   const mode = localStorage.getItem('queuePrintMode') || 'host';
   if (mode === 'local') {
-    const ok = await fetch('http://localhost:3001/api/print-config', { signal: AbortSignal.timeout(2500) }).then(r => r.ok).catch(() => false);
+    const ok = await agentFetch('/api/print-config', { signal: AbortSignal.timeout(2500) }).then(r => r.ok).catch(() => false);
     const name = localStorage.getItem('queueLocalPrinter') || '';
     return setDev('devPrinter', ok && name ? 'ok' : 'bad', !ok ? 'ไม่พบ Print Agent' : name ? `เครื่องนี้ · ${name}` : 'ยังไม่ได้เลือกเครื่องพิมพ์');
   }
@@ -2535,7 +2535,7 @@ function doPrint(ticket, opts) {
   const localPrinter = localStorage.getItem('queueLocalPrinter') || '';
   if (printMode === 'local') {
     if (localPrinter) {
-      fetch('http://localhost:3001/api/local-print', {
+      agentFetch('/api/local-print', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ printerName: localPrinter, sysId, ticket: data }),
         signal: AbortSignal.timeout(15000),

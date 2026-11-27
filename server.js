@@ -664,6 +664,9 @@ app.delete('/api/sys/:sysId/queue-types/:id', requireSys, (req, res) => {
 });
 
 // ── Counters API ──────────────────────────────────────────────────────────
+// speak: what the display says after the queue number, e.g. "ช่องรับยา 1" → "ขอเชิญ หมายเลข … ที่ช่องรับยา 1"
+// (pharmacy and cashier both have a "ช่อง 1"; without it both are announced the same way)
+const cleanSpeak = v => String(v || '').replace(/\s+/g, ' ').trim().slice(0, 60);
 app.get('/api/sys/:sysId/counters', requireSys, (req, res) => res.json(req.sys.counters));
 
 app.post('/api/sys/:sysId/counters', requireSys, (req, res) => {
@@ -671,6 +674,8 @@ app.post('/api/sys/:sysId/counters', requireSys, (req, res) => {
   const { name } = req.body;
   if (!name) return res.status(400).json({ success: false, message: 'ต้องระบุชื่อช่อง' });
   const counter = { id: sys.nextCounterId++, name: name.trim() };
+  const speak = cleanSpeak(req.body.speak);
+  if (speak) counter.speak = speak;
   sys.counters.push(counter);
   saveJson(sys.ctrsFile, sys.counters);
   io.to('sys-' + sysId).emit('counters_updated', sys.counters);
@@ -683,6 +688,10 @@ app.put('/api/sys/:sysId/counters/:id', requireSys, (req, res) => {
   const idx = sys.counters.findIndex(c => c.id === id);
   if (idx === -1) return res.status(404).json({ success: false, message: 'ไม่พบช่องบริการ' });
   if (req.body.name) sys.counters[idx].name = req.body.name.trim();
+  if ('speak' in req.body) {   // empty = back to the standard wording "ที่ช่องบริการ <name>"
+    const speak = cleanSpeak(req.body.speak);
+    if (speak) sys.counters[idx].speak = speak; else delete sys.counters[idx].speak;
+  }
   saveJson(sys.ctrsFile, sys.counters);
   io.to('sys-' + sysId).emit('counters_updated', sys.counters);
   res.json({ success: true, counter: sys.counters[idx] });
@@ -1150,6 +1159,7 @@ function doCall(sys, sysId, ticket, s, counterId) {
     calledAt:    new Date().toLocaleTimeString('th-TH'),
     counterId:   counter?.id   || null,
     counterName: counter?.name || '',
+    counterSpeak: counter?.speak || undefined,   // announcement wording set per counter (settings → ช่องบริการ)
     _ts: Date.now(),
   };
   s.calledQueue = called;
@@ -1269,7 +1279,7 @@ app.post('/api/sys/:sysId/uncall', requireSys, (req, res) => {
         returnCount: (ticket.returnCount || 0) + 1,
         calledAt:    undefined,
         counterId:   undefined,
-        counterName: undefined,
+        counterName: undefined, counterSpeak: undefined,
       };
       s.waiting.push(restored);
       s.waiting.sort((a, b) => a._ts - b._ts);
@@ -1443,6 +1453,7 @@ app.post('/api/sys/:sysId/recall-served', requireSys, (req, res) => {
     calledAt:    new Date().toLocaleTimeString('th-TH'),
     counterId:   counter?.id   || ticket.counterId   || null,
     counterName: counter?.name || ticket.counterName || '',
+    counterSpeak: counter ? (counter.speak || undefined) : ticket.counterSpeak,
     _ts: Date.now(),
   };
   if (recalled.counterId) {
@@ -1493,6 +1504,7 @@ app.post('/api/sys/:sysId/recall-noshow', requireSys, (req, res) => {
     calledAt:    new Date().toLocaleTimeString('th-TH'),
     counterId:   counter?.id   || entry.counterId   || null,
     counterName: counter?.name || entry.counterName || '',
+    counterSpeak: counter ? (counter.speak || undefined) : entry.counterSpeak,
     noShow: false, recalled: true, _ts: Date.now(),
   };
   for (const s of Object.values(sys.state)) {
@@ -1566,7 +1578,7 @@ function placeForwarded(sysId, fromName, ticket, targetId, extra) {
     _ts: ts, issuedTs: ts,
     forwardedFrom: { sysId, name: fromName, at: new Date().toLocaleTimeString('th-TH') },
     returned: undefined, returnedAt: undefined, returnCount: undefined,
-    calledAt: undefined, counterId: undefined, counterName: undefined,
+    calledAt: undefined, counterId: undefined, counterName: undefined, counterSpeak: undefined,
     recalled: undefined, noShow: undefined, forwardedTo: undefined, forwardSkipped: undefined, _dbId: undefined,
     ...extra,
   };
@@ -2339,7 +2351,9 @@ function flowToCashier(pharmId, pharm, w) {
   const me = systems.find(s => s.id === pharmId) || {};
   const endsAtCashier = t.drugCount === 0 || undefined;   // nothing to dispense → the trip ends at the cashier
   // keeps the pharmacy's colour and type name, so the cashier's tabs, badges and board match the pharmacy's
-  placeForwarded(pharmId, me.name || '', t, cashId, { flow: undefined, flowFrom: pharmId, endsAtCashier, forwardSkipped: true,
+  // parked: a queue staff parked (เก็บคิว) while it waited for the drug check arrives at the cashier as a normal
+  // queue — the cashier's "เรียกคิวถัดไป" would otherwise skip it
+  placeForwarded(pharmId, me.name || '', t, cashId, { flow: undefined, parked: undefined, flowFrom: pharmId, endsAtCashier, forwardSkipped: true,
     color: t.color, typeName: t.typeName,
     fwdHops: [...ticketHops(t, pharmId), `${pharmId}>${cashId}`] });
   (pharm.flowAway = pharm.flowAway || []).push({ ...t, flow: 'away', cashierSysId: cashId, sentTs: Date.now(), sentAt: flowNow(), endsAtCashier });
@@ -2391,7 +2405,7 @@ function flowBack(pharmId, pharm, display, how, by, reason) {
         flowBack: { at, how, cashier: (systems.find(s => s.id === cashId) || {}).name || '' },
         fwdHops: [...ticketHops(away, pharmId), `${cashId}>${pharmId}`], forwardSkipped: true,
         cashierSysId: undefined, sentTs: undefined, sentAt: undefined, forwardedTo: undefined,
-        calledAt: undefined, counterId: undefined, counterName: undefined, recalled: undefined, noShow: undefined };
+        calledAt: undefined, counterId: undefined, counterName: undefined, counterSpeak: undefined, recalled: undefined, noShow: undefined };
       pharm.state[type.id].waiting.push(back);
       pharm.state[type.id].waiting.sort((a, b) => a._ts - b._ts);
     }
@@ -2555,6 +2569,11 @@ app.post('/api/sys/:sysId/cashier-settings', requireSys, (req, res) => {
   const { sys, sysId } = req;
   const flowWas = flowCashierOf(sysId, sys);
   Object.assign(sys.cashierSettings, req.body);
+  // opening words of the display's announcement; empty = the standard "ขอเชิญ หมายเลข"
+  if ('announcePrefix' in req.body) {
+    const p = cleanSpeak(req.body.announcePrefix);
+    if (p) sys.cashierSettings.announcePrefix = p; else delete sys.cashierSettings.announcePrefix;
+  }
   saveJson(sys.cashierSettingsFile, sys.cashierSettings);
   io.to('sys-' + sysId).emit('cashier_settings_updated', sys.cashierSettings);
   const flowIs = flowCashierOf(sysId, sys);
@@ -2607,6 +2626,54 @@ app.post('/api/sys/:sysId/print-ticket', requireSys, (req, res) => {
     if (err) return res.json({ success: false, message: (stderr || err.message).trim() });
     res.json({ success: true });
   }, 15000);
+});
+
+// ── Print Agent relay ─────────────────────────────────────────────────────
+// Chrome blocks a LAN page (http://10.x.x.x:3000) from calling the client's own http://localhost:3001
+// (Local Network Access). The page asks this server instead, and the server forwards the call to the
+// Print Agent on the machine the request came from: <client IP>:3001 (the agent installer opens that port).
+const AGENT_PORT = 3001;
+const AGENT_PATHS = ['/api/printers', '/api/print-config', '/api/local-print', '/ping'];
+app.use('/api/agent', (req, res, next) => {
+  let passed = false;
+  requireApiToken(req, res, () => { passed = true; next(); });
+  if (!passed) console.log(`[agent-relay] ${req.path} from ${String(req.socket.remoteAddress || '').replace(/^::ffff:/, '')} refused: no API token`);
+});
+app.all('/api/agent/*', (req, res) => {
+  const sub = req.path.replace(/^\/api\/agent/, '');
+  if (!AGENT_PATHS.includes(sub)) return res.status(404).json({ success: false, message: 'not found' });
+  if (!['GET', 'POST'].includes(req.method)) return res.status(405).json({ success: false, message: 'method not allowed' });
+  let ip = String(req.socket.remoteAddress || '').replace(/^::ffff:/, '');
+  if (ip === '::1' || ip.startsWith('127.')) ip = '127.0.0.1';
+  const qs   = req.originalUrl.includes('?') ? req.originalUrl.slice(req.originalUrl.indexOf('?')) : '';
+  const body = req.method === 'POST' ? JSON.stringify(req.body || {}) : null;
+  let done = false;
+  const fail = (status, message) => {
+    if (done) return; done = true;
+    console.log(`[agent-relay] ${req.method} ${sub} → ${ip}:${AGENT_PORT} FAILED: ${message}`);
+    res.status(status).json({ success: false, agentUnreachable: true, agentIp: ip, message });
+  };
+  // agent:false → always a fresh socket, so its 'connect' event (which stops the 4 s timer below) always fires
+  const up = http.request({ host: ip, port: AGENT_PORT, path: sub + qs, method: req.method, timeout: 40000, agent: false,
+    headers: body ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) } : {} }, r => {
+    let data = '';
+    r.setEncoding('utf8');
+    r.on('data', c => data += c);
+    r.on('end', () => {
+      if (done) return; done = true;
+      if (sub !== '/api/print-config') console.log(`[agent-relay] ${req.method} ${sub} → ${ip}:${AGENT_PORT} ${r.statusCode}`);
+      res.status(r.statusCode || 502).type('application/json').send(data);
+    });
+  });
+  // a firewall that drops the packets would hold the connect for ~20 s — give up after 4 s so the page can
+  // still try localhost directly within its own timeout
+  const connectTimer = setTimeout(() => { up.destroy(); fail(502, `เชื่อมต่อ Print Agent ที่เครื่อง ${ip}:${AGENT_PORT} ไม่ได้ (ไม่ตอบภายใน 4 วินาที — Firewall?)`); }, 4000);
+  up.on('socket', s => s.once('connect', () => clearTimeout(connectTimer)));
+  up.on('close', () => clearTimeout(connectTimer));
+  up.on('timeout', () => { up.destroy(); fail(504, `Print Agent ที่เครื่อง ${ip} ไม่ตอบ`); });
+  up.on('error', err => fail(502, `เชื่อมต่อ Print Agent ที่เครื่อง ${ip}:${AGENT_PORT} ไม่ได้ (${err.code || err.message})`));
+  if (body) up.write(body);
+  up.end();
 });
 
 // ── Local print (CORS — called from client machine's localhost) ───────────

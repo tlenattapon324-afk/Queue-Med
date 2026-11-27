@@ -87,7 +87,33 @@ function sendJson(res, obj, status = 200) {
 const getPrinters = (cb, fresh) => listPrinters(cb, { maxAgeMs: fresh ? 0 : 60000 });
 
 // ── HTTP Server ───────────────────────────────────────────────────────────
+// The queue server relays the page's calls here (Chrome blocks a LAN page from calling localhost), so the
+// agent also answers on the LAN — but only from this PC, from private network addresses
+// (10.x / 172.16–31.x / 192.168.x), and from this PC's own network (same first two numbers of the IP:
+// some hospitals number their LAN with public-range addresses, e.g. 162.16.x.x).
+function ownPrefixes() {
+  const out = new Set();
+  for (const list of Object.values(os.networkInterfaces()))
+    for (const a of list || []) if (a.family === 'IPv4' || a.family === 4) out.add(a.address.split('.').slice(0, 2).join('.'));
+  return out;
+}
+function allowedFrom(addr) {
+  const ip = String(addr || '').replace(/^::ffff:/, '');
+  if (ip === '::1' || ip.startsWith('127.')) return true;
+  const m = ip.match(/^(\d+)\.(\d+)\.\d+\.\d+$/);
+  if (!m) return false;
+  const a = +m[1], b = +m[2];
+  if (a === 10 || (a === 192 && b === 168) || (a === 172 && b >= 16 && b <= 31)) return true;
+  return ownPrefixes().has(`${a}.${b}`);
+}
+
 const server = http.createServer((req, res) => {
+  if (!allowedFrom(req.socket.remoteAddress)) {
+    const from = String(req.socket.remoteAddress || '').replace(/^::ffff:/, '');
+    console.log(`Refused a request from ${from} (not this PC's network)`);
+    sendJson(res, { success: false, message: `Print Agent ไม่รับคำสั่งจาก ${from} (คนละเครือข่ายกับเครื่องนี้)` }, 403);
+    return;
+  }
   cors(res);
   if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
 
