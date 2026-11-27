@@ -339,9 +339,10 @@
       font-size:1.05rem;font-weight:800;cursor:pointer;font-family:inherit}
     .im-row.im-pay-row{grid-template-columns:1.1fr 1.6fr .7fr}
     /* ข้อความบนบัตรคิว under each queue row */
-    .im-note-row{display:flex;align-items:center;gap:6px;margin:-2px 0 10px}
-    .im-note-ic{flex:0 0 auto;font-size:.9rem;opacity:.75}
-    .im-note{flex:1;min-width:0;border:1px dashed #cbd5e1;border-radius:9px;padding:6px 10px;font:inherit;font-size:.82rem;color:#0f766e;background:#f8fafc}
+    .im-note-row{display:flex;align-items:flex-start;gap:6px;margin:-2px 0 10px}
+    .im-note-ic{flex:0 0 auto;font-size:.9rem;opacity:.75;padding-top:6px}
+    .im-note{flex:1;min-width:0;border:1px dashed #cbd5e1;border-radius:9px;padding:6px 10px;font:inherit;font-size:.82rem;color:#0f766e;background:#f8fafc;
+      display:block;resize:none;overflow:hidden;line-height:1.45;min-height:2.1em;white-space:pre-wrap;overflow-wrap:anywhere;field-sizing:content}
     .im-note:focus{outline:none;border-style:solid;border-color:#14b8a6;background:#fff}
     .im-note::placeholder{color:#94a3b8}
     .im-tag{font-weight:800;font-size:.92rem;border-radius:8px;padding:8px 10px;text-align:center}
@@ -432,6 +433,26 @@
     .dup-ok kbd{font-family:inherit;font-size:.72rem;background:rgba(255,255,255,.2);border-radius:6px;padding:1px 7px}
     .dup-reprint{flex:1;border:2px solid var(--navy,#1e2a5a);background:#fff;color:var(--navy,#1e2a5a);border-radius:12px;padding:10px;font:inherit;font-size:1rem;font-weight:700;cursor:pointer}
     .dup-reprint:hover{background:var(--navy,#1e2a5a);color:#fff}
+    .vp-box{max-width:760px}
+    .vp-list{display:flex;flex-direction:column;gap:12px;margin-top:14px}
+    .vp-item{display:flex;gap:14px;align-items:stretch;text-align:left;width:100%;border:2px solid #cbd5e1;background:#fff;border-radius:14px;padding:12px 14px;cursor:pointer;font:inherit;color:#0f172a}
+    .vp-item:hover,.vp-item:focus{border-color:#1d4ed8;background:#eff6ff;outline:none}
+    .vp-no{flex:0 0 auto;width:44px;border-radius:10px;background:#1d4ed8;color:#fff;font-size:1.5rem;font-weight:800;display:flex;align-items:center;justify-content:center}
+    .vp-body{flex:1;min-width:0;display:block}
+    .vp-top{font-size:1.05rem;line-height:1.5}
+    .vp-top b{font-size:1.25rem}
+    .vp-sub{color:#475569;font-size:.9rem;margin-top:2px}
+    .vp-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+    .vp-tag{border-radius:999px;padding:4px 12px;font-weight:700;font-size:.95rem;border:1.5px solid}
+    .vp-tag.yes{background:#ecfdf5;border-color:#059669;color:#065f46}
+    .vp-tag.no{background:#f1f5f9;border-color:#94a3b8;color:#475569}
+    .vp-tag.pay{background:#fff7ed;border-color:#ea580c;color:#9a3412}
+    .vp-tag.paid{background:#eff6ff;border-color:#2563eb;color:#1e40af}
+    .vp-tag.warn{background:#fef2f2;border-color:#dc2626;color:#991b1b}
+    .vp-drugs{color:#334155;font-size:.88rem;margin-top:6px;overflow-wrap:anywhere}
+    .vp-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px;color:#64748b;font-size:.85rem;flex-wrap:wrap}
+    .vp-foot kbd{font-family:inherit;background:#e2e8f0;border-radius:5px;padding:0 6px}
+    .vp-cancel{border:2px solid #94a3b8;background:#fff;color:#334155;border-radius:12px;padding:8px 22px;font:inherit;font-weight:700;cursor:pointer}
     .dup-printed{color:#15803d;font-weight:700;font-size:.9rem;min-height:1.2em;margin-top:8px}
     .dup-ok{margin-top:14px;width:100%;border:none;background:#d97706;color:#fff;border-radius:12px;padding:12px;font-size:1.05rem;font-weight:800;cursor:pointer;font-family:inherit}
     @media (max-width:560px){.im-codes{grid-template-columns:1fr}.im-row.im-pay-row{grid-template-columns:1fr 1.3fr .7fr}}
@@ -851,6 +872,17 @@
       </label>
     </div>
     <div class="ni-types" id="pickTypes"></div>
+  </div>
+</div>
+
+<!-- one HN, several visits today: staff choose which visit gets the ticket -->
+<div class="im-overlay" id="vpOverlay">
+  <div class="im-box vp-box">
+    <h3>🩺 ผู้ป่วยมีหลาย visit วันนี้ — เลือก visit ที่จะออกคิว</h3>
+    <div class="ni-pt" id="vpPt"></div>
+    <div class="vp-list" id="vpList"></div>
+    <div class="vp-foot"><span>กดเลข <kbd>1</kbd>–<kbd>9</kbd> เพื่อเลือก · <kbd>Esc</kbd> ยกเลิก</span>
+      <button class="vp-cancel" onclick="closeVisitPick(true)">ยกเลิก</button></div>
   </div>
 </div>
 
@@ -1350,11 +1382,16 @@ function doLookup() {
     value = hn || qn;
   }
 
-  btn.disabled = true;
-  btn.innerHTML = `<span style="display:inline-block;width:18px;height:18px;border:2.5px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite"></span>`;
-
   const lookupBody = { type, value, sysId: Number(sysId) };
   if (isIpd) lookupBody.mode = 'ipd';
+  runLookup(lookupBody);
+}
+
+// lookupBody.vn: the visit staff picked when the HN has several visits today
+function runLookup(lookupBody) {
+  const btn = document.getElementById('searchBtn');
+  btn.disabled = true;
+  btn.innerHTML = `<span style="display:inline-block;width:18px;height:18px;border:2.5px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite"></span>`;
 
   fetch('/api/patient-lookup', {
     method:'POST', headers:{'Content-Type':'application/json'},
@@ -1365,6 +1402,8 @@ function doLookup() {
     return r.json();
   })
   .then(async d => {
+    // 2 VN / 2 oqueue today → staff choose the visit, then the lookup runs again for that VN
+    if (d.success && d.pickVisit) { stopScanner(); showVisitPick(d, lookupBody); return; }
     if (d.success && issueMode.allowReissue !== true) {
       // ออกคิวซ้ำ ปิดอยู่: warn before anything else is looked up or issued
       const key = d.patient.mode === 'ipd' ? d.patient.an : d.patient.vn;
@@ -1760,6 +1799,60 @@ function closeDup() {
   setTimeout(() => setStatus(chkIpd.checked ? 'พร้อมรับบัตรคิว — ยิงบาร์โค้ด AN หรือกรอกเลขในช่องค้นหา' : 'พร้อมรับบัตรคิว — ยิงบาร์โค้ด HN หรือกรอกเลขในช่องค้นหา'), 4000);
 }
 
+// ── Several visits today for one HN: staff pick the visit ─────────────────
+let _vp = null;
+const vpMoney = v => Number(v).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function showVisitPick(d, body) {
+  _vp = { d, body };
+  const p = d.patient || {};
+  document.getElementById('vpPt').innerHTML =
+    `<b>${escHtml(p.name || '')}</b> · HN ${escHtml(p.hn || '-')}${p.age ? ' · อายุ ' + escHtml(p.age) : ''}<br>มี <b>${(d.visits || []).length}</b> visit ในวันนี้ — ดูยาและค่าใช้จ่ายแล้วเลือก visit ที่จะออกคิว`;
+  document.getElementById('vpList').innerHTML = (d.visits || []).map((v, i) => {
+    const tags = [];
+    if (v.drugCount == null) tags.push('<span class="vp-tag no">💊 ตรวจสอบยาไม่ได้</span>');
+    else if (v.drugCount > 0) tags.push(`<span class="vp-tag yes">💊 มียา ${v.drugCount} รายการ${v.drugPrice ? ' · ' + vpMoney(v.drugPrice) + ' บาท' : ''}</span>`);
+    else tags.push('<span class="vp-tag no">💊 ไม่มียา</span>');
+    if (v.due == null) tags.push('<span class="vp-tag no">💰 ตรวจสอบค่าใช้จ่ายไม่ได้</span>');
+    else if (v.due > 0) tags.push(`<span class="vp-tag pay">💰 มีค่าใช้จ่าย ต้องชำระ ${vpMoney(v.due)} บาท</span>`);
+    else tags.push('<span class="vp-tag no">💰 ไม่มียอดต้องชำระ</span>');
+    if (v.paid) tags.push('<span class="vp-tag paid">🧾 ออกใบเสร็จแล้ว</span>');
+    if (v.total != null) tags.push(`<span class="vp-tag no">ค่าใช้จ่ายทั้งหมด ${vpMoney(v.total)} บาท</span>`);
+    if (v.issued) tags.push(`<span class="vp-tag warn">⚠ ออกคิวแล้ว ${escHtml(v.issued.display || '')} · ${escHtml(v.issued.status || '')}</span>`);
+    const sub = [v.dept && '🏥 ' + v.dept, v.doctor && '🩺 ' + v.doctor, v.pttypeName && '💳 ' + v.pttypeName].filter(Boolean).map(escHtml).join(' · ');
+    const drugs = v.drugNames && v.drugNames.length
+      ? `<div class="vp-drugs">ยา: ${v.drugNames.map(escHtml).join(', ')}${v.drugMore ? ` และอีก ${v.drugMore} รายการ` : ''}</div>` : '';
+    return `<button class="vp-item" onclick="pickVisit(${i})"><span class="vp-no">${i + 1}</span><span class="vp-body">
+      <div class="vp-top">QN <b>${escHtml(v.qn)}</b>${v.vsttime ? ' · มาเวลา ' + escHtml(v.vsttime) : ''} · <span style="color:#64748b">VN ${escHtml(v.vn)}</span></div>
+      ${sub ? `<div class="vp-sub">${sub}</div>` : ''}
+      <div class="vp-tags">${tags.join('')}</div>${drugs}</span></button>`;
+  }).join('');
+  showNotice('', '');
+  document.getElementById('vpOverlay').classList.add('show');
+  setStatus('เลือก visit ที่จะออกคิว', '#1d4ed8');
+}
+function pickVisit(i) {
+  if (!_vp) return;
+  const v = (_vp.d.visits || [])[i];
+  if (!v) return;
+  const body = { ..._vp.body, vn: v.vn };
+  closeVisitPick(false);
+  runLookup(body);
+}
+function closeVisitPick(cancel) {
+  document.getElementById('vpOverlay').classList.remove('show');
+  _vp = null;
+  if (cancel) {
+    backToScanner();
+    setStatus('ยกเลิก — ยังไม่ได้ออกคิว', '#b45309');
+    setTimeout(() => setStatus(chkIpd.checked ? 'พร้อมรับบัตรคิว — ยิงบาร์โค้ด AN หรือกรอกเลขในช่องค้นหา' : 'พร้อมรับบัตรคิว — ยิงบาร์โค้ด HN หรือกรอกเลขในช่องค้นหา'), 3000);
+  }
+}
+document.addEventListener('keydown', ev => {
+  if (!document.getElementById('vpOverlay').classList.contains('show')) return;
+  if (ev.key === 'Escape') { ev.preventDefault(); ev.stopPropagation(); closeVisitPick(true); }
+  else if (/^[1-9]$/.test(ev.key) && _vp && _vp.d.visits[+ev.key - 1]) { ev.preventDefault(); ev.stopPropagation(); pickVisit(+ev.key - 1); }
+}, true);
+
 // ── Issue mode settings window ────────────────────────────────────────────
 const ISSUE_MODE_LBL = { type: '📋 ตามประเภท', drug: '💊 ตามจำนวนยา', pay: '💰 ตามสิทธิ/ค่าใช้จ่าย' };
 function updateIssueModeLbl() {
@@ -1781,9 +1874,21 @@ function ensureNoteInputs() {
     const row = document.getElementById(nameId)?.closest('.im-pay-row');
     if (!row) continue;
     row.insertAdjacentHTML('afterend', `<div class="im-note-row"><span class="im-note-ic" title="ข้อความบนบัตรคิว">🧾</span>` +
-      `<input id="${noteId(k)}" class="im-note" maxlength="200" placeholder="ข้อความบนบัตรคิว เช่น กรุณารอเจ้าหน้าที่…เรียกคิว (ไม่ใส่ = ไม่พิมพ์)"/></div>`);
+      `<textarea id="${noteId(k)}" class="im-note" rows="1" maxlength="200" placeholder="ข้อความบนบัตรคิว เช่น กรุณารอเจ้าหน้าที่…เรียกคิว (ไม่ใส่ = ไม่พิมพ์) · Enter = ขึ้นบรรทัดใหม่ ได้ 3 บรรทัด"></textarea></div>`);
+    const el = document.getElementById(noteId(k));
+    el.addEventListener('input', () => fitNote(el));
+    el.addEventListener('focus', () => fitNote(el));
+    // the slip prints up to 3 lines — no 4th line
+    el.addEventListener('keydown', e => { if (e.key === 'Enter' && el.value.split('\n').length >= 3) e.preventDefault(); });
   }
 }
+// grow with the text (long text wraps onto line 2, 3 … instead of being cut to one line)
+function fitNote(el) {
+  if (!el || !el.offsetParent) return;
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 2 + 'px';
+}
+const fitNotes = () => requestAnimationFrame(() => NOTE_ROWS.forEach(([k]) => fitNote(document.getElementById(noteId(k)))));
 function loadNotes(pay) {
   ensureNoteInputs();
   const typeOf = k => {
@@ -1797,6 +1902,7 @@ function loadNotes(pay) {
     el.value = (typeOf(k) || {}).slipNote || (k === 'noDrug' ? (pay.noDrugNote || '') : '');
     el.dataset.orig = el.value;
   }
+  fitNotes();
 }
 // sent only for boxes on screen; ไม่มียา only when changed (its note can't be read here)
 function collectNotes() {
@@ -1913,7 +2019,7 @@ function syncDrugSplitUI() {
     const row = document.getElementById(id);
     row.style.display = on ? '' : 'none';
     const note = row.nextElementSibling;
-    if (note && note.classList.contains('im-note-row')) note.style.display = on ? '' : 'none';
+    if (note && note.classList.contains('im-note-row')) { note.style.display = on ? '' : 'none'; if (on) fitNote(note.querySelector('.im-note')); }
   };
   for (const id of ['payCashSRow', 'payCashLRow']) showRow(id, cash);
   for (const id of ['payFreeSRow', 'payFreeLRow']) showRow(id, free);

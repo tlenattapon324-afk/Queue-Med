@@ -166,6 +166,7 @@ function buildPrintLines(cfg, ticket) {
   };
 
   for (const id of order) {
+    const from = lines.length;
     if (id === 'divider') {
       if (c(cfg.showDividerLine, true) && lines.length && lines[lines.length-1].t !== 'div')
         lines.push({ t:'div', style: c(cfg.dividerStyle, 'dashed') });
@@ -179,6 +180,9 @@ function buildPrintLines(cfg, ticket) {
     } else if (builders[id]) {
       builders[id]();
     }
+    // ◀ ▶ ▲ ▼ of this section (mm) — drawn shifted; the next section still starts where it would have
+    const o = (cfg.sectionOffsets || {})[id] || {}, dx = clampOff(o.x), dy = clampOff(o.y);
+    if (dx || dy) for (let i = from; i < lines.length; i++) { lines[i].dx = dx; lines[i].dy = dy; }
   }
   return lines;
 }
@@ -192,6 +196,8 @@ function imgSize(line, paperMm) {
 // ── Calculate paper height from content (for printers without auto-cut) ──────
 function calcPrintHeight(lines, paperMm = 80, bottomMargin = 8) {
   let y = 3; // top margin
+  // a section moved down (▼) may reach below the last line — keep it on the paper
+  let bottom = 0;
   for (const line of lines) {
     if (line.t === 'div') {
       y += 3.0;
@@ -202,8 +208,9 @@ function calcPrintHeight(lines, paperMm = 80, bottomMargin = 8) {
     } else {
       y += (line.fs / 72.0 * 25.4) * 1.5 + 1.5;
     }
+    bottom = Math.max(bottom, y + (Number(line.dy) || 0));   // where this line ends after its ▲ ▼ shift
   }
-  return Math.ceil(y + bottomMargin);
+  return Math.ceil(Math.max(y, bottom) + bottomMargin);
 }
 
 function paperWidthMm(cfg) {
@@ -316,6 +323,10 @@ $script:drawContent = {
   [float]$pw=$avail-6.0; [float]$m=3.0; [float]$y=$m
   for($i=0; $i -lt $script:d.lines.Count; $i++){
     $line = $script:d.lines[$i]
+    # ◀ ▶ ▲ ▼ of this section (mm) — only its own drawing moves
+    [float]$sdx = 0; [float]$sdy = 0
+    if($line.dx){ $sdx = [float]$line.dx }; if($line.dy){ $sdy = [float]$line.dy }
+    if($sdx -ne 0 -or $sdy -ne 0){ $g.TranslateTransform($sdx, $sdy) }
     if($line.t -eq 'div'){
       $col = if($line.style -eq 'solid' -or $line.style -eq 'double'){[System.Drawing.Color]::Black}else{[System.Drawing.Color]::Gray}
       $pen=New-Object System.Drawing.Pen($col,[float]0.3)
@@ -368,6 +379,7 @@ $script:drawContent = {
       $g.DrawString($line.text,$font,$brush,$rect,$fmt)
       $y+=$lh+[float]1.5
     }
+    if($sdx -ne 0 -or $sdy -ne 0){ $g.TranslateTransform(-$sdx, -$sdy) }
   }
 }
 

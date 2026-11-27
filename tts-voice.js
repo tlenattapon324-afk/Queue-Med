@@ -17,7 +17,10 @@ const DIGIT_WORDS  = ['ศูนย์','หนึ่ง','สอง','สาม
 const LETTER_WORDS = ['เอ','บี','ซี','ดี','อี','เอฟ','จี','เอช','ไอ','เจ','เค','แอล','เอ็ม',
                       'เอ็น','โอ','พี','คิว','อาร์','เอส','ที','ยู','วี','ดับเบิลยู','เอ็กซ์','วาย','แซด'];
 const PHRASE_WORDS = ['ขอเชิญ','หมายเลข','ที่ช่องบริการ','ช่องบริการ','ช่อง','ที่','ห้อง','โต๊ะ','จุด',
-                      'ทับ','เปิดเสียงแล้ว','ชำระเงิน','การเงิน','ห้องยา','รับยา','เวชระเบียน','คัดกรอง','ตรวจ'];
+                      'ทับ','เปิดเสียงแล้ว','ชำระเงิน','การเงิน','ห้องยา','รับยา','เวชระเบียน','คัดกรอง','ตรวจ',
+                      // counter wording / opening phrase set per site (ข้อความเสียง, คำขึ้นต้น)
+                      'ค่ะ','ครับ','คะ','ขอ','เชิญ','ผู้ป่วย','ผู้รับบริการ','คุณ','กรุณา','ติดต่อ','เจ้าหน้าที่',
+                      'บริการ','ชำระ','เงิน','ยา','จ่ายยา','จ่าย','รับ','จุดบริการ','คลินิก','ชั้น','อาคาร','เคาน์เตอร์'];
 const BUNDLED_WORDS = [...PHRASE_WORDS, ...LETTER_WORDS, ...DIGIT_WORDS];
 
 const keyOf = (lang, text) => crypto.createHash('md5').update(lang + '|' + text).digest('hex');
@@ -72,13 +75,44 @@ function createTts({ appDir, cacheDir }) {
     return { buf, source: 'google' };
   }
 
-  // Offline: join the Google clips of each word. Words without a clip are skipped.
+  // A word with no clip of its own (e.g. "ช่องรับยา", "การเงินช่อง1") is read as the longest known
+  // words inside it: "ช่อง" + "รับยา". A piece never starts or ends in the middle of a Thai syllable
+  // (vowel / tone marks), and the single-letter clips (เอ, ที …) are not used inside words, so "ที่" never
+  // turns into the letter T. Characters no clip covers are skipped.
+  const COMBINING = /[ัิ-ฺ็-๎]/;
+  const LETTER_SET = new Set(LETTER_WORDS);
+  function splitWord(lang, w) {
+    const files = [], missing = [];
+    let i = 0, gap = '';
+    while (i < w.length) {
+      let hit = null;
+      if (!COMBINING.test(w[i])) {
+        for (let j = w.length; j > i + 1 && !hit; j--) {
+          if (j < w.length && COMBINING.test(w[j])) continue;
+          const piece = w.slice(i, j);
+          if (LETTER_SET.has(piece)) continue;
+          const f = /^\d+$/.test(piece) ? null : findFile(lang, piece);
+          if (f) hit = { f, j };
+        }
+        if (!hit && /\d/.test(w[i])) { const f = findFile(lang, DIGIT_WORDS[+w[i]]); if (f) hit = { f, j: i + 1 }; }
+      }
+      if (hit) { if (gap) { missing.push(gap); gap = ''; } files.push(hit.f); i = hit.j; }
+      else { gap += w[i]; i++; }
+    }
+    if (gap) missing.push(gap);
+    return { files, missing };
+  }
+
+  // Offline: join the Google clips of each word. Words without a clip are split into known words.
   function composeFromClips(lang, text) {
     const words = tokenize(text);
     const parts = [], missing = [];
     for (const w of words) {
       const f = findFile(lang, w);
-      if (f) parts.push(stripId3(fs.readFileSync(f))); else missing.push(w);
+      if (f) { parts.push(stripId3(fs.readFileSync(f))); continue; }
+      const s = splitWord(lang, w);
+      for (const p of s.files) parts.push(stripId3(fs.readFileSync(p)));
+      missing.push(...s.missing);
     }
     return parts.length ? { buf: Buffer.concat(parts), missing } : null;
   }

@@ -1822,6 +1822,13 @@ function tabInfo(id) {
   if (id.startsWith('p:')) return cashFlowTabs().find(x => x.prefix === id.slice(2)) || null;
   return queueTypes.find(x => String(x.id) === id) || null;
 }
+// tabs in prefix order: 1 - · 2 - · 3 - … then letters (A, E, F …) — not the order the types were created in
+const pfxKey = p => String(p || '').replace(/[\s-]+$/g, '').trim();
+const byPrefix = (a, b) => {
+  const x = pfxKey(a.prefix), y = pfxKey(b.prefix), nx = /^\d/.test(x), ny = /^\d/.test(y);
+  if (nx !== ny) return nx ? -1 : 1;   // numbers first
+  return x.localeCompare(y, 'th', { numeric: true }) || String(a.name || '').localeCompare(String(b.name || ''), 'th');
+};
 function renderTabs() {
   const bar      = document.getElementById('typeTabs');
   const modeList = allWaiting.filter(t => (t.mode || 'opd') === cashierMode);
@@ -1843,7 +1850,7 @@ function renderTabs() {
     bar.appendChild(tab);
   };
   // 1) the pharmacy's money-related types (ไปการเงิน · ห้องตรวจ · สิทธิ), in the pharmacy's own colours
-  fTabs.forEach(x => addTab('p:' + x.prefix, x.color, x.prefix, x.name,
+  [...fTabs].sort(byPrefix).forEach(x => addTab('p:' + x.prefix, x.color, x.prefix, x.name,
     modeList.filter(w => w.flowFrom && w.prefix === x.prefix).length, `คิวจากห้องยา · ${x.name}`, 'ttab-flow'));
   // 2) this room's own types — only the types the issue settings hand out now; one with people waiting (or open) stays
   const inUse = tabTypesInUse();
@@ -1852,7 +1859,7 @@ function renderTabs() {
   const showOwn = t => fTabs.length
     ? !!t.noDrugFrom || activeTabs.has(String(t.id)) || modeList.some(w => w.typeId == t.id && own(w))
     : inUse.has(t.id) || activeTabs.has(String(t.id)) || modeList.some(w => w.typeId == t.id);
-  queueTypes.filter(showOwn).forEach((t, i) =>
+  queueTypes.filter(showOwn).sort(byPrefix).forEach((t, i) =>
     addTab(t.id, t.color, t.prefix, t.name, modeList.filter(w => w.typeId == t.id && own(w)).length,
       fTabs.length ? 'คิวของห้องนี้เอง (ไม่ได้มาจากห้องยา)' : '', fTabs.length && i === 0 ? 'ttab-own-first' : ''));
   bar.querySelector('[data-id="all"]').classList.toggle('active', !activeTabs.size);
@@ -1952,7 +1959,8 @@ function renderWaiting() {
               ? `<button class="btn-call-item fl-force" title="ยังไม่ผ่านการตรวจสอบยา — เรียกแบบ manual" onclick="callByDisplay('${t.display}',${JSON.stringify(t).replace(/"/g,'&quot;')})">▶ เรียก</button>`
               : `<span class="fl-pill" title="เรียกได้เมื่อ HOSxP บันทึกผู้ตรวจสอบยา"><span class="dot"></span>รอตรวจยา</span>`}
             <button class="btn-fl-more" onclick="openFlowAct('check','${t.display}')">⋯ ทำเอง</button></div>`
-        : `<div class="fl-act"><button class="btn-call-item" onclick="callByDisplay('${t.display}',${JSON.stringify(t).replace(/"/g,'&quot;')})">▶ เรียก</button>${sendBackBtn(t)}</div>`}
+        : `<div class="fl-act"><button class="btn-call-item" onclick="callByDisplay('${t.display}',${JSON.stringify(t).replace(/"/g,'&quot;')})">▶ เรียก</button>${sendBackBtn(t)}${
+            flowRole() === 'pharmacy' && cashierMode === 'opd' && t.flow !== 'check' ? `<button class="btn-fl-more" title="ส่งคิวนี้ไปการเงินเอง" onclick="openFlowAct('ready','${t.display}')">⋯ ทำเอง</button>` : ''}</div>`}
       </div>
     </div>`; }).join('');
   loadDrugCounts(all); loadPayAmounts(all);
@@ -2110,6 +2118,7 @@ function nsRow(t) {
       <div class="wq-action-cell"><div class="fl-ns-acts">
         <button class="btn-fl-more" title="เรียกคิวนี้อีกครั้งที่ช่องของเครื่องนี้" onclick="recallNoShow('${d}')">↺ เรียกซ้ำ</button>
         <button class="btn-fl-more ns-clear" title="เอาออกจากจอแสดงคิวไม่มา" onclick="clearNoShowDisplay('${d}')">🧹 เคลีย</button>
+        ${flowRole() === 'cashier' && t.flowFrom ? `<button class="btn-fl-more" title="ชำระแล้ว / ไม่ต้องชำระ — ส่งคิวนี้กลับห้องยาเอง" onclick="openFlowAct('paid','${d}')">${t.endsAtCashier || t.drugCount === 0 ? '✓ ปิดคิว' : '↩ ส่งห้องยา'}</button>` : ''}
       </div></div>
     </div>`;
 }
@@ -2132,6 +2141,7 @@ function histRow(e) {
   if (e.back) tags.push(tag('fl-t-back', `↩ กลับจากการเงิน ${flHm(e.back)}`));
   if (e.recalls) tags.push(tag('fl-t-call', `↺ เรียกซ้ำ ${e.recalls} ครั้ง${e.lastRecallAt ? ' · ' + flHm(e.lastRecallAt) : ''}`));
   if (e.noShowAt !== undefined) tags.push(tag('fl-t-ns', `✕ ไม่มา${e.noShowAt ? ' ' + flHm(e.noShowAt) : ''}`));
+  else if (e.wasNoShowAt !== undefined) tags.push(tag('fl-t-gone', `เคยไม่มา${e.wasNoShowAt ? ' ' + flHm(e.wasNoShowAt) : ''}`, 'เคยกดไม่มา แล้วเรียกซ้ำจากรายการเรียกแล้วไม่มา'));
   if (e.uncalledAt) tags.push(tag('fl-t-gone', `↩ คืนคิว ${flHm(e.uncalledAt)}`));
   if (e.parkedAt) tags.push(tag('fl-t-wait', `📥 เก็บคิว ${flHm(e.parkedAt)}${e.parkReason ? ' · ' + e.parkReason : ''}`, 'เก็บคิวไว้ — อยู่บนสุดของรายการรอ (แถวสีเหลือง) จนกว่าจะเรียกใหม่'));
   if (e.flowDone && e.flowDone.end) tags.push(tag('fl-t-end', `■ ชำระแล้ว ${flHowTag(e.flowDone.how)} · จบที่การเงิน`));
@@ -2271,9 +2281,10 @@ function sendBackBtn(t) {
 let _flowAct = null;
 function openFlowAct(kind, display) {
   const role = flowRole();
-  const t = kind === 'check' ? allWaiting.find(x => x.display === display)
+  const t = kind === 'check' || kind === 'ready' ? allWaiting.find(x => x.display === display)
     : role === 'pharmacy' ? (flow.pharmacy.away || []).find(x => x.display === display)
-    : allServed.find(x => x.display === display && x.flowFrom && !x.flowDone) || allWaiting.find(x => x.display === display && x.flowFrom);
+    : allServed.find(x => x.display === display && x.flowFrom && !x.flowDone) || allWaiting.find(x => x.display === display && x.flowFrom)
+      || noShows.find(x => x.display === display && x.flowFrom);
   if (!t) { toast('ไม่พบคิวนี้แล้ว — อาจเดินต่อไปแล้ว', 'err'); return; }
   _flowAct = { kind, display };
   const cashName = role === 'pharmacy' ? flow.pharmacy.cashierName || 'การเงิน' : 'การเงิน';
@@ -2296,6 +2307,12 @@ function openFlowAct(kind, display) {
         <span><b>ถือว่าตรวจยาแล้ว · ส่งไป${flEsc(cashName)}</b><small>คนไข้ต้องชำระเงินแม้ระบบบอกว่าไม่ผ่านการเงิน — จะกลับมาห้องยาเมื่อชำระแล้ว</small></span></label>` : '');
     chips = ['HOSxP เชื่อมต่อไม่ได้', 'ตรวจยาแล้ว ระบบยังไม่ขึ้น', 'เภสัชกรอนุญาต'];
     document.getElementById('flmGo').textContent = '✓ ยืนยัน';
+  } else if (kind === 'ready') {
+    document.getElementById('flmIc').textContent = '💰';
+    document.getElementById('flmTitle').textContent = `เดินคิวเอง · ส่งไป${cashName}`;
+    document.getElementById('flmDesc').textContent = `คิวนี้อยู่ที่ “พร้อมจ่ายยา” — ส่งไป${cashName}ให้คนไข้ชำระเงิน / รูดบัตร EDC ก่อน แล้วจะกลับมาที่ห้องยาเมื่อชำระแล้ว`;
+    chips = ['ต้องรูดบัตร EDC', 'ต้องชำระเงิน แต่ระบบบอกไม่ผ่านการเงิน', 'คนไข้ขอชำระเงินเอง'];
+    document.getElementById('flmGo').textContent = `💰 ยืนยัน ส่งไป${cashName}`;
   } else {
     document.getElementById('flmIc').textContent = '🧾';
     document.getElementById('flmTitle').textContent = t.endsAtCashier ? 'ถือว่าชำระแล้ว · จบที่การเงิน' : 'ถือว่าชำระแล้ว · ส่งกลับห้องยา';
@@ -2342,7 +2359,7 @@ async function submitFlowAct() {
   const reason = document.getElementById('flmReason').value.trim();
   if (!reason) { document.getElementById('flmErr').textContent = 'กรุณาเลือกหรือพิมพ์เหตุผล'; document.getElementById('flmReason').focus(); return; }
   const pick = document.querySelector('input[name="flmAct"]:checked');
-  const action = _flowAct.kind === 'check' ? (pick ? pick.value : 'checked') : 'paid';
+  const action = _flowAct.kind === 'check' ? (pick ? pick.value : 'checked') : _flowAct.kind === 'ready' ? 'readyToCashier' : 'paid';
   const ctr = (counters.find(c => c.id === Number(myCounterId)) || {}).name || '';
   const by = [sessionStorage.getItem('officerName') || '', ctr].filter(Boolean).join(' · ');
   const btn = document.getElementById('flmGo');
@@ -2351,7 +2368,7 @@ async function submitFlowAct() {
     const d = await fetch(`/api/sys/${sysId}/flow-action`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ display: _flowAct.display, action, reason, by, how: _flowAct.how || undefined }) }).then(r => r.json());
     if (!d.success) { document.getElementById('flmErr').textContent = d.message || 'ทำรายการไม่สำเร็จ'; return; }
-    const msg = action === 'checked' ? 'ตรวจยาแล้ว — เดินคิวต่อแล้ว' : action === 'toCashier' ? 'ส่งไปการเงินแล้ว' : d.ended ? 'จบที่การเงินแล้ว' : 'ส่งกลับห้องยาแล้ว';
+    const msg = action === 'checked' ? 'ตรวจยาแล้ว — เดินคิวต่อแล้ว' : action === 'toCashier' || action === 'readyToCashier' ? 'ส่งไปการเงินแล้ว' : d.ended ? 'จบที่การเงินแล้ว' : 'ส่งกลับห้องยาแล้ว';
     toast(`${_flowAct.display} — ${msg}`, 'ok');
     closeFlowAct();
   } catch { document.getElementById('flmErr').textContent = 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้'; }
@@ -2465,7 +2482,7 @@ function statusCell(t, i) {
       tags.push(`<span class="st-tag fl-t fl-t-back" title="ห้องยาตรวจสอบยาแล้ว — ชำระเงินแล้วคิวจะกลับห้องยาเอง">✅ ตรวจยาแล้ว ${esc(String(t.rxCheckedAt).slice(0, 5))}</span>`);
   }
   if (t.flowBack) tags.push(`<span class="st-tag fl-t fl-t-back" title="${esc((t.flowBack.cashier || 'การเงิน') + ' ' + t.flowBack.at)}">↩ กลับจากการเงิน ${esc(String(t.flowBack.at).slice(0, 5))}</span>`);
-  if (t.routeChanged) tags.push(`<span class="st-tag fl-t fl-t-chg" title="ตอนออกคิว: ${t.routeChanged.from === 'cash' ? 'ไปการเงิน' : 'ไม่ผ่านการเงิน'} · เช็คใหม่ตอนตรวจยา ${esc(t.routeChanged.at)}">⚠ เปลี่ยนเป็น${t.routeChanged.to === 'cash' ? 'ไปการเงิน' : 'ไม่ผ่านการเงิน'}</span>`);
+  if (t.routeChanged) tags.push(`<span class="st-tag fl-t fl-t-chg" title="ตอนออกคิว: ${t.routeChanged.from === 'cash' ? 'ไปการเงิน' : 'ไม่ผ่านการเงิน'} · เช็คใหม่ตอนตรวจยา ${esc(t.routeChanged.at)}${t.routeChanged.why ? ' · เหตุผล: ' + esc(t.routeChanged.why) : ''}">⚠ เปลี่ยนเป็น${t.routeChanged.to === 'cash' ? 'ไปการเงิน' : 'ไม่ผ่านการเงิน'}</span>`);
   if ((t.flowLog || []).length) tags.push(`<span class="st-tag fl-t fl-t-hand" title="${esc(t.flowLog.map(l => `${l.at} ${l.what} — ${l.reason || ''}${l.by ? ' (' + l.by + ')' : ''}`).join('\n'))}">✋ กดเอง</span>`);
   if (rs && !rs.receipt && !rs.debt && t.payRoute === 'cash' && !t.flow) tags.push(`<span class="st-tag st-unpaid" title="ยังไม่มีใบเสร็จหรือใบแจ้งหนี้">⏳ ยังไม่ผ่านการเงิน</span>`);
   if (t.returned) tags.push(`<span class="st-tag st-ret" title="${t.returnedAt ? 'คืนคิวเมื่อ ' + esc(t.returnedAt) : ''}">↩ คืนคิว${t.returnCount > 1 ? ' ×' + t.returnCount : ''}</span>`);

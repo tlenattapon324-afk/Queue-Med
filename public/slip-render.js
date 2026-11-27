@@ -143,6 +143,12 @@
   const imgHtml = (src, wmm, align) =>
     `<div style="text-align:${align};margin:4px 0;line-height:0"><img src="${src}" style="width:${wmm}mm;max-width:100%;height:auto"/></div>`;
 
+  // ◀ ▶ ▲ ▼ of one section (mm): moves that section only — the others stay where they are (as slip-print.js)
+  function secOff(cfg, id) {
+    const o = (cfg.sectionOffsets || {})[id] || {};
+    return { x: clampOff(o.x), y: clampOff(o.y) };
+  }
+
   function html(cfg, d) {
     const box = val(cfg.numBoxStyle, 'thick');
     const builders = {
@@ -231,7 +237,11 @@
       } else if (builders[id]) {
         part = builders[id]();
       }
-      if (part) { h += part; lastWasDivider = false; }
+      if (part) {
+        const o = secOff(cfg, id);
+        if (o.x || o.y) part = `<div style="transform:translate(${o.x}mm,${o.y}mm)">${part}</div>`;
+        h += part; lastWasDivider = false;
+      }
     }
     // Fixed black-on-white so the host page's theme colours never leak into the slip
     const ff = cfg.fontFamily ? `font-family:'${esc(cfg.fontFamily)}',sans-serif;` : '';
@@ -294,6 +304,6 @@
       `html,body{margin:0!important;padding:0!important;min-height:0!important;height:auto!important;background:#fff!important}` };
   }
 
-  window.SlipRender = { DEFAULT_ORDER, STYLE_DEFAULTS, style, fill, html, codeSources, codeImage, codeImages, whenImagesReady,
+  window.SlipRender = { DEFAULT_ORDER, STYLE_DEFAULTS, style, fill, html, secOff, codeSources, codeImage, codeImages, whenImagesReady,
                         paperSize, applyPaperBox, measureHeightMm, preparePrint };
 })();

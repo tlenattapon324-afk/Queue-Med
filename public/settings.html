@@ -452,6 +452,12 @@
     /* ── Per-section style row (align / bold / color) ── */
     .pd-style-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:4px 0 11px}
     .pd-style-lbl{font-size:.72rem;color:#1d4ed8;min-width:62px}
+    .pd-move-row{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin:-6px 0 11px}
+    .pd-move-row button{width:30px;height:28px;border:1px solid #9ec5f3;background:#fff;border-radius:7px;cursor:pointer;font-size:.8rem;color:#1d4ed8;font-family:inherit}
+    .pd-move-row button:hover{background:#e0edff}
+    .pd-move-val{font-size:.74rem;color:#64748b;margin-left:4px}
+    .pd-move-val.on{color:#b45309;font-weight:700}
+    .pd-ct-item .pd-move-row{margin:6px 0 0}
     .pd-seg{display:inline-flex;border:1px solid #9ec5f3;border-radius:7px;overflow:hidden}
     .pd-seg button{background:#ffffff;border:none;color:#1d4ed8;padding:5px 9px;font-size:.74rem;
       cursor:pointer;font-family:inherit}
@@ -1806,6 +1812,7 @@ let pdCurrentSize = '80mm';
 let pdSysName = '';
 let pdLayoutOrder = ['logo', 'header', 'patientName', 'hnQn', 'pttype', 'queueType', 'queueNum', 'slipNote', 'barcode', 'dateTime', 'footer'];
 let pdSectionStyles = {};   // { sectionId: { align, bold, color } }
+let pdSectionOffsets = {};  // { sectionId | 'text:<id>': { x, y } } mm — ◀ ▶ ▲ ▼ per section
 let pdCustomTexts   = [];   // [{ id, text, fs, align, bold, color }]
 let pdLogo          = { data: '', aspect: 1 };
 const pdLayoutItems = {
@@ -1948,6 +1955,7 @@ function applyPrintCfgToForm(cfg) {
   document.getElementById('pdDividerStyle').value = cfg.dividerStyle || 'dashed';
   // Section styles + custom text blocks
   pdSectionStyles = JSON.parse(JSON.stringify(cfg.sectionStyles || {}));
+  pdSectionOffsets = JSON.parse(JSON.stringify(cfg.sectionOffsets || {}));
   pdCustomTexts   = JSON.parse(JSON.stringify(cfg.customTexts   || []));
   renderStyleRows();
   renderCustomTexts();
@@ -2025,6 +2033,7 @@ function collectPrintCfg() {
     numBoxStyle:      document.getElementById('pdNumBox').value,
     dividerStyle:     document.getElementById('pdDividerStyle').value,
     sectionStyles:    pdSectionStyles,
+    sectionOffsets:   pdSectionOffsets,
     customTexts:      pdCustomTexts,
     showFooter:       document.getElementById('pdShowFooter').checked,
     footerText:       document.getElementById('pdFooterText').value,
@@ -2101,8 +2110,31 @@ function renderStyleRows() {
     const opts = (el.dataset.opts || 'align,bold,color').split(',');
     const st   = SlipRender.style({ sectionStyles: pdSectionStyles }, sec);
     el.innerHTML = `<div class="pd-style-row"><span class="pd-style-lbl">${el.dataset.label || ''}</span>` +
-      styleControlsHtml(st, opts, `setSecStyle('${sec}',`) + `</div>`;
+      styleControlsHtml(st, opts, `setSecStyle('${sec}',`) + `</div>` + moveControlsHtml(sec);
   });
+}
+
+// ◀ ▶ ▲ ▼ — move one section (1 mm a click, up to 20 mm); the other sections stay put
+function moveControlsHtml(key) {
+  const o = SlipRender.secOff({ sectionOffsets: pdSectionOffsets }, key);
+  const k = escHtml(key).replace(/'/g, '&#39;');
+  const b = (dx, dy, t, l) => `<button type="button" title="${t}" onclick="moveSec('${k}',${dx},${dy})">${l}</button>`;
+  const moved = o.x || o.y;
+  return `<div class="pd-move-row"><span class="pd-style-lbl">เลื่อน</span>` +
+    b(-1, 0, 'เลื่อนไปทางซ้าย 1 mm', '◀') + b(1, 0, 'เลื่อนไปทางขวา 1 mm', '▶') +
+    b(0, -1, 'เลื่อนขึ้น 1 mm', '▲') + b(0, 1, 'เลื่อนลง 1 mm', '▼') +
+    `<span class="pd-move-val${moved ? ' on' : ''}">${moved ? `↔ ${o.x > 0 ? '+' : ''}${o.x} · ↕ ${o.y > 0 ? '+' : ''}${o.y} mm` : 'ตำแหน่งเดิม'}</span>` +
+    (moved ? `<button type="button" class="pd-move-reset" title="กลับตำแหน่งเดิม" onclick="moveSec('${k}','reset')">↺</button>` : '') + `</div>`;
+}
+function moveSec(key, dx, dy) {
+  if (dx === 'reset') delete pdSectionOffsets[key];
+  else {
+    const o = SlipRender.secOff({ sectionOffsets: pdSectionOffsets }, key);
+    const lim = v => Math.max(-20, Math.min(20, v));
+    const n = { x: lim(o.x + dx), y: lim(o.y + dy) };
+    if (n.x || n.y) pdSectionOffsets[key] = n; else delete pdSectionOffsets[key];
+  }
+  renderStyleRows(); renderCustomTexts(); updatePreview();
 }
 
 function styleControlsHtml(st, opts, call) {
@@ -2139,6 +2171,7 @@ function renderCustomTexts() {
         ${styleControlsHtml({ align: b.align || 'center', bold: !!b.bold, color: b.color || 'black' }, ['align','bold','color'], `setCustomText(${i},`)}
         <button class="pd-lo-del" title="ลบข้อความนี้" onclick="removeCustomText(${i})">✕</button>
       </div>
+      ${moveControlsHtml('text:' + b.id)}
     </div>`).join('');
 }
 

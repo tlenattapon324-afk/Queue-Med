@@ -401,6 +401,7 @@ function restoreQueueState(sysId, sys) {
     sys.deletedQueues       = saved.deletedQueues       || [];
     sys.flowAway            = saved.flowAway            || [];
     sys.calledLog           = saved.calledLog           || [];
+    if (saved.calledLog) repairNsLog(sys);
     // state saved before the call log existed: start it from the called lists still on hand
     if (!saved.calledLog) {
       Object.values(sys.state).flatMap(s => s.served).sort((a, b) => a._ts - b._ts).forEach(t => {
@@ -679,6 +680,7 @@ app.post('/api/sys/:sysId/counters', requireSys, (req, res) => {
   sys.counters.push(counter);
   saveJson(sys.ctrsFile, sys.counters);
   io.to('sys-' + sysId).emit('counters_updated', sys.counters);
+  setImmediate(learnCounterWords);
   res.json({ success: true, counter });
 });
 
@@ -694,6 +696,7 @@ app.put('/api/sys/:sysId/counters/:id', requireSys, (req, res) => {
   }
   saveJson(sys.ctrsFile, sys.counters);
   io.to('sys-' + sysId).emit('counters_updated', sys.counters);
+  setImmediate(learnCounterWords);
   res.json({ success: true, counter: sys.counters[idx] });
 });
 
@@ -877,6 +880,28 @@ function logCalled(sys, t) {
     from: t.forwardedFrom ? t.forwardedFrom.name : undefined, back: t.flowBack ? t.flowBack.at : undefined,
     rxCheckedAt: t.rxCheckedAt || undefined, returned: t.returned || undefined });
   if (log.length > 3000) log.shift();
+}
+// ไม่มา → เรียกซ้ำ: the row in "เรียกแล้ววันนี้" is a called queue again (its ↺ เรียกซ้ำ button comes back);
+// the earlier no-show stays visible as "เคยไม่มา"
+function nsRecalledMark(e, at) {
+  if (e.noShowAt !== undefined) e.wasNoShowAt = e.noShowAt;
+  delete e.noShowAt; delete e.notCalled;
+  e.recalls = (e.recalls || 0) + 1;
+  if (at) e.lastRecallAt = at;
+}
+// call logs saved before that fix: a queue still marked ไม่มา in the log but no longer on the no-show list,
+// and called again (recalled, not a no-show) in the called list → mark it recalled
+function repairNsLog(sys) {
+  const nsNow = new Set((sys.noShows || []).map(t => t.display));
+  const served = new Map(Object.values(sys.state).flatMap(s => s.served).map(t => [t.display, t]));
+  const seen = new Set();
+  for (let i = (sys.calledLog || []).length - 1; i >= 0; i--) {
+    const e = sys.calledLog[i];
+    if (seen.has(e.display)) continue;   // only the latest call of each queue
+    seen.add(e.display);
+    const t = served.get(e.display);
+    if (e.noShowAt !== undefined && !nsNow.has(e.display) && t && t.recalled && !t.noShow) nsRecalledMark(e, t.calledAt);
+  }
 }
 // later news about the latest call of a queue (เรียกซ้ำ / ไม่มา / คืนคิว / ส่งต่อ / ชำระแล้ว)
 function logMark(sys, display, patch) {
@@ -1519,6 +1544,7 @@ app.post('/api/sys/:sysId/recall-noshow', requireSys, (req, res) => {
     if (sys.recentByCounter[recalled.counterId].length > 10) sys.recentByCounter[recalled.counterId].pop();
   }
   broadcastCall(sysId, sys, recalled);
+  logMark(sys, display, e => nsRecalledMark(e, recalled.calledAt));
   saveQueueState(sysId, sys);
   dbCallTicket(sysId, recalled);
   io.to('sys-' + sysId).emit('noshow_recalled', { display, noShows: sys.noShows.slice(0, 40) });
@@ -1768,9 +1794,13 @@ app.get('/api/tts', async (req, res) => {
   }
 });
 
-// Learn Google clips for every counter name while online, so offline announcements include them
+// Learn Google clips for every counter name, counter wording (ข้อความเสียง) and opening phrase (คำขึ้นต้น)
+// while online, so offline announcements include them; also run right after those are saved
 function learnCounterWords() {
-  const names = Object.values(sysData).flatMap(s => (s.counters || []).map(c => c.name || ''));
+  const names = Object.values(sysData).flatMap(s => [
+    ...(s.counters || []).flatMap(c => [c.name || '', c.speak || '']),
+    (s.cashierSettings && s.cashierSettings.announcePrefix) || '',
+  ]).map(t => t.split('/').join(' ')).filter(Boolean);
   tts.learnWords('th', names)
     .then(n => { if (n) console.log(`[tts] learned ${n} word clip(s) for offline announcements`); })
     .catch(() => {});
@@ -2330,7 +2360,7 @@ function flowPass(pharmId, pharm, display, info) {
     return true;
   }
   const route = info.route || was || 'cash';   // never known → การเงิน, rather than risk an unpaid bill
-  if (was && route !== was) t.routeChanged = { from: was, to: route, at: flowNow() };
+  if (was && route !== was) t.routeChanged = { from: was, to: route, at: flowNow(), why: info.why ? String(info.why).slice(0, 200) : undefined };
   t.payRoute = route;
   t.routeLabel = routeLabelFor(pharm, route, t);
   if (Number.isFinite(info.drugCount)) t.drugCount = info.drugCount;
@@ -2365,6 +2395,12 @@ function flowBack(pharmId, pharm, display, how, by, reason) {
   if (ai === -1) return false;
   const away = pharm.flowAway.splice(ai, 1)[0];
   const cashId = away.cashierSysId, cash = getSys(cashId);
+  // it was on the cashier's "ไม่มา" list (sent back from there by hand): it leaves that list
+  const ni = cash ? (cash.noShows || []).findIndex(x => x.display === display && x.flowFrom) : -1;
+  if (ni !== -1) {
+    cash.noShows.splice(ni, 1);
+    io.to('sys-' + cashId).emit('noshow_recalled', { display, noShows: cash.noShows.slice(0, 40) });
+  }
   const at = flowNow(), pinfo = systems.find(s => s.id === pharmId) || {};
   if (by || reason) flowLog(away, 'ถือว่าชำระแล้ว', by, reason);
   if (cash) {
@@ -2499,14 +2535,15 @@ async function flowTick() {
         const vn = key(t.vn), n = nDrugs.get(vn) || 0;
         if (!rxAt.has(vn) && n > 0) continue;   // drugs not checked yet
         // checked → decide ไปการเงิน / ไม่ผ่านการเงิน again on the latest items (เช็คซ้ำตอนตรวจยาเสร็จ)
-        let route = null;
+        let route = null, why = null;
         // (a ticket already here with 0 drugs that must pay — staff picked it, or its drugs were cancelled — still goes to the cashier)
         if (!t.flowBack) try { const r = await payRouteFor(pharmId, pharm, vn);
+          if (r.success) why = `${r.reason || ''}${r.pttype ? ` · สิทธิ ${r.pttype}` : ''}`;
           if (r.success && (r.route === 'cash' || r.route === 'free')) route = r.route;
           else if (r.success && r.noDrugs) route = 'cash'; } catch {}
         // no drugs at all: only a visit that must pay moves on (to the cashier, where it ends) — anything else is left to staff
         if (n === 0 && route !== 'cash' && !t.flowBack) continue;
-        if (flowPass(pharmId, pharm, t.display, { route, drugCount: n, rxAt: rxAt.get(vn) })) changed = true;
+        if (flowPass(pharmId, pharm, t.display, { route, why, drugCount: n, rxAt: rxAt.get(vn) })) changed = true;
       }
       for (const a of called) {
         const how = paid.get(key(a.vn));
@@ -2542,6 +2579,24 @@ app.post('/api/sys/:sysId/flow-action', requireSys, (req, res) => {
     emitFlow(sysId); emitFlow(cashId);
     return res.json({ success: true });
   }
+  // ห้องยา · พร้อมจ่ายยา → การเงิน by hand (e.g. a สิทธิ that must swipe EDC, judged ไม่ผ่านการเงิน)
+  if (b.action === 'readyToCashier') {
+    const cashId = flowCashierOf(sysId, sys);
+    if (!cashId) return res.json({ success: false, message: 'ห้องนี้ไม่ได้เปิด "เดินคิวตามสถานะ HOSxP"' });
+    const w = findWaiting(sys, display);
+    if (!w || w.t.flow === 'check') return res.json({ success: false, message: `ไม่พบคิว ${display} ในรายการพร้อมจ่ายยา` });
+    const t = w.t, was = t.payRoute || null;
+    flowLog(t, 'ส่งไปการเงินเอง (จากพร้อมจ่ายยา)', b.by, reason);
+    if (was && was !== 'cash') t.routeChanged = { from: was, to: 'cash', at: flowNow(), why: 'ส่งเอง: ' + reason.slice(0, 120) };
+    t.payRoute = 'cash';
+    t.routeLabel = routeLabelFor(sys, 'cash', t);
+    // a second trip: the earlier return from the cashier no longer applies
+    delete t.flowBack; delete t.readyTs; delete t.readyAt;
+    if (!flowToCashier(sysId, sys, w)) return res.json({ success: false, message: 'ส่งไปการเงินไม่สำเร็จ — ตรวจว่าห้องการเงินมีประเภทคิว' });
+    saveQueueState(sysId, sys); saveQueueState(cashId, getSys(cashId));
+    emitFlow(sysId); emitFlow(cashId);
+    return res.json({ success: true });
+  }
   if (b.action === 'paid') {
     // from the pharmacy (its "อยู่ที่การเงิน" lane) or from the cashier (a called pharmacy queue)
     let pharmId = sysId;
@@ -2573,6 +2628,7 @@ app.post('/api/sys/:sysId/cashier-settings', requireSys, (req, res) => {
   if ('announcePrefix' in req.body) {
     const p = cleanSpeak(req.body.announcePrefix);
     if (p) sys.cashierSettings.announcePrefix = p; else delete sys.cashierSettings.announcePrefix;
+    setImmediate(learnCounterWords);
   }
   saveJson(sys.cashierSettingsFile, sys.cashierSettings);
   io.to('sys-' + sysId).emit('cashier_settings_updated', sys.cashierSettings);
@@ -2715,6 +2771,58 @@ function ageOf(b) {
   const y = Math.floor(m / 12), mm = m % 12;
   return y >= 6 ? y + ' ปี' : y ? y + ' ปี' + (mm ? ' ' + mm + ' เดือน' : '') : mm + ' เดือน';
 }
+// ── Several OPD visits today for one HN: details for each, so staff choose which visit gets the ticket ──
+// มียาไหม (opitemrece icode 1%), ยอดที่ต้องชำระ (the "ต้องจ่ายเงิน" paidst codes — same as /pay-amounts),
+// ค่าใช้จ่ายทั้งหมด, ชำระแล้ว (rcpt_print), ห้องตรวจ / แพทย์, and whether this visit already has a ticket here
+async function visitChoices(rows, sysId) {
+  const sys = getSys(sysId);
+  const vns = rows.map(r => String(r.vn || '').trim()).filter(Boolean);
+  const ph = a => a.map(() => '?').join(',');
+  const src = (sys && flowPharmaciesOf(sysId).map(getSys).find(Boolean)) || sys;
+  const pay = (src && src.issueMode && src.issueMode.pay) || {};
+  const codes = (pay.cashCodes && pay.cashCodes.length ? pay.cashCodes : ['01', '03']).map(String);
+  // each query on its own: a table this HOSxP does not have only blanks that detail
+  const q = (sql, params) => hosQuery([[sql, params]]).then(r => r[0]).catch(e => { console.warn('[visit-pick]', e.message); return null; });
+  const [info, drugs, totals, dues, paid] = await Promise.all([
+    q(`SELECT o.vn, k.department, d.name AS doctor_name FROM ovst o
+       LEFT JOIN kskdepartment k ON k.depcode = o.main_dep LEFT JOIN doctor d ON d.code = o.doctor
+       WHERE o.vn IN (${ph(vns)})`, vns),
+    q(`SELECT op.vn, op.icode, s.name AS drug_name, op.sum_price FROM opitemrece op
+       LEFT JOIN s_drugitems s ON s.icode = op.icode WHERE op.vn IN (${ph(vns)}) AND op.icode LIKE '1%'`, vns),
+    q(`SELECT vn, SUM(sum_price) AS total FROM opitemrece WHERE vn IN (${ph(vns)}) GROUP BY vn`, vns),
+    q(`SELECT vn, SUM(sum_price) AS total FROM opitemrece WHERE vn IN (${ph(vns)}) AND paidst IN (${ph(codes)}) GROUP BY vn`, [...vns, ...codes]),
+    q(`SELECT DISTINCT vn FROM rcpt_print WHERE vn IN (${ph(vns)}) AND COALESCE(status, '') <> 'ABORT'`, vns),
+  ]);
+  const key = r => String(r.vn || '').trim();
+  const money = v => Math.round((Number(v) || 0) * 100) / 100;
+  const byVn = (list, f) => list ? new Map(list.map(r => [key(r), f(r)])) : null;
+  const infoM = byVn(info, r => r), totM = byVn(totals, r => money(r.total)), dueM = byVn(dues, r => money(r.total));
+  const paidS = paid ? new Set(paid.map(key)) : null;
+  const first = rows[0];
+  return {
+    success: true, pickVisit: true,
+    patient: { hn: first.hn, name: (first.ptname || '').trim() || '(ไม่ระบุชื่อ)', age: ageOf(first.birthday) },
+    visits: rows.map(r => {
+      const vn = key(r), inf = (infoM && infoM.get(vn)) || {};
+      const dr = drugs ? drugs.filter(x => key(x) === vn) : null;
+      const names = dr ? [...new Set(dr.map(x => (x.drug_name || '').trim()).filter(Boolean))] : [];
+      const issued = sys ? findIssued(sys, vn) : null;
+      return {
+        vn, qn: r.oqueue || '-', vsttime: r.vsttime ? String(r.vsttime).slice(0, 5) : '',
+        pttypeName: (r.pttype_name || '').trim() || (r.pttype || '').trim() || '',
+        dept: (inf.department || '').trim(), doctor: (inf.doctor_name || '').trim(),
+        drugCount: dr ? new Set(dr.map(x => String(x.icode))).size : null,
+        drugPrice: dr ? money(dr.reduce((a, x) => a + (Number(x.sum_price) || 0), 0)) : null,
+        drugNames: names.slice(0, 6), drugMore: Math.max(0, names.length - 6),
+        total: totM ? (totM.get(vn) || 0) : null,
+        due: dueM ? (dueM.get(vn) || 0) : null,
+        paid: paidS ? paidS.has(vn) : null,
+        issued: issued ? { display: issued.display, status: issued.status } : null,
+      };
+    }),
+  };
+}
+
 app.post('/api/patient-lookup', requireApiToken, async (req, res) => {
   const { type, value, sysId: reqSysId, mode } = req.body;
   if (!value || !value.toString().trim()) return res.json({ success: false, message: 'กรุณาระบุข้อมูล' });
@@ -2825,7 +2933,7 @@ app.post('/api/patient-lookup', requireApiToken, async (req, res) => {
   const searchField = (type === 'barcode' && lc) ? (lc.barcodeField || 'hn')
                     : (type === 'hn' ? 'hn' : 'qn');
   try {
-    let row = null;
+    let row = null, found = [];
     if (isMysqlType(cfg.type)) {
       const mysql = require('mysql2/promise');
       const conn  = await mysql.createConnection({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectTimeout: 10000, charset: 'utf8mb4' });
@@ -2839,11 +2947,11 @@ app.post('/api/patient-lookup', requireApiToken, async (req, res) => {
          LEFT JOIN patient p  ON p.hn      = o.hn
          LEFT JOIN pttype  pt ON pt.pttype = o.pttype
          WHERE ${col} = ? AND o.vstdate = CURDATE()
-         ORDER BY o.vn DESC LIMIT 1`,
+         ORDER BY o.vn DESC LIMIT 10`,
         [val]
       );
       await conn.end();
-      row = rows[0] || null;
+      found = rows;
     } else {
       const { Client } = require('pg');
       const client = new Client({ host: cfg.host, port: Number(cfg.port), database: cfg.database, user: cfg.username, password: cfg.password, connectionTimeoutMillis: 10000 });
@@ -2857,12 +2965,17 @@ app.post('/api/patient-lookup', requireApiToken, async (req, res) => {
          LEFT JOIN patient p  ON p.hn      = o.hn
          LEFT JOIN pttype  pt ON pt.pttype = o.pttype
          WHERE ${col} = $1 AND o.vstdate = CURRENT_DATE
-         ORDER BY o.vn DESC LIMIT 1`,
+         ORDER BY o.vn DESC LIMIT 10`,
         [val]
       );
       await client.end();
-      row = result.rows[0] || null;
+      found = result.rows;
     }
+    // one HN with several visits today (2 VN / 2 oqueue): staff pick the visit — the page asks again with its vn
+    const wantVn = String(req.body.vn || '').trim();
+    if (wantVn) row = found.find(r => String(r.vn || '').trim() === wantVn) || null;
+    else if (found.length > 1 && searchField === 'hn') return res.json(await visitChoices(found, Number(reqSysId)));
+    else row = found[0] || null;
     if (!row) return res.json({ success: false, message: 'ไม่พบ visit รับบริการในวันนี้' });
 
     // Pttype rule matching
